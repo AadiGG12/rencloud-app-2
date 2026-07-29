@@ -140,7 +140,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
             OutlinedButton.icon(
               onPressed: () => UpdateService.checkForUpdates(context, silent: false),
               icon: const Icon(Icons.system_update),
-              label: const Text('Check for App Updates (v1.0.0)'),
+              label: const Text('Check for App Updates (v1.1.0)'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.primaryPurple,
                 minimumSize: const Size(double.infinity, 44),
