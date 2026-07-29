@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RenCloud — Mobile App Simulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: #0f172a; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+
+    /* Phone Shell Frame */
+    .phone-frame {
+      width: 380px;
+      height: 780px;
+      background: #ffffff;
+      border-radius: 44px;
+      box-shadow: 0 0 0 12px #1e293b, 0 30px 60px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .phone-notch {
+      width: 130px;
+      height: 24px;
+      background: #1e293b;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 100;
+    }
+
+    .phone-header {
+      background: white;
+      padding: 36px 16px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .phone-header img { height: 26px; }
+    .phone-header h2 { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+
+    .phone-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: #f8fafc;
+    }
+
+    /* Auto Update Banner in Simulator */
+    .update-banner {
+      background: linear-gradient(135deg, #7c3aed, #06b6d4);
+      color: white;
+      padding: 12px 14px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(124,58,237,0.25);
+      animation: pulseBanner 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseBanner {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .update-banner button {
+      background: white;
+      color: #7c3aed;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .card-title { font-weight: 800; font-size: 1.1rem; }
+    .card-price { color: #7c3aed; font-weight: 900; font-size: 1.3rem; margin: 4px 0 10px; }
+
+    .phone-nav {
+      height: 60px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .phone-nav div.active { color: #7c3aed; }
+
+    .svg-icon {
+      display: inline-block;
+      vertical-align: middle;
+      stroke: currentColor;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+
+    <div class="phone-header">
+      <img src="logo.png" alt="RenCloud Logo">
+      <h2>RenCloud Mobile</h2>
+    </div>
+
+    <div class="phone-body">
+      <!-- Auto Update Notification Demo -->
+      <div class="update-banner" id="update-demo">
+        <div>
+          <div style="font-size:0.75rem; font-weight:800; display:flex; align-items:center; gap:4px;">
+            <svg class="svg-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="white" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            UPDATE AVAILABLE (v1.1.0)
+          </div>
+          <div style="font-size:0.65rem; opacity:0.9;">In-app popup auto-updater enabled</div>
+        </div>
+        <button onclick="triggerUpdatePopup()">VIEW</button>
+      </div>
+
+      <div class="card">
+        <span style="font-size:0.7rem; color:#06b6d4; font-weight:800;">MINECRAFT BUDGET</span>
+        <div class="card-title">Iron Plan (Popular)</div>
+        <div class="card-price">₹80/mo</div>
+        <p style="font-size:0.8rem; color:#64748b;">RAM: 8 GB DDR4 | NVMe: 30 GB | CPU: 3 Cores</p>
+      </div>
+
+      <div class="card">
+        <span style="font-size:0.7rem; color:#06b6d4; font-weight:800;">CLOUD VPS</span>
+        <div class="card-title">Ryzen 16</div>
+        <div class="card-price">₹1,849/mo</div>
+        <p style="font-size:0.8rem; color:#64748b;">RAM: 16 GB DDR4 | NVMe: 150 GB | CPU: 4 Cores</p>
+      </div>
+    </div>
+
+    <div class="phone-nav">
+      <div class="active" style="display:flex; align-items:center; gap:4px;">
+        <svg class="svg-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+        Catalog
+      </div>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <svg class="svg-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#64748b" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/></svg>
+        Calculator
+      </div>
+      <div style="display:flex; align-items:center; gap:4px;">
+        <svg class="svg-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#64748b" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Support
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function triggerUpdatePopup() {
+      alert("RenCloud In-App Auto Update Popup\n\nA new version of RenCloud is available (v1.1.0)!\n\nRelease Notes: Splash screen opening animation, crisp non-stretched icons, micro-animations.\n\nTapping [Update Now] downloads the APK directly from GitHub Releases.");
+    }
+  </script>
+</body>
+</html>
