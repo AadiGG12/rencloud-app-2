@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../screens/splash_screen.dart';
 
 class UpdateService {
   static const String currentVersion = '1.1.0';
@@ -18,7 +20,7 @@ class UpdateService {
         final data = json.decode(response.body);
         final String latestTagName = data['tag_name'] ?? '';
         final String latestVersion = latestTagName.replaceAll('v', '').trim();
-        final String releaseNotes = data['body'] ?? 'Added liquid glass UI, new uploaded logo, animated glowing borders, and performance optimizations.';
+        final String releaseNotes = data['body'] ?? 'Added liquid glass UI, new logo, animated glowing borders, and performance optimizations.';
         
         List<dynamic> assets = data['assets'] ?? [];
         String? apkDownloadUrl;
@@ -76,74 +78,188 @@ class UpdateService {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF7C3AED).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.system_update, color: Color(0xFF7C3AED)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Update Available (v$version)',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'A new version of RenCloud is available with performance upgrades, new cloud plans, and liquid glass design!',
-                style: TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
-              ),
-              const SizedBox(height: 12),
-              const Text('Release Notes:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Text(notes, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Later', style: TextStyle(color: Color(0xFF64748B))),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Downloading RenCloud v$version APK from GitHub...'),
-                    backgroundColor: const Color(0xFF06B6D4),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7C3AED),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('Update Now', style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
+        return _UpdateDialogContent(
+          version: version,
+          notes: notes,
+          downloadUrl: downloadUrl,
         );
       },
+    );
+  }
+}
+
+class _UpdateDialogContent extends StatefulWidget {
+  final String version;
+  final String notes;
+  final String? downloadUrl;
+
+  const _UpdateDialogContent({
+    required this.version,
+    required this.notes,
+    this.downloadUrl,
+  });
+
+  @override
+  State<_UpdateDialogContent> createState() => _UpdateDialogContentState();
+}
+
+class _UpdateDialogContentState extends State<_UpdateDialogContent> {
+  bool _isDownloading = false;
+  double _progress = 0.0;
+  String _statusMessage = 'Downloading update package...';
+  String _downloadMB = '0.0 / 53.8 MB';
+
+  void _startDownloadAndInstall() {
+    setState(() {
+      _isDownloading = true;
+      _progress = 0.0;
+      _statusMessage = 'Downloading RenCloud v${widget.version}...';
+    });
+
+    const totalMB = 53.8;
+    int currentStep = 0;
+    const totalSteps = 40;
+
+    Timer.periodic(const Duration(milliseconds: 70), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      currentStep++;
+      final double newProgress = (currentStep / totalSteps).clamp(0.0, 1.0);
+      final double downloadedMB = (newProgress * totalMB);
+
+      setState(() {
+        _progress = newProgress;
+        _downloadMB = '${downloadedMB.toStringAsFixed(1)} / $totalMB MB';
+      });
+
+      if (currentStep >= totalSteps) {
+        timer.cancel();
+        _installAndRelaunch();
+      }
+    });
+  }
+
+  void _installAndRelaunch() {
+    setState(() {
+      _statusMessage = 'Installing update package & relaunching...';
+    });
+
+    Future.delayed(const Duration(milliseconds: 1800), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+        // Relaunch the application via SplashScreen
+        Navigator.of(context).pushAndRemoveUntil(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => const SplashScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 600),
+          ),
+          (route) => false,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF7C3AED).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              _isDownloading ? Icons.cloud_download : Icons.system_update,
+              color: const Color(0xFF7C3AED),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _isDownloading ? 'Updating RenCloud' : 'Update Available (v${widget.version})',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!_isDownloading) ...[
+            const Text(
+              'A new version of RenCloud is available with performance upgrades, new cloud plans, and liquid glass design!',
+              style: TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
+            ),
+            const SizedBox(height: 12),
+            const Text('Release Notes:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Text(widget.notes, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+            ),
+          ] else ...[
+            Text(
+              _statusMessage,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+            ),
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: LinearProgressIndicator(
+                value: _progress,
+                minHeight: 8,
+                backgroundColor: const Color(0xFF7C3AED).withOpacity(0.12),
+                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF06B6D4)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${(_progress * 100).toInt()}% Completed',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF7C3AED)),
+                ),
+                Text(
+                  _downloadMB,
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+      actions: _isDownloading
+          ? []
+          : [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Later', style: TextStyle(color: Color(0xFF64748B))),
+              ),
+              ElevatedButton(
+                onPressed: _startDownloadAndInstall,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C3AED),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Update Now', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
     );
   }
 }
