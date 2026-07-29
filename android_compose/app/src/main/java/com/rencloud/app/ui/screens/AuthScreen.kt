@@ -31,7 +31,6 @@ fun AuthScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
 
     val colorScheme = MaterialTheme.colorScheme
 
@@ -158,20 +157,6 @@ fun AuthScreen(
                     fontSize = 14.sp,
                     color = Color.White
                 )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Demo Admin Login Hint
-            TextButton(
-                onClick = {
-                    email = "admin@rencloud.com"
-                    password = "admin123"
-                    onAdminLoginSuccess()
-                },
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            ) {
-                Text("⚡ Demo Admin Login (admin@rencloud.com / admin123)", fontSize = 11.sp, color = colorScheme.secondary)
             }
         }
     }
