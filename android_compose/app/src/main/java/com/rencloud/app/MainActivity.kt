@@ -31,6 +31,8 @@ import com.rencloud.app.data.AppCurrency
 import com.rencloud.app.data.RenCloudPlan
 import com.rencloud.app.services.BiometricsManager
 import com.rencloud.app.services.UpdateService
+import com.rencloud.app.ui.screens.AdminPanelScreen
+import com.rencloud.app.ui.screens.AuthScreen
 import com.rencloud.app.ui.screens.CalculatorScreen
 import com.rencloud.app.ui.screens.CatalogScreen
 import com.rencloud.app.ui.screens.SettingsScreen
@@ -91,6 +93,15 @@ fun MainAppContainer(
 ) {
     val prefs = remember { activity.getSharedPreferences("rencloud_prefs", Context.MODE_PRIVATE) }
     var showSplash by remember { mutableStateOf(true) }
+    var isAuthenticated by remember { mutableStateOf(prefs.getBoolean("is_authenticated", false)) }
+    var isAdminMode by remember { mutableStateOf(false) }
+    var userEmail by remember { mutableStateOf(prefs.getString("user_email", "") ?: "") }
+    var userName by remember { mutableStateOf(prefs.getString("user_name", "") ?: "") }
+
+    var appName by remember { mutableStateOf("RenCloud") }
+    var announcement by remember { mutableStateOf("⚡ Welcome to RenCloud Liquid Glass Cloud!") }
+    var discordUrl by remember { mutableStateOf("https://discord.gg/rencloud") }
+
     var currentTab by remember { mutableIntStateOf(0) }
     var currency by remember { mutableStateOf(AppCurrency.INR) }
     var biometricsEnabled by remember { mutableStateOf(prefs.getBoolean("biometrics_enabled", false)) }
@@ -103,7 +114,7 @@ fun MainAppContainer(
 
     // Automatically prompt biometric hardware scanner when splash finishes if biometrics enabled
     LaunchedEffect(showSplash) {
-        if (!showSplash && biometricsEnabled && !isUnlocked) {
+        if (!showSplash && isAuthenticated && biometricsEnabled && !isUnlocked) {
             BiometricsManager.promptBiometric(
                 activity = activity,
                 onSuccess = { isUnlocked = true },
@@ -116,6 +127,36 @@ fun MainAppContainer(
 
     if (showSplash) {
         SplashScreen(onNavigateToHome = { showSplash = false })
+        return
+    }
+
+    // Login & Registration Flow
+    if (!isAuthenticated && !isAdminMode) {
+        AuthScreen(
+            onLoginSuccess = { email, name, role ->
+                userEmail = email
+                userName = name
+                isAuthenticated = true
+                prefs.edit().putBoolean("is_authenticated", true).putString("user_email", email).putString("user_name", name).apply()
+            },
+            onAdminLoginSuccess = {
+                isAdminMode = true
+            }
+        )
+        return
+    }
+
+    // Admin Control Panel Screen
+    if (isAdminMode) {
+        AdminPanelScreen(
+            appName = appName,
+            onAppNameChange = { appName = it },
+            announcement = announcement,
+            onAnnouncementChange = { announcement = it },
+            discordUrl = discordUrl,
+            onDiscordUrlChange = { discordUrl = it },
+            onExitAdmin = { isAdminMode = false; isAuthenticated = true }
+        )
         return
     }
 
@@ -152,9 +193,9 @@ fun MainAppContainer(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("RenCloud Biometric Lock", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
+                Text("$appName Biometric Lock", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Touch fingerprint sensor or scan Face ID to unlock RenCloud", fontSize = 12.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
+                Text("Touch fingerprint sensor or scan Face ID to unlock $appName", fontSize = 12.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -192,10 +233,13 @@ fun MainAppContainer(
                             modifier = Modifier.size(28.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("RenCloud", fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
+                        Text(appName, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
                     }
                 },
                 actions = {
+                    IconButton(onClick = { isAdminMode = true }) {
+                        Icon(Icons.Default.AdminPanelSettings, contentDescription = "Admin Panel", tint = colorScheme.secondary)
+                    }
                     IconButton(onClick = { onDarkThemeToggle(!darkTheme) }) {
                         Icon(
                             imageVector = if (darkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
@@ -277,7 +321,7 @@ fun MainAppContainer(
                             }
                         },
                         onDiscordClick = {
-                            Toast.makeText(activity, "Copied https://discord.gg/rencloud to clipboard!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(activity, "Copied $discordUrl to clipboard!", Toast.LENGTH_SHORT).show()
                         },
                         onCheckUpdateClick = { showUpdateDialog = true }
                     )
