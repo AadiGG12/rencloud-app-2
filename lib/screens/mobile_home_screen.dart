@@ -4,6 +4,7 @@ import '../models/rencloud_plan.dart';
 import '../providers/catalog_provider.dart';
 import '../core/theme/app_theme.dart';
 import '../services/update_service.dart';
+import 'panel/login_screen.dart';
 import 'widgets/category_tabs.dart';
 import 'widgets/plan_card.dart';
 import 'widgets/resource_calculator.dart';
@@ -371,7 +372,24 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Update App Button
+            // Pterodactyl Panel Access Button
+          ElevatedButton.icon(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PterodactylLoginScreen())),
+            icon: const Icon(Icons.dns, color: Colors.white),
+            label: const Text(
+              '🖥️ Manage My Servers (Panel)',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryPurple,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              elevation: 4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Update App Button
             ElevatedButton.icon(
               onPressed: () => UpdateService.checkForUpdates(context, silent: false),
               icon: const Icon(Icons.system_update_sharp, color: Colors.white),
