@@ -3,15 +3,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/rencloud_plan.dart';
 import '../providers/catalog_provider.dart';
 import '../core/theme/app_theme.dart';
+import '../services/update_service.dart';
 import 'widgets/category_tabs.dart';
 import 'widgets/plan_card.dart';
 import 'widgets/resource_calculator.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          UpdateService.checkForUpdates(context, silent: true);
+        }
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final plans = ref.watch(filteredPlansProvider);
     final cycle = ref.watch(billingCycleProvider);
     final searchQuery = ref.watch(searchQueryProvider);
@@ -53,6 +71,20 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          // Update App Header Action Button
+          ElevatedButton.icon(
+            onPressed: () => UpdateService.checkForUpdates(context, silent: false),
+            icon: const Icon(Icons.system_update, size: 16),
+            label: const Text('Update App', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentAqua,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+          ),
+          const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.help_outline, color: AppTheme.primaryPurple),
             onPressed: () {

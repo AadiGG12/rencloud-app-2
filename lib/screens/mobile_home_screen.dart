@@ -140,15 +140,22 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.textSecondary),
             ),
-            const SizedBox(height: 20),
-            OutlinedButton.icon(
+            const SizedBox(height: 24),
+
+            // Prominent Update App Button
+            ElevatedButton.icon(
               onPressed: () => UpdateService.checkForUpdates(context, silent: false),
-              icon: const Icon(Icons.system_update),
-              label: const Text('Check for App Updates (v1.1.0)'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primaryPurple,
-                minimumSize: const Size(double.infinity, 44),
-                side: const BorderSide(color: AppTheme.primaryPurple),
+              icon: const Icon(Icons.system_update_sharp, color: Colors.white),
+              label: const Text(
+                '⚡ Check & Install App Updates',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentAqua,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 4,
               ),
             ),
             const SizedBox(height: 12),
@@ -160,6 +167,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 backgroundColor: AppTheme.primaryPurple,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
           ],
@@ -180,6 +188,15 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
             const Text('RenCloud Mobile'),
           ],
         ),
+        actions: [
+          // AppBar Update Button Action Icon
+          IconButton(
+            icon: const Icon(Icons.system_update, color: AppTheme.accentAqua),
+            tooltip: 'Check for App Updates',
+            onPressed: () => UpdateService.checkForUpdates(context, silent: false),
+          ),
+          const SizedBox(width: 8),
+        ],
         elevation: 0.5,
       ),
       body: pages[_currentIndex],
