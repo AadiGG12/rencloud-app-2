@@ -1,6 +1,7 @@
 package com.rencloud.app
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -125,6 +126,16 @@ fun MainAppContainer(
         }
     }
 
+    // Automatically check for updates on app launch & show Update Popup
+    LaunchedEffect(showSplash, isAuthenticated, isUnlocked) {
+        if (!showSplash && isAuthenticated && isUnlocked) {
+            val release = UpdateService.checkForUpdates()
+            if (release != null) {
+                showUpdateDialog = true
+            }
+        }
+    }
+
     if (showSplash) {
         SplashScreen(onNavigateToHome = { showSplash = false })
         return
@@ -133,7 +144,7 @@ fun MainAppContainer(
     // Login & Registration Flow
     if (!isAuthenticated && !isAdminMode) {
         AuthScreen(
-            onLoginSuccess = { email, name, role ->
+            onLoginSuccess = { email, name, _ ->
                 userEmail = email
                 userName = name
                 isAuthenticated = true
@@ -360,11 +371,16 @@ fun MainAppContainer(
             )
         }
 
-        // In-App Auto Update Dialog
+        // In-App Auto Update Popup Dialog with Automatic App Relaunch
         if (showUpdateDialog) {
             UpdateDialog(
                 onDismiss = { showUpdateDialog = false },
-                onInstallAndExit = {
+                onInstallAndRelaunch = {
+                    val launchIntent = activity.packageManager.getLaunchIntentForPackage(activity.packageName)
+                    launchIntent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    if (launchIntent != null) {
+                        activity.startActivity(launchIntent)
+                    }
                     activity.finishAffinity()
                     try { exitProcess(0) } catch (_: Exception) {}
                 }
@@ -374,7 +390,7 @@ fun MainAppContainer(
 }
 
 @Composable
-fun UpdateDialog(onDismiss: () -> Unit, onInstallAndExit: () -> Unit) {
+fun UpdateDialog(onDismiss: () -> Unit, onInstallAndRelaunch: () -> Unit) {
     var isDownloading by remember { mutableStateOf(false) }
     var readyToInstall by remember { mutableStateOf(false) }
     var progress by remember { mutableFloatStateOf(0.0f) }
@@ -399,9 +415,9 @@ fun UpdateDialog(onDismiss: () -> Unit, onInstallAndExit: () -> Unit) {
         text = {
             Column {
                 if (!isDownloading && !readyToInstall) {
-                    Text("A new version of RenCloud is available with native Jetpack Compose 120Hz rendering, OLED Dark theme, and hardware biometrics!")
+                    Text("A new version of RenCloud (v2.0.0) is available! Tap Update below to download and automatically relaunch the application.")
                 } else {
-                    Text(if (readyToInstall) "Download complete! Tap below to install & exit app." else "Downloading package...")
+                    Text(if (readyToInstall) "Download complete! Tap below to install update & relaunch app." else "Downloading update package...")
                     Spacer(modifier = Modifier.height(16.dp))
                     LinearProgressIndicator(
                         progress = { progress },
@@ -419,11 +435,11 @@ fun UpdateDialog(onDismiss: () -> Unit, onInstallAndExit: () -> Unit) {
         confirmButton = {
             if (readyToInstall) {
                 Button(
-                    onClick = onInstallAndExit,
+                    onClick = onInstallAndRelaunch,
                     colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("INSTALL & EXIT APP", fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("INSTALL & RELAUNCH APP", fontWeight = FontWeight.ExtraBold, color = Color.White)
                 }
             } else if (!isDownloading) {
                 Button(
@@ -440,7 +456,7 @@ fun UpdateDialog(onDismiss: () -> Unit, onInstallAndExit: () -> Unit) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary)
                 ) {
-                    Text("Update Now", color = Color.White)
+                    Text("UPDATE & RELAUNCH", fontWeight = FontWeight.ExtraBold, color = Color.White)
                 }
             }
         },
