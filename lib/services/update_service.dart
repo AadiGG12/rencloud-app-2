@@ -4,8 +4,7 @@ import 'package:http/http.dart' as http;
 
 class UpdateService {
   static const String currentVersion = '1.0.0';
-  // Replace with your GitHub Username and Repository
-  static const String githubRepo = 'rencloud-app/rencloud_flutter';
+  static const String githubRepo = 'ANSH9BOSS/rencloud-flutter-app';
   static const String releasesApiUrl = 'https://api.github.com/repos/$githubRepo/releases/latest';
 
   /// Check for new updates on GitHub Releases
@@ -16,7 +15,7 @@ class UpdateService {
         final data = json.decode(response.body);
         final String latestTagName = data['tag_name'] ?? '';
         final String latestVersion = latestTagName.replaceAll('v', '').trim();
-        final String releaseNotes = data['body'] ?? 'Performance improvements and bug fixes.';
+        final String releaseNotes = data['body'] ?? 'Performance improvements and new cloud server plans.';
         
         List<dynamic> assets = data['assets'] ?? [];
         String? apkDownloadUrl;
@@ -113,7 +112,7 @@ class UpdateService {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Downloading RenCloud v$version APK...'),
+                    content: Text('Downloading RenCloud v$version APK from GitHub...'),
                     backgroundColor: const Color(0xFF06B6D4),
                   ),
                 );
