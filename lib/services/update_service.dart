@@ -7,15 +7,18 @@ class UpdateService {
   static const String githubRepo = 'ANSH9BOSS/rencloud-flutter-app';
   static const String releasesApiUrl = 'https://api.github.com/repos/$githubRepo/releases/latest';
 
+  static bool _updateChecked = false;
+
   /// Check for new updates on GitHub Releases
   static Future<void> checkForUpdates(BuildContext context, {bool silent = false}) async {
+    if (silent && _updateChecked) return;
     try {
       final response = await http.get(Uri.parse(releasesApiUrl)).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final String latestTagName = data['tag_name'] ?? '';
         final String latestVersion = latestTagName.replaceAll('v', '').trim();
-        final String releaseNotes = data['body'] ?? 'Added smooth splash screen opening animation, card touch micro-animations, non-stretched crisp launcher icons, and performance optimizations.';
+        final String releaseNotes = data['body'] ?? 'Added liquid glass UI, new uploaded logo, animated glowing borders, and performance optimizations.';
         
         List<dynamic> assets = data['assets'] ?? [];
         String? apkDownloadUrl;
@@ -27,6 +30,7 @@ class UpdateService {
         }
 
         if (_isNewerVersion(latestVersion, currentVersion)) {
+          _updateChecked = true;
           if (context.mounted) {
             _showUpdateDialog(
               context,
@@ -37,7 +41,7 @@ class UpdateService {
           }
         } else if (!silent && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('You are on the latest version of RenCloud (v1.1.0)')),
+            SnackBar(content: Text('You are on the latest version of RenCloud (v$currentVersion)')),
           );
         }
       }
@@ -73,12 +77,24 @@ class UpdateService {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
-              const Icon(Icons.system_update, color: Color(0xFF7C3AED)),
-              const SizedBox(width: 10),
-              Text('Update Available (v$version)'),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF7C3AED).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.system_update, color: Color(0xFF7C3AED)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Update Available (v$version)',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
             ],
           ),
           content: Column(
@@ -86,17 +102,18 @@ class UpdateService {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'A new version of RenCloud is available with improvements and new cloud plans!',
-                style: TextStyle(fontSize: 13),
+                'A new version of RenCloud is available with performance upgrades, new cloud plans, and liquid glass design!',
+                style: TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
               ),
               const SizedBox(height: 12),
               const Text('Release Notes:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Text(notes, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
               ),
@@ -120,6 +137,7 @@ class UpdateService {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF7C3AED),
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: const Text('Update Now', style: TextStyle(fontWeight: FontWeight.bold)),
             ),

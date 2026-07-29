@@ -22,7 +22,11 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      UpdateService.checkForUpdates(context, silent: true);
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          UpdateService.checkForUpdates(context, silent: true);
+        }
+      });
     });
   }
 
