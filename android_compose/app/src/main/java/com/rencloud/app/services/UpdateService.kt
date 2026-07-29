@@ -22,7 +22,8 @@ interface GitHubApi {
 }
 
 object UpdateService {
-    // Current installed app version
+    // Production API Base URL
+    const val BACKEND_URL = "https://app.rencloud.online"
     const val CURRENT_VERSION = "1.4.0"
 
     private val api: GitHubApi by lazy {
