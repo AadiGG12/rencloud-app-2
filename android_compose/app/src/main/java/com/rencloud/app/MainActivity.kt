@@ -141,13 +141,14 @@ fun MainAppContainer(
     }
 
     // Login & Registration Flow
-    if (!isAuthenticated && !isAdminMode) {
+    if (!isAuthenticated) {
         AuthScreen(
             onLoginSuccess = { email, name, role ->
                 userEmail = email
                 userName = name
                 userRole = role
                 isAuthenticated = true
+                isAdminMode = (role == "admin")
                 prefs.edit()
                     .putBoolean("is_authenticated", true)
                     .putString("user_email", email)
@@ -156,10 +157,17 @@ fun MainAppContainer(
                     .apply()
             },
             onAdminLoginSuccess = {
+                userEmail = "admin@rencloud.com"
+                userName = "RenCloud Admin"
                 userRole = "admin"
                 isAdminMode = true
                 isAuthenticated = true
-                prefs.edit().putBoolean("is_authenticated", true).putString("user_role", "admin").apply()
+                prefs.edit()
+                    .putBoolean("is_authenticated", true)
+                    .putString("user_email", "admin@rencloud.com")
+                    .putString("user_name", "RenCloud Admin")
+                    .putString("user_role", "admin")
+                    .apply()
             }
         )
         return
@@ -345,7 +353,14 @@ fun MainAppContainer(
                         onDiscordClick = {
                             Toast.makeText(activity, "Copied $discordUrl to clipboard!", Toast.LENGTH_SHORT).show()
                         },
-                        onCheckUpdateClick = { showUpdateDialog = true }
+                        onCheckUpdateClick = { showUpdateDialog = true },
+                        onSignOutClick = {
+                            isAuthenticated = false
+                            isAdminMode = false
+                            userRole = "user"
+                            prefs.edit().clear().apply()
+                            Toast.makeText(activity, "Signed out successfully", Toast.LENGTH_SHORT).show()
+                        }
                     )
                 }
             }

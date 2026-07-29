@@ -30,7 +30,8 @@ fun SettingsScreen(
     biometricsEnabled: Boolean,
     onBiometricsToggle: (Boolean) -> Unit,
     onDiscordClick: () -> Unit,
-    onCheckUpdateClick: () -> Unit
+    onCheckUpdateClick: () -> Unit,
+    onSignOutClick: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
 
@@ -176,6 +177,20 @@ fun SettingsScreen(
             Icon(Icons.Default.Chat, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
             Text("Join Official RenCloud Discord", fontWeight = FontWeight.Bold, color = Color.White)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Sign Out Button
+        Button(
+            onClick = onSignOutClick,
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+            modifier = Modifier.fillMaxWidth().height(48.dp)
+        ) {
+            Icon(Icons.Default.Logout, contentDescription = null, tint = Color.White)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Sign Out of Account", fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }
