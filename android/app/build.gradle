@@ -24,7 +24,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.rencloud.app"
-    compileSdk 34
+    compileSdk 35
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -38,15 +38,26 @@ android {
 
     defaultConfig {
         applicationId "com.rencloud.app"
-        minSdk 21
-        targetSdk 34
+        minSdkVersion flutter.minSdkVersion
+        targetSdk 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
 
+    signingConfigs {
+        release {
+            keyAlias 'key'
+            keyPassword 'rencloud123'
+            storeFile file('key.jks')
+            storePassword 'rencloud123'
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
         }

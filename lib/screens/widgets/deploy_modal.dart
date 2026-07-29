@@ -79,8 +79,8 @@ class _DeployModalState extends State<DeployModal> {
                     '₹${widget.plan.monthlyPriceInr}/mo',
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.extrabold,
-                      color: AppTheme.primaryBlue,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primaryPurple,
                     ),
                   ),
                 ],
@@ -114,12 +114,12 @@ class _DeployModalState extends State<DeployModal> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Deployment initiated for ${widget.plan.name} in $selectedRegion!'),
-                      backgroundColor: Colors.green[700],
+                      backgroundColor: AppTheme.accentAqua,
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryBlue,
+                  backgroundColor: AppTheme.primaryPurple,
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('Confirm & Launch Instant Provisioning', style: TextStyle(fontWeight: FontWeight.bold)),

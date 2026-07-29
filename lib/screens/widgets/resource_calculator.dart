@@ -64,7 +64,7 @@ class ResourceCalculator extends ConsumerWidget {
                       '₹${state.estimatedPriceInr}/mo',
                       style: const TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.extrabold,
+                        fontWeight: FontWeight.w800,
                         color: AppTheme.accentAqua,
                       ),
                     ),

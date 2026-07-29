@@ -101,7 +101,7 @@ class PlanCard extends ConsumerWidget {
                       '₹$price',
                       style: const TextStyle(
                         fontSize: 28,
-                        fontWeight: FontWeight.extrabold,
+                        fontWeight: FontWeight.w800,
                         color: AppTheme.primaryPurple,
                       ),
                     ),
@@ -130,7 +130,7 @@ class PlanCard extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Text(
                     plan.extraInfo!,
-                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, italic: true),
+                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontStyle: FontStyle.italic),
                   ),
                 ],
 

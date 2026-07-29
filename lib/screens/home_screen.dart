@@ -35,7 +35,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(width: 10),
             const Text(
               'RenCloud',
-              style: TextStyle(fontWeight: FontWeight.extrabold, letterSpacing: -0.5, color: AppTheme.textPrimary),
+              style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: -0.5, color: AppTheme.textPrimary),
             ),
             const SizedBox(width: 8),
             Container(
@@ -47,7 +47,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               child: const Text(
                 '55 PLANS',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.extrabold, color: AppTheme.accentAqua),
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.accentAqua),
               ),
             ),
           ],
@@ -85,7 +85,7 @@ class HomeScreen extends ConsumerWidget {
                       'Cloud & Game Server Hosting',
                       style: TextStyle(
                         fontSize: 28,
-                        fontWeight: FontWeight.extrabold,
+                        fontWeight: FontWeight.w800,
                         color: AppTheme.textPrimary,
                         letterSpacing: -0.5,
                       ),
