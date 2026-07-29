@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Purple, White, Aqua Color Tokens
@@ -18,10 +19,13 @@ class AppTheme {
   static const Color borderDark = Color(0xFF334155);
 
   static ThemeData get lightTheme {
+    final baseTextTheme = ThemeData.light().textTheme;
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       scaffoldBackgroundColor: backgroundLight,
+      textTheme: GoogleFonts.outfitTextTheme(baseTextTheme),
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryPurple,
         brightness: Brightness.light,
@@ -39,12 +43,12 @@ class AppTheme {
           side: const BorderSide(color: borderLight, width: 1),
         ),
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 1,
-        iconTheme: IconThemeData(color: primaryPurple),
-        titleTextStyle: TextStyle(
+        iconTheme: const IconThemeData(color: primaryPurple),
+        titleTextStyle: GoogleFonts.outfit(
           color: textPrimaryLight,
           fontSize: 20,
           fontWeight: FontWeight.bold,
@@ -54,10 +58,13 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
+    final baseTextTheme = ThemeData.dark().textTheme;
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: backgroundDark,
+      textTheme: GoogleFonts.outfitTextTheme(baseTextTheme),
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryPurple,
         brightness: Brightness.dark,
@@ -75,12 +82,12 @@ class AppTheme {
           side: const BorderSide(color: borderDark, width: 1),
         ),
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF1E293B),
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFF1E293B),
         elevation: 0,
         scrolledUnderElevation: 1,
-        iconTheme: IconThemeData(color: accentAqua),
-        titleTextStyle: TextStyle(
+        iconTheme: const IconThemeData(color: accentAqua),
+        titleTextStyle: GoogleFonts.outfit(
           color: textPrimaryDark,
           fontSize: 20,
           fontWeight: FontWeight.bold,

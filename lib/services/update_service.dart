@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import '../screens/splash_screen.dart';
 
 class UpdateService {
-  static const String currentVersion = '1.1.0';
+  static const String currentVersion = '1.3.0';
   static const String githubRepo = 'ANSH9BOSS/rencloud-flutter-app';
   static const String releasesApiUrl = 'https://api.github.com/repos/$githubRepo/releases/latest';
 
@@ -19,7 +19,7 @@ class UpdateService {
         final data = json.decode(response.body);
         final String latestTagName = data['tag_name'] ?? '';
         final String latestVersion = latestTagName.replaceAll('v', '').trim();
-        final String releaseNotes = data['body'] ?? 'Added liquid glass UI, new logo, animated glowing borders, and performance optimizations.';
+        final String releaseNotes = data['body'] ?? 'Added Google Fonts Outfit typography, working biometrics, multi-currency support, glassmorphism card upgrades, and bug fixes.';
         
         List<dynamic> assets = data['assets'] ?? [];
         String? apkDownloadUrl;
@@ -115,7 +115,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
   bool _readyToInstall = false;
   double _progress = 0.0;
   String _statusMessage = 'Downloading update package...';
-  String _downloadMB = '0.0 / 53.8 MB';
+  String _downloadMB = '0.0 / 54.3 MB';
 
   void _startDownload() {
     setState(() {
@@ -125,7 +125,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
       _statusMessage = 'Downloading RenCloud v${widget.version}...';
     });
 
-    const totalMB = 53.8;
+    const totalMB = 54.3;
     int currentStep = 0;
     const totalSteps = 40;
 
@@ -212,7 +212,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
         children: [
           if (!_isDownloading) ...[
             const Text(
-              'A new version of RenCloud is available with performance upgrades, new cloud plans, and liquid glass design!',
+              'A new version of RenCloud is available with Google Fonts Outfit typography, working biometrics, multi-currency support, and performance upgrades!',
               style: TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
             ),
             const SizedBox(height: 12),

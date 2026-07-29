@@ -7,7 +7,6 @@ import '../services/update_service.dart';
 import 'widgets/category_tabs.dart';
 import 'widgets/plan_card.dart';
 import 'widgets/resource_calculator.dart';
-import 'widgets/server_performance_widget.dart';
 
 class MobileHomeScreen extends ConsumerStatefulWidget {
   const MobileHomeScreen({super.key});
@@ -29,6 +28,49 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
         }
       });
     });
+  }
+
+  void _showDiscordDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.discord, color: AppTheme.primaryPurple, size: 28),
+            SizedBox(width: 10),
+            Text('RenCloud Discord', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text('Join our official 24/7 Discord Community for instant support & server monitoring:'),
+            SizedBox(height: 12),
+            SelectableText(
+              'https://discord.gg/rencloud',
+              style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.accentAqua, fontSize: 16),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Copied https://discord.gg/rencloud to clipboard!'),
+                  backgroundColor: AppTheme.primaryPurple,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryPurple, foregroundColor: Colors.white),
+            child: const Text('Copy Discord Invite'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -61,12 +103,12 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'RenCloud Security Lock',
+                  'RenCloud Biometric Lock',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Authenticate using Fingerprint or Face ID to access your server console',
+                  'Touch sensor or scan Face ID to unlock RenCloud Console',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: AppTheme.textSecondary),
                 ),
@@ -75,11 +117,14 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   onPressed: () {
                     ref.read(biometricProvider.notifier).unlock();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Biometric Authentication Successful!')),
+                      const SnackBar(
+                        content: Text('Fingerprint / Face ID Authenticated Successfully!'),
+                        backgroundColor: Color(0xFF10B981),
+                      ),
                     );
                   },
-                  icon: const Icon(Icons.lock_open, color: Colors.white),
-                  label: const Text('Unlock with Biometrics', style: TextStyle(fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.fingerprint, color: Colors.white),
+                  label: const Text('Touch Fingerprint Sensor to Unlock', style: TextStyle(fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryPurple,
                     foregroundColor: Colors.white,
@@ -95,38 +140,13 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
     }
 
     final List<Widget> pages = [
-      // Tab 0: Home Catalog & Live Widget
+      // Tab 0: Home Catalog
       SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 26. Live Server Performance Monitor Widget
-            const ServerPerformanceWidget(),
-            const SizedBox(height: 14),
-
-            // 27. Offline Mode Cache Indicator
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppTheme.accentAqua.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.accentAqua.withOpacity(0.3)),
-              ),
-              child: Row(
-                children: const [
-                  Icon(Icons.offline_pin, size: 16, color: AppTheme.accentAqua),
-                  SizedBox(width: 8),
-                  Text(
-                    'Offline Mode Active — 55 plans cached locally',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.accentAqua),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-
             // Search Bar
             TextField(
               onChanged: (val) => ref.read(searchQueryProvider.notifier).state = val,
@@ -154,7 +174,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   onSelected: (_) => ref.read(billingCycleProvider.notifier).state = BillingCycle.monthly,
                   selectedColor: AppTheme.primaryPurple,
                   labelStyle: TextStyle(
-                    color: cycle == BillingCycle.monthly ? Colors.white : (isDark ? Colors.white : AppTheme.textPrimaryLight),
+                    color: cycle == BillingCycle.monthly ? Colors.white : (isDark ? Colors.white : AppTheme.textPrimary),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -165,7 +185,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   onSelected: (_) => ref.read(billingCycleProvider.notifier).state = BillingCycle.annual,
                   selectedColor: AppTheme.accentAqua,
                   labelStyle: TextStyle(
-                    color: cycle == BillingCycle.annual ? Colors.white : (isDark ? Colors.white : AppTheme.textPrimaryLight),
+                    color: cycle == BillingCycle.annual ? Colors.white : (isDark ? Colors.white : AppTheme.textPrimary),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -238,15 +258,15 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                     errorBuilder: (_, __, ___) => const Icon(Icons.headset_mic, size: 60, color: AppTheme.primaryPurple),
                   ),
                   const SizedBox(height: 12),
-                  const Text('App Preferences & Settings', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text('App Preferences & Security', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  const Text('Configure currency, biometrics, theme & app updates', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                  const Text('Configure currency, biometrics, dark mode & app updates', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
-            // 23. Dark Mode Switch Tile
+            // Dark Mode Switch Tile
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
@@ -266,7 +286,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
             ),
             const SizedBox(height: 12),
 
-            // 25. Multi-Currency Tile
+            // Multi-Currency Display Tile
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -304,7 +324,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
             ),
             const SizedBox(height: 12),
 
-            // 24. Biometric Authentication Switch Tile
+            // Biometric Authentication Switch Tile
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
@@ -314,11 +334,19 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
               ),
               child: SwitchListTile(
                 title: const Text('Fingerprint / Face ID Lock', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: const Text('Require biometric authentication on app start', style: TextStyle(fontSize: 11)),
+                subtitle: const Text('Require biometric authentication to open app', style: TextStyle(fontSize: 11)),
                 secondary: const Icon(Icons.fingerprint, color: AppTheme.accentAqua),
                 value: biometric.isEnabled,
                 onChanged: (val) {
                   ref.read(biometricProvider.notifier).toggleBiometrics(val);
+                  if (val) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Biometric Fingerprint / Face ID Lock Enabled!'),
+                        backgroundColor: Color(0xFF7C3AED),
+                      ),
+                    );
+                  }
                 },
               ),
             ),
@@ -341,10 +369,12 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
               ),
             ),
             const SizedBox(height: 12),
+
+            // Functional Discord Button
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: _showDiscordDialog,
               icon: const Icon(Icons.discord),
-              label: const Text('Join RenCloud Discord'),
+              label: const Text('Join Official RenCloud Discord', style: TextStyle(fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryPurple,
                 foregroundColor: Colors.white,
