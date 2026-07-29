@@ -1,12 +1,9 @@
 package com.rencloud.app.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -15,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rencloud.app.R
 import com.rencloud.app.data.AppCurrency
+import com.rencloud.app.ui.components.GlassCard
 
 @Composable
 fun SettingsScreen(
@@ -53,55 +50,16 @@ fun SettingsScreen(
         )
         Spacer(modifier = Modifier.height(10.dp))
         Text("RenCloud Preferences & Security", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
-        Text("Version 2.0.0 (Native Jetpack Compose)", fontSize = 12.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
+        Text("Liquid Glass Console • v2.0.0", fontSize = 12.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Live Node Status Widget
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.secondary.copy(alpha = 0.4f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(shape = CircleShape, color = Color(0xFF10B981), modifier = Modifier.size(10.dp)) {}
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("All RenCloud Nodes Operational", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
-                    }
-                    Text("TPS 20.0", fontSize = 11.sp, fontWeight = FontWeight.Black, color = Color(0xFF10B981))
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider(color = colorScheme.outlineVariant)
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Text("Online Players: 142 / 200", fontSize = 11.sp, color = colorScheme.onSurface.copy(alpha = 0.7f))
-                    Text("Network Ping: 18ms", fontSize = 11.sp, color = colorScheme.onSurface.copy(alpha = 0.7f))
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Dark Theme Switch Tile
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.outlineVariant),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        // Dark Theme Liquid Glass Tile
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -111,8 +69,8 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text("Dark Mode (OLED Pure Black)", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
-                        Text(if (darkTheme) "Active: OLED Pure Black Theme (#030712)" else "Active: Light Liquid Glass Theme (#F8FAFC)", fontSize = 11.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
+                        Text("Dark / Light Mode", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
+                        Text(if (darkTheme) "OLED Pure Black (#030712)" else "Light Liquid Glass (#F8FAFC)", fontSize = 11.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                 }
                 Switch(
@@ -125,17 +83,12 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Multi-Currency Selector Tile
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.outlineVariant),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        // Multi-Currency Liquid Glass Tile
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.CurrencyExchange, contentDescription = null, tint = colorScheme.secondary)
@@ -150,7 +103,7 @@ fun SettingsScreen(
                 Box {
                     Button(
                         onClick = { expanded = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary.copy(alpha = 0.15f)),
+                        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary.copy(alpha = 0.2f)),
                         shape = RoundedCornerShape(10.dp),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                     ) {
@@ -174,17 +127,12 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Biometrics Security Switch Tile
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = colorScheme.surface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.outlineVariant),
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        // Biometrics Security Liquid Glass Tile
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Fingerprint, contentDescription = null, tint = colorScheme.secondary)
@@ -229,8 +177,5 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.width(8.dp))
             Text("Join Official RenCloud Discord", fontWeight = FontWeight.Bold, color = Color.White)
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("RenCloud Cloud Services © 2026", fontSize = 10.sp, color = colorScheme.onSurface.copy(alpha = 0.4f))
     }
 }

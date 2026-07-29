@@ -22,6 +22,7 @@ interface GitHubApi {
 }
 
 object UpdateService {
+    // Current installed app version
     const val CURRENT_VERSION = "1.4.0"
 
     private val api: GitHubApi by lazy {
@@ -35,7 +36,7 @@ object UpdateService {
     suspend fun checkForUpdates(): GitHubRelease? {
         return try {
             val release = api.getLatestRelease()
-            val latestVersion = release.tagName.replace("v", "").trim()
+            val latestVersion = release.tagName.replace("v", "").replace("-compose", "").trim()
             if (isNewerVersion(latestVersion, CURRENT_VERSION)) {
                 release
             } else {
