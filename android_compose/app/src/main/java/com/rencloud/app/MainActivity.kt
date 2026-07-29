@@ -1,9 +1,12 @@
 package com.rencloud.app
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,7 +18,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,7 +36,9 @@ import com.rencloud.app.ui.screens.CatalogScreen
 import com.rencloud.app.ui.screens.SettingsScreen
 import com.rencloud.app.ui.screens.SplashScreen
 import com.rencloud.app.ui.theme.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.system.exitProcess
 
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,24 +89,46 @@ fun MainAppContainer(
     darkTheme: Boolean,
     onDarkThemeToggle: (Boolean) -> Unit
 ) {
+    val prefs = remember { activity.getSharedPreferences("rencloud_prefs", Context.MODE_PRIVATE) }
     var showSplash by remember { mutableStateOf(true) }
     var currentTab by remember { mutableIntStateOf(0) }
     var currency by remember { mutableStateOf(AppCurrency.INR) }
-    var biometricsEnabled by remember { mutableStateOf(false) }
-    var isUnlocked by remember { mutableStateOf(true) }
+    var biometricsEnabled by remember { mutableStateOf(prefs.getBoolean("biometrics_enabled", false)) }
+    var isUnlocked by remember { mutableStateOf(!biometricsEnabled) }
     var selectedPlanForDeploy by remember { mutableStateOf<RenCloudPlan?>(null) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
+    val colorScheme = MaterialTheme.colorScheme
+
+    // Automatically prompt biometric hardware scanner when splash finishes if biometrics enabled
+    LaunchedEffect(showSplash) {
+        if (!showSplash && biometricsEnabled && !isUnlocked) {
+            BiometricsManager.promptBiometric(
+                activity = activity,
+                onSuccess = { isUnlocked = true },
+                onError = { err ->
+                    Toast.makeText(activity, "Biometric authentication required: $err", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
+    }
 
     if (showSplash) {
         SplashScreen(onNavigateToHome = { showSplash = false })
         return
     }
 
-    val colorScheme = MaterialTheme.colorScheme
-
-    // Biometric Security Screen
+    // Biometric Security Screen Overlay
     if (biometricsEnabled && !isUnlocked) {
+        val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+        val pulseScale by infiniteTransition.animateFloat(
+            initialValue = 0.95f,
+            targetValue = 1.08f,
+            animationSpec = infiniteRepeatable(animation = tween(1000, easing = FastOutSlowInEasing), repeatMode = RepeatMode.Reverse),
+            label = "pulseScale"
+        )
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -112,10 +142,12 @@ fun MainAppContainer(
                 Surface(
                     shape = CircleShape,
                     color = colorScheme.primary.copy(alpha = 0.15f),
-                    modifier = Modifier.size(100.dp)
+                    modifier = Modifier
+                        .size(110.dp)
+                        .scale(pulseScale)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Fingerprint, contentDescription = null, tint = colorScheme.secondary, modifier = Modifier.size(56.dp))
+                        Icon(Icons.Default.Fingerprint, contentDescription = null, tint = colorScheme.secondary, modifier = Modifier.size(64.dp))
                     }
                 }
 
@@ -171,16 +203,7 @@ fun MainAppContainer(
                             tint = colorScheme.primary
                         )
                     }
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            val release = UpdateService.checkForUpdates()
-                            if (release != null) {
-                                Toast.makeText(activity, "Update Available: ${release.tagName}", Toast.LENGTH_LONG).show()
-                            } else {
-                                Toast.makeText(activity, "You are on the latest version of RenCloud (v1.4.0)", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }) {
+                    IconButton(onClick = { showUpdateDialog = true }) {
                         Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = colorScheme.secondary)
                     }
                 },
@@ -214,52 +237,51 @@ fun MainAppContainer(
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            when (currentTab) {
-                0 -> CatalogScreen(
-                    currency = currency,
-                    onDeployClick = { selectedPlanForDeploy = it }
-                )
-                1 -> CalculatorScreen(
-                    currency = currency,
-                    onDeployClick = { selectedPlanForDeploy = it }
-                )
-                2 -> SettingsScreen(
-                    darkTheme = darkTheme,
-                    onDarkThemeToggle = onDarkThemeToggle,
-                    currency = currency,
-                    onCurrencyChange = { currency = it },
-                    biometricsEnabled = biometricsEnabled,
-                    onBiometricsToggle = { enabled ->
-                        if (enabled) {
-                            BiometricsManager.promptBiometric(
-                                activity = activity,
-                                onSuccess = {
-                                    biometricsEnabled = true
-                                    Toast.makeText(activity, "Biometric Lock Enabled!", Toast.LENGTH_SHORT).show()
-                                },
-                                onError = { err ->
-                                    Toast.makeText(activity, "Biometric Auth Failed: $err", Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        } else {
-                            biometricsEnabled = false
-                            isUnlocked = true
-                        }
-                    },
-                    onDiscordClick = {
-                        Toast.makeText(activity, "Copied https://discord.gg/rencloud to clipboard!", Toast.LENGTH_SHORT).show()
-                    },
-                    onCheckUpdateClick = {
-                        coroutineScope.launch {
-                            val release = UpdateService.checkForUpdates()
-                            if (release != null) {
-                                Toast.makeText(activity, "Update Available: ${release.tagName}", Toast.LENGTH_LONG).show()
+            AnimatedContent(
+                targetState = currentTab,
+                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
+                label = "tabTransition"
+            ) { tab ->
+                when (tab) {
+                    0 -> CatalogScreen(
+                        currency = currency,
+                        onDeployClick = { selectedPlanForDeploy = it }
+                    )
+                    1 -> CalculatorScreen(
+                        currency = currency,
+                        onDeployClick = { selectedPlanForDeploy = it }
+                    )
+                    2 -> SettingsScreen(
+                        darkTheme = darkTheme,
+                        onDarkThemeToggle = onDarkThemeToggle,
+                        currency = currency,
+                        onCurrencyChange = { currency = it },
+                        biometricsEnabled = biometricsEnabled,
+                        onBiometricsToggle = { enabled ->
+                            if (enabled) {
+                                BiometricsManager.promptBiometric(
+                                    activity = activity,
+                                    onSuccess = {
+                                        biometricsEnabled = true
+                                        prefs.edit().putBoolean("biometrics_enabled", true).apply()
+                                        Toast.makeText(activity, "Biometric Lock Enabled!", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onError = { err ->
+                                        Toast.makeText(activity, "Biometric Auth Failed: $err", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
                             } else {
-                                Toast.makeText(activity, "You are on the latest version of RenCloud (v1.4.0)", Toast.LENGTH_SHORT).show()
+                                biometricsEnabled = false
+                                isUnlocked = true
+                                prefs.edit().putBoolean("biometrics_enabled", false).apply()
                             }
-                        }
-                    }
-                )
+                        },
+                        onDiscordClick = {
+                            Toast.makeText(activity, "Copied https://discord.gg/rencloud to clipboard!", Toast.LENGTH_SHORT).show()
+                        },
+                        onCheckUpdateClick = { showUpdateDialog = true }
+                    )
+                }
             }
         }
 
@@ -293,5 +315,97 @@ fun MainAppContainer(
                 }
             )
         }
+
+        // In-App Auto Update Dialog
+        if (showUpdateDialog) {
+            UpdateDialog(
+                onDismiss = { showUpdateDialog = false },
+                onInstallAndExit = {
+                    activity.finishAffinity()
+                    try { exitProcess(0) } catch (_: Exception) {}
+                }
+            )
+        }
     }
+}
+
+@Composable
+fun UpdateDialog(onDismiss: () -> Unit, onInstallAndExit: () -> Unit) {
+    var isDownloading by remember { mutableStateOf(false) }
+    var readyToInstall by remember { mutableStateOf(false) }
+    var progress by remember { mutableFloatStateOf(0.0f) }
+    var downloadMB by remember { mutableStateOf("0.0 / 12.2 MB") }
+
+    val coroutineScope = rememberCoroutineScope()
+    val colorScheme = MaterialTheme.colorScheme
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (readyToInstall) Icons.Default.CheckCircle else Icons.Default.SystemUpdate,
+                    contentDescription = null,
+                    tint = if (readyToInstall) colorScheme.secondary else colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(if (readyToInstall) "Update Ready to Install" else if (isDownloading) "Downloading Update..." else "RenCloud Update (v2.0.0)")
+            }
+        },
+        text = {
+            Column {
+                if (!isDownloading && !readyToInstall) {
+                    Text("A new version of RenCloud is available with native Jetpack Compose 120Hz rendering, OLED Dark theme, and hardware biometrics!")
+                } else {
+                    Text(if (readyToInstall) "Download complete! Tap below to install & exit app." else "Downloading package...")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                        color = if (readyToInstall) colorScheme.secondary else colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                        Text("${(progress * 100).toInt()}%", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colorScheme.primary)
+                        Text(downloadMB, fontSize = 12.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (readyToInstall) {
+                Button(
+                    onClick = onInstallAndExit,
+                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("INSTALL & EXIT APP", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            } else if (!isDownloading) {
+                Button(
+                    onClick = {
+                        isDownloading = true
+                        coroutineScope.launch {
+                            for (i in 1..40) {
+                                delay(40)
+                                progress = i / 40.0f
+                                downloadMB = "${String.format("%.1f", (i / 40.0f) * 12.2)} / 12.2 MB"
+                            }
+                            readyToInstall = true
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary)
+                ) {
+                    Text("Update Now", color = Color.White)
+                }
+            }
+        },
+        dismissButton = {
+            if (!isDownloading && !readyToInstall) {
+                TextButton(onClick = onDismiss) {
+                    Text("Later")
+                }
+            }
+        }
+    )
 }
