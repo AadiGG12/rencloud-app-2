@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import '../screens/splash_screen.dart';
 
@@ -129,7 +131,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
     int currentStep = 0;
     const totalSteps = 40;
 
-    Timer.periodic(const Duration(milliseconds: 60), (timer) {
+    Timer.periodic(const Duration(milliseconds: 50), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
@@ -147,32 +149,23 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
         timer.cancel();
         setState(() {
           _readyToInstall = true;
-          _statusMessage = 'Download complete! Ready to install v${widget.version}';
+          _statusMessage = 'Update downloaded! Tap below to install & close app.';
         });
       }
     });
   }
 
-  void _installAndRelaunch() {
+  void _installAndCloseApp() {
     setState(() {
-      _statusMessage = 'Installing update package & relaunching...';
+      _statusMessage = 'Closing app for package installation...';
     });
 
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        Navigator.of(context).pop();
-        // Relaunch the application via SplashScreen
-        Navigator.of(context).pushAndRemoveUntil(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const SplashScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            transitionDuration: const Duration(milliseconds: 600),
-          ),
-          (route) => false,
-        );
-      }
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      // Fully close application natively
+      SystemNavigator.pop();
+      try {
+        exit(0);
+      } catch (_) {}
     });
   }
 
@@ -199,8 +192,8 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
           Expanded(
             child: Text(
               _readyToInstall
-                  ? 'Update Ready to Install'
-                  : (_isDownloading ? 'Updating RenCloud' : 'Update Available (v${widget.version})'),
+                  ? 'Update Package Ready'
+                  : (_isDownloading ? 'Downloading Update' : 'Update Available (v${widget.version})'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
@@ -268,13 +261,13 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
       actions: _readyToInstall
           ? [
               ElevatedButton.icon(
-                onPressed: _installAndRelaunch,
-                icon: const Icon(Icons.install_mobile, color: Colors.white),
-                label: const Text('INSTALL PACKAGE & RELAUNCH', style: TextStyle(fontWeight: FontWeight.bold)),
+                onPressed: _installAndCloseApp,
+                icon: const Icon(Icons.exit_to_app, color: Colors.white),
+                label: const Text('INSTALL & EXIT APP', style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF06B6D4),
                   foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 44),
+                  minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
