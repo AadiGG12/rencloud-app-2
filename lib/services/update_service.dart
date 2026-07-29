@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class UpdateService {
-  static const String currentVersion = '1.0.0';
+  static const String currentVersion = '1.1.0';
   static const String githubRepo = 'ANSH9BOSS/rencloud-flutter-app';
   static const String releasesApiUrl = 'https://api.github.com/repos/$githubRepo/releases/latest';
 
@@ -15,7 +15,7 @@ class UpdateService {
         final data = json.decode(response.body);
         final String latestTagName = data['tag_name'] ?? '';
         final String latestVersion = latestTagName.replaceAll('v', '').trim();
-        final String releaseNotes = data['body'] ?? 'Performance improvements and new cloud server plans.';
+        final String releaseNotes = data['body'] ?? 'Added smooth splash screen opening animation, card touch micro-animations, non-stretched crisp launcher icons, and performance optimizations.';
         
         List<dynamic> assets = data['assets'] ?? [];
         String? apkDownloadUrl;
@@ -37,7 +37,7 @@ class UpdateService {
           }
         } else if (!silent && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('You are on the latest version of RenCloud (v1.0.0)')),
+            const SnackBar(content: Text('You are on the latest version of RenCloud (v1.1.0)')),
           );
         }
       }
