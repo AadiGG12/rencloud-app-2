@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rencloud.app.data.AppCurrency
 import com.rencloud.app.data.RenCloudPlan
-import com.rencloud.app.ui.theme.*
 
 @Composable
 fun CalculatorScreen(
@@ -27,6 +26,7 @@ fun CalculatorScreen(
     var vcpuCores by remember { mutableFloatStateOf(4f) }
     var ramGb by remember { mutableFloatStateOf(16f) }
     var storageGb by remember { mutableFloatStateOf(80f) }
+    val colorScheme = MaterialTheme.colorScheme
 
     val estimatedPriceInr = remember(vcpuCores, ramGb, storageGb) {
         (vcpuCores.toInt() * 150) + (ramGb.toInt() * 35) + (storageGb.toInt() * 5)
@@ -37,14 +37,14 @@ fun CalculatorScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(colorScheme.background)
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
         Card(
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = SurfaceDark),
-            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryPurple.copy(alpha = 0.3f)),
+            colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
+            border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.primary.copy(alpha = 0.3f)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
@@ -58,13 +58,13 @@ fun CalculatorScreen(
                             text = "⚡ Custom Resource Cost Estimator",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Configure vCPUs, RAM, and NVMe Storage to build your custom cluster",
                             fontSize = 11.sp,
-                            color = TextSecondary
+                            color = colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
 
@@ -72,19 +72,19 @@ fun CalculatorScreen(
 
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = AccentAquaLight.copy(alpha = 0.15f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, AccentAqua.copy(alpha = 0.4f))
+                        color = colorScheme.secondary.copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.secondary.copy(alpha = 0.4f))
                     ) {
                         Column(
                             horizontalAlignment = Alignment.End,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                         ) {
-                            Text("Estimated Cost", fontSize = 9.sp, color = TextSecondary)
+                            Text("Estimated Cost", fontSize = 9.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
                             Text(
                                 text = "$formattedPrice/mo",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = AccentAqua
+                                color = colorScheme.secondary
                             )
                         }
                     }
@@ -142,12 +142,12 @@ fun CalculatorScreen(
                         onDeployClick(customPlan)
                     },
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
                     modifier = Modifier.fillMaxWidth().height(46.dp)
                 ) {
                     Icon(Icons.Default.RocketLaunch, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Deploy Custom Configuration", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Deploy Custom Configuration", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
                 }
             }
         }
@@ -163,13 +163,14 @@ fun SliderRow(
     steps: Int,
     onValueChange: (Float) -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     Column(modifier = Modifier.padding(bottom = 10.dp)) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
-            Text(valueText, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = PrimaryPurple)
+            Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = colorScheme.onSurface)
+            Text(valueText, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = colorScheme.primary)
         }
         Slider(
             value = value,
@@ -177,9 +178,9 @@ fun SliderRow(
             valueRange = range,
             steps = steps,
             colors = SliderDefaults.colors(
-                thumbColor = AccentAqua,
-                activeTrackColor = PrimaryPurple,
-                inactiveTrackColor = PrimaryPurple.copy(alpha = 0.15f)
+                thumbColor = colorScheme.secondary,
+                activeTrackColor = colorScheme.primary,
+                inactiveTrackColor = colorScheme.primary.copy(alpha = 0.15f)
             )
         )
     }

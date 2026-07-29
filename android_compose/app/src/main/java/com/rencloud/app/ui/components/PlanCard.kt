@@ -1,9 +1,6 @@
 package com.rencloud.app.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,7 +23,6 @@ import androidx.compose.ui.unit.sp
 import com.rencloud.app.data.AppCurrency
 import com.rencloud.app.data.BillingCycle
 import com.rencloud.app.data.RenCloudPlan
-import com.rencloud.app.ui.theme.*
 
 @Composable
 fun PlanCard(
@@ -37,11 +33,12 @@ fun PlanCard(
 ) {
     val priceInr = plan.getPriceForCycle(billingCycle)
     val formattedPrice = currency.format(priceInr)
+    val colorScheme = MaterialTheme.colorScheme
 
     val borderBrush = if (plan.isPopular) {
-        Brush.linearGradient(listOf(PrimaryPurple, AccentAqua))
+        Brush.linearGradient(listOf(colorScheme.primary, colorScheme.secondary))
     } else {
-        Brush.linearGradient(listOf(BorderDark, BorderDark.copy(alpha = 0.5f)))
+        Brush.linearGradient(listOf(colorScheme.outlineVariant, colorScheme.outlineVariant.copy(alpha = 0.5f)))
     }
 
     Box(
@@ -53,7 +50,7 @@ fun PlanCard(
     ) {
         Card(
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = SurfaceDark.copy(alpha = 0.95f)),
+            colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
             modifier = Modifier.fillMaxWidth()
         ) {
             Box {
@@ -64,14 +61,14 @@ fun PlanCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
                             shape = RoundedCornerShape(14.dp),
-                            color = AccentAqua.copy(alpha = 0.12f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, AccentAqua.copy(alpha = 0.35f))
+                            color = colorScheme.secondary.copy(alpha = 0.12f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.secondary.copy(alpha = 0.35f))
                         ) {
                             Text(
                                 text = plan.categoryName.uppercase(),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = AccentAqua,
+                                color = colorScheme.secondary,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
@@ -80,13 +77,13 @@ fun PlanCard(
                             Spacer(modifier = Modifier.width(6.dp))
                             Surface(
                                 shape = RoundedCornerShape(14.dp),
-                                color = PrimaryPurple.copy(alpha = 0.15f)
+                                color = colorScheme.primary.copy(alpha = 0.15f)
                             ) {
                                 Text(
                                     text = tier,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = PrimaryPurple,
+                                    color = colorScheme.primary,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }
@@ -100,7 +97,7 @@ fun PlanCard(
                         text = plan.name,
                         fontSize = 19.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -111,18 +108,18 @@ fun PlanCard(
                             text = formattedPrice,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Black,
-                            color = PrimaryPurple
+                            color = colorScheme.primary
                         )
                         Text(
                             text = if (plan.isOneTime) " one-time" else if (billingCycle == BillingCycle.ANNUAL) "/mo (yearly)" else "/mo",
                             fontSize = 11.sp,
-                            color = TextSecondary,
+                            color = colorScheme.onSurface.copy(alpha = 0.6f),
                             modifier = Modifier.padding(bottom = 3.dp, start = 4.dp)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    HorizontalDivider(color = BorderDark, thickness = 1.dp)
+                    HorizontalDivider(color = colorScheme.outlineVariant, thickness = 1.dp)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Spec Rows
@@ -141,14 +138,15 @@ fun PlanCard(
                         onClick = { onDeployClick(plan) },
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (plan.isPopular) PrimaryPurple else AccentAqua
+                            containerColor = if (plan.isPopular) colorScheme.primary else colorScheme.secondary
                         ),
                         modifier = Modifier.fillMaxWidth().height(44.dp)
                     ) {
                         Text(
                             text = if (plan.isOneTime) "Order Plan" else "Deploy Server",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            color = Color.White
                         )
                     }
                 }
@@ -157,7 +155,7 @@ fun PlanCard(
                 if (plan.isPopular) {
                     Surface(
                         shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp),
-                        color = AccentAqua,
+                        color = colorScheme.secondary,
                         modifier = Modifier.align(Alignment.TopEnd).padding(end = 18.dp)
                     ) {
                         Row(
@@ -187,26 +185,27 @@ fun PlanCard(
 
 @Composable
 fun SpecRow(icon: ImageVector, label: String, value: String) {
+    val colorScheme = MaterialTheme.colorScheme
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(bottom = 6.dp)
     ) {
         Surface(
             shape = RoundedCornerShape(6.dp),
-            color = PrimaryPurple.copy(alpha = 0.1f),
+            color = colorScheme.primary.copy(alpha = 0.1f),
             modifier = Modifier.size(22.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = PrimaryPurple,
+                    tint = colorScheme.primary,
                     modifier = Modifier.size(14.dp)
                 )
             }
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "$label: ", fontSize = 11.sp, color = TextSecondary)
-        Text(text = value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Text(text = "$label: ", fontSize = 11.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
+        Text(text = value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
     }
 }

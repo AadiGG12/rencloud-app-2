@@ -2,7 +2,6 @@ package com.rencloud.app.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rencloud.app.R
 import com.rencloud.app.data.AppCurrency
-import com.rencloud.app.ui.theme.*
 
 @Composable
 fun SettingsScreen(
@@ -37,10 +35,12 @@ fun SettingsScreen(
     onDiscordClick: () -> Unit,
     onCheckUpdateClick: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundDark)
+            .background(colorScheme.background)
             .padding(20.dp)
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -51,16 +51,16 @@ fun SettingsScreen(
             modifier = Modifier.size(60.dp)
         )
         Spacer(modifier = Modifier.height(10.dp))
-        Text("App Preferences & Security", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-        Text("Configure currency, biometrics, theme & app updates", fontSize = 12.sp, color = TextSecondary)
+        Text("App Preferences & Security", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
+        Text("Configure currency, biometrics, theme & app updates", fontSize = 12.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
 
         Spacer(modifier = Modifier.height(24.dp))
 
         // Dark Theme Tile
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = SurfaceDark,
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
+            color = colorScheme.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.outlineVariant),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -72,18 +72,18 @@ fun SettingsScreen(
                     Icon(
                         imageVector = if (darkTheme) Icons.Default.DarkMode else Icons.Default.LightMode,
                         contentDescription = null,
-                        tint = PrimaryPurple
+                        tint = colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text("Dark Mode (OLED Pure Black)", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text("Switch between Light and OLED Pure Black theme", fontSize = 11.sp, color = TextSecondary)
+                        Text("Dark Mode (OLED Pure Black)", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
+                        Text("Switch between Light and OLED Pure Black theme", fontSize = 11.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                 }
                 Switch(
                     checked = darkTheme,
                     onCheckedChange = onDarkThemeToggle,
-                    colors = SwitchDefaults.colors(checkedThumbColor = AccentAqua, checkedTrackColor = PrimaryPurple)
+                    colors = SwitchDefaults.colors(checkedThumbColor = colorScheme.secondary, checkedTrackColor = colorScheme.primary)
                 )
             }
         }
@@ -93,8 +93,8 @@ fun SettingsScreen(
         // Currency Selector Tile
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = SurfaceDark,
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
+            color = colorScheme.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.outlineVariant),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -103,15 +103,15 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.CurrencyExchange, contentDescription = null, tint = AccentAqua)
+                    Icon(Icons.Default.CurrencyExchange, contentDescription = null, tint = colorScheme.secondary)
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("Currency Display", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Currency Display", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
                 }
 
                 var expanded by remember { mutableStateOf(false) }
                 Box {
                     TextButton(onClick = { expanded = true }) {
-                        Text("${currency.name.uppercase()} (${currency.symbol})", fontWeight = FontWeight.Bold, color = AccentAqua)
+                        Text("${currency.name.uppercase()} (${currency.symbol})", fontWeight = FontWeight.Bold, color = colorScheme.secondary)
                     }
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         AppCurrency.values().forEach { curr ->
@@ -133,8 +133,8 @@ fun SettingsScreen(
         // Biometrics Tile
         Surface(
             shape = RoundedCornerShape(14.dp),
-            color = SurfaceDark,
-            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark),
+            color = colorScheme.surface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, colorScheme.outlineVariant),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -143,17 +143,17 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Fingerprint, contentDescription = null, tint = AccentAqua)
+                    Icon(Icons.Default.Fingerprint, contentDescription = null, tint = colorScheme.secondary)
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text("Fingerprint / Face ID Lock", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text("Require native biometric authentication to open app", fontSize = 11.sp, color = TextSecondary)
+                        Text("Fingerprint / Face ID Lock", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
+                        Text("Require native biometric authentication to open app", fontSize = 11.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                 }
                 Switch(
                     checked = biometricsEnabled,
                     onCheckedChange = onBiometricsToggle,
-                    colors = SwitchDefaults.colors(checkedThumbColor = AccentAqua, checkedTrackColor = PrimaryPurple)
+                    colors = SwitchDefaults.colors(checkedThumbColor = colorScheme.secondary, checkedTrackColor = colorScheme.primary)
                 )
             }
         }
@@ -164,12 +164,12 @@ fun SettingsScreen(
         Button(
             onClick = onCheckUpdateClick,
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = AccentAqua),
+            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.secondary),
             modifier = Modifier.fillMaxWidth().height(50.dp)
         ) {
             Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("⚡ Check & Install App Updates", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp)
+            Text("⚡ Check & Install App Updates", fontWeight = FontWeight.ExtraBold, fontSize = 15.sp, color = Color.White)
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -178,10 +178,10 @@ fun SettingsScreen(
         Button(
             onClick = onDiscordClick,
             shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple),
+            colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
             modifier = Modifier.fillMaxWidth().height(48.dp)
         ) {
-            Text("Join Official RenCloud Discord", fontWeight = FontWeight.Bold)
+            Text("Join Official RenCloud Discord", fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }

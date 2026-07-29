@@ -95,12 +95,14 @@ fun MainAppContainer(
         return
     }
 
+    val colorScheme = MaterialTheme.colorScheme
+
     // Biometric Security Screen
     if (biometricsEnabled && !isUnlocked) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(BackgroundDark),
+                .background(colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -109,18 +111,18 @@ fun MainAppContainer(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = PrimaryPurple.copy(alpha = 0.15f),
+                    color = colorScheme.primary.copy(alpha = 0.15f),
                     modifier = Modifier.size(100.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Fingerprint, contentDescription = null, tint = AccentAqua, modifier = Modifier.size(56.dp))
+                        Icon(Icons.Default.Fingerprint, contentDescription = null, tint = colorScheme.secondary, modifier = Modifier.size(56.dp))
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("RenCloud Biometric Lock", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("RenCloud Biometric Lock", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Touch fingerprint sensor or scan Face ID to unlock RenCloud", fontSize = 12.sp, color = TextSecondary)
+                Text("Touch fingerprint sensor or scan Face ID to unlock RenCloud", fontSize = 12.sp, color = colorScheme.onSurface.copy(alpha = 0.6f))
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -135,12 +137,12 @@ fun MainAppContainer(
                         )
                     },
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
                     modifier = Modifier.fillMaxWidth().height(50.dp)
                 ) {
                     Icon(Icons.Default.Fingerprint, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Scan Fingerprint / Face ID to Unlock", fontWeight = FontWeight.Bold)
+                    Text("Scan Fingerprint / Face ID to Unlock", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
         }
@@ -158,7 +160,7 @@ fun MainAppContainer(
                             modifier = Modifier.size(28.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text("RenCloud", fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("RenCloud", fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
                     }
                 },
                 actions = {
@@ -166,7 +168,7 @@ fun MainAppContainer(
                         Icon(
                             imageVector = if (darkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = PrimaryPurple
+                            tint = colorScheme.primary
                         )
                     }
                     IconButton(onClick = {
@@ -179,34 +181,34 @@ fun MainAppContainer(
                             }
                         }
                     }) {
-                        Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = AccentAqua)
+                        Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = colorScheme.secondary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SurfaceDark)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.surface)
             )
         },
         bottomBar = {
-            NavigationBar(containerColor = SurfaceDark) {
+            NavigationBar(containerColor = colorScheme.surface) {
                 NavigationBarItem(
                     selected = currentTab == 0,
                     onClick = { currentTab = 0 },
                     icon = { Icon(Icons.Default.Cloud, contentDescription = null) },
                     label = { Text("Catalog") },
-                    colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryPurple, indicatorColor = PrimaryPurple.copy(alpha = 0.15f))
+                    colors = NavigationBarItemDefaults.colors(selectedIconColor = colorScheme.primary, indicatorColor = colorScheme.primary.copy(alpha = 0.15f))
                 )
                 NavigationBarItem(
                     selected = currentTab == 1,
                     onClick = { currentTab = 1 },
                     icon = { Icon(Icons.Default.Calculate, contentDescription = null) },
                     label = { Text("Calculator") },
-                    colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryPurple, indicatorColor = PrimaryPurple.copy(alpha = 0.15f))
+                    colors = NavigationBarItemDefaults.colors(selectedIconColor = colorScheme.primary, indicatorColor = colorScheme.primary.copy(alpha = 0.15f))
                 )
                 NavigationBarItem(
                     selected = currentTab == 2,
                     onClick = { currentTab = 2 },
                     icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                     label = { Text("Settings") },
-                    colors = NavigationBarItemDefaults.colors(selectedIconColor = PrimaryPurple, indicatorColor = PrimaryPurple.copy(alpha = 0.15f))
+                    colors = NavigationBarItemDefaults.colors(selectedIconColor = colorScheme.primary, indicatorColor = colorScheme.primary.copy(alpha = 0.15f))
                 )
             }
         }
@@ -215,8 +217,7 @@ fun MainAppContainer(
             when (currentTab) {
                 0 -> CatalogScreen(
                     currency = currency,
-                    onDeployClick = { selectedPlanForDeploy = it },
-                    onCheckUpdateClick = {}
+                    onDeployClick = { selectedPlanForDeploy = it }
                 )
                 1 -> CalculatorScreen(
                     currency = currency,
@@ -271,7 +272,7 @@ fun MainAppContainer(
                     Column {
                         Text("Specs: ${plan.ram} | ${plan.cpu} | ${plan.nvmeStorage}")
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Price: ${currency.format(plan.monthlyPriceInr)}/month", fontWeight = FontWeight.ExtraBold, color = AccentAqua)
+                        Text("Price: ${currency.format(plan.monthlyPriceInr)}/month", fontWeight = FontWeight.ExtraBold, color = colorScheme.secondary)
                     }
                 },
                 confirmButton = {
@@ -280,9 +281,9 @@ fun MainAppContainer(
                             selectedPlanForDeploy = null
                             Toast.makeText(activity, "Order placed for ${plan.name}!", Toast.LENGTH_LONG).show()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryPurple)
+                        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary)
                     ) {
-                        Text("Confirm Deployment")
+                        Text("Confirm Deployment", color = Color.White)
                     }
                 },
                 dismissButton = {
