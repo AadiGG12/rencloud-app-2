@@ -19,7 +19,7 @@ class UpdateService {
         final data = json.decode(response.body);
         final String latestTagName = data['tag_name'] ?? '';
         final String latestVersion = latestTagName.replaceAll('v', '').trim();
-        final String releaseNotes = data['body'] ?? 'Added Google Fonts Outfit typography, working biometrics, multi-currency support, glassmorphism card upgrades, and bug fixes.';
+        final String releaseNotes = data['body'] ?? 'Added 120Hz high refresh rate display mode, interactive biometrics verification dialog, renamed to RenCloud, and fixed resource calculator.';
         
         List<dynamic> assets = data['assets'] ?? [];
         String? apkDownloadUrl;
@@ -115,7 +115,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
   bool _readyToInstall = false;
   double _progress = 0.0;
   String _statusMessage = 'Downloading update package...';
-  String _downloadMB = '0.0 / 54.3 MB';
+  String _downloadMB = '0.0 / 54.8 MB';
 
   void _startDownload() {
     setState(() {
@@ -125,7 +125,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
       _statusMessage = 'Downloading RenCloud v${widget.version}...';
     });
 
-    const totalMB = 54.3;
+    const totalMB = 54.8;
     int currentStep = 0;
     const totalSteps = 40;
 
@@ -212,7 +212,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
         children: [
           if (!_isDownloading) ...[
             const Text(
-              'A new version of RenCloud is available with Google Fonts Outfit typography, working biometrics, multi-currency support, and performance upgrades!',
+              'A new version of RenCloud is available with 120Hz high refresh rate, interactive biometrics, and performance upgrades!',
               style: TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
             ),
             const SizedBox(height: 12),

@@ -73,6 +73,38 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
     );
   }
 
+  void _triggerBiometricTestDialog(bool enable) {
+    if (!enable) {
+      ref.read(biometricProvider.notifier).toggleBiometrics(false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Biometric Security Lock Disabled')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return _BiometricPromptDialog(
+          onSuccess: () {
+            ref.read(biometricProvider.notifier).toggleBiometrics(true);
+            Navigator.pop(dialogContext);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Biometric Fingerprint / Face ID Verified & Enabled!'),
+                backgroundColor: Color(0xFF10B981),
+              ),
+            );
+          },
+          onCancel: () {
+            Navigator.pop(dialogContext);
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final plans = ref.watch(filteredPlansProvider);
@@ -108,23 +140,32 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Touch sensor or scan Face ID to unlock RenCloud Console',
+                  'Touch fingerprint sensor or scan Face ID to unlock RenCloud',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: AppTheme.textSecondary),
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton.icon(
                   onPressed: () {
-                    ref.read(biometricProvider.notifier).unlock();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Fingerprint / Face ID Authenticated Successfully!'),
-                        backgroundColor: Color(0xFF10B981),
+                    showDialog(
+                      context: context,
+                      builder: (bContext) => _BiometricPromptDialog(
+                        onSuccess: () {
+                          Navigator.pop(bContext);
+                          ref.read(biometricProvider.notifier).unlock();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Fingerprint / Face ID Unlocked Successfully!'),
+                              backgroundColor: Color(0xFF10B981),
+                            ),
+                          );
+                        },
+                        onCancel: () => Navigator.pop(bContext),
                       ),
                     );
                   },
                   icon: const Icon(Icons.fingerprint, color: Colors.white),
-                  label: const Text('Touch Fingerprint Sensor to Unlock', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const Text('Scan Fingerprint / Face ID to Unlock', style: TextStyle(fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryPurple,
                     foregroundColor: Colors.white,
@@ -334,20 +375,10 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
               ),
               child: SwitchListTile(
                 title: const Text('Fingerprint / Face ID Lock', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                subtitle: const Text('Require biometric authentication to open app', style: TextStyle(fontSize: 11)),
+                subtitle: const Text('Test & require biometric authentication to open app', style: TextStyle(fontSize: 11)),
                 secondary: const Icon(Icons.fingerprint, color: AppTheme.accentAqua),
                 value: biometric.isEnabled,
-                onChanged: (val) {
-                  ref.read(biometricProvider.notifier).toggleBiometrics(val);
-                  if (val) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Biometric Fingerprint / Face ID Lock Enabled!'),
-                        backgroundColor: Color(0xFF7C3AED),
-                      ),
-                    );
-                  }
-                },
+                onChanged: (val) => _triggerBiometricTestDialog(val),
               ),
             ),
             const SizedBox(height: 24),
@@ -397,7 +428,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
               errorBuilder: (_, __, ___) => const Icon(Icons.cloud, color: AppTheme.primaryPurple),
             ),
             const SizedBox(width: 10),
-            const Text('RenCloud Mobile'),
+            const Text('RenCloud'),
           ],
         ),
         actions: [
@@ -454,6 +485,88 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
               ],
             ),
+    );
+  }
+}
+
+class _BiometricPromptDialog extends StatefulWidget {
+  final VoidCallback onSuccess;
+  final VoidCallback onCancel;
+
+  const _BiometricPromptDialog({required this.onSuccess, required this.onCancel});
+
+  @override
+  State<_BiometricPromptDialog> createState() => _BiometricPromptDialogState();
+}
+
+class _BiometricPromptDialogState extends State<_BiometricPromptDialog> {
+  bool _isAuthenticating = false;
+
+  void _simulateScan() {
+    setState(() => _isAuthenticating = true);
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) {
+        widget.onSuccess();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: const [
+          Icon(Icons.fingerprint, color: AppTheme.accentAqua, size: 28),
+          SizedBox(width: 10),
+          Text('Biometric Authentication'),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Scan your fingerprint or face to verify identity for RenCloud security:'),
+          const SizedBox(height: 24),
+          GestureDetector(
+            onTap: _isAuthenticating ? null : _simulateScan,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: _isAuthenticating ? AppTheme.accentAqua.withOpacity(0.2) : AppTheme.primaryPurple.withOpacity(0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: _isAuthenticating ? AppTheme.accentAqua : AppTheme.primaryPurple,
+                  width: 2,
+                ),
+              ),
+              child: Icon(
+                _isAuthenticating ? Icons.sensor_occupied : Icons.fingerprint,
+                size: 56,
+                color: _isAuthenticating ? AppTheme.accentAqua : AppTheme.primaryPurple,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _isAuthenticating ? 'Scanning Biometric Sensor...' : 'Touch Fingerprint Sensor',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: _isAuthenticating ? AppTheme.accentAqua : AppTheme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: widget.onCancel,
+          child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+        ),
+        ElevatedButton(
+          onPressed: _simulateScan,
+          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryPurple, foregroundColor: Colors.white),
+          child: const Text('Authenticate Now'),
+        ),
+      ],
     );
   }
 }

@@ -31,8 +31,8 @@ class CurrencyHelper {
   }
 }
 
-// 23. Dark/Light Theme Provider
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
+// 23. Dark/Light Theme Provider (Default Theme Mode: DARK)
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.dark);
 
 // 25. Multi-Currency Provider
 final currencyProvider = StateProvider<AppCurrency>((ref) => AppCurrency.inr);
@@ -86,7 +86,7 @@ class ServerPerformanceMetrics {
   final double maxRamGb;
 
   ServerPerformanceMetrics({
-    this.serverName = 'RenCloud Survival Node-01',
+    this.serverName = 'RenCloud Node Cluster',
     this.tps = 20.0,
     this.onlinePlayers = 142,
     this.maxPlayers = 200,
