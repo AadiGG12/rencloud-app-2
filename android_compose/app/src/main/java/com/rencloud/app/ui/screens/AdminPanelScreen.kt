@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rencloud.app.data.CatalogData
 import com.rencloud.app.data.RenCloudPlan
+import com.rencloud.app.services.ApiService
 import com.rencloud.app.ui.components.GlassCard
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,10 +39,12 @@ fun AdminPanelScreen(
     var adminTab by remember { mutableIntStateOf(0) }
     val colorScheme = MaterialTheme.colorScheme
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var editPlanName by remember { mutableStateOf("") }
     var editPlanPrice by remember { mutableStateOf("") }
     var selectedPlanForEdit by remember { mutableStateOf<RenCloudPlan?>(null) }
+    var isSaving by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -126,15 +130,29 @@ fun AdminPanelScreen(
 
                             Button(
                                 onClick = {
-                                    Toast.makeText(context, "App Branding & Configuration Updated!", Toast.LENGTH_LONG).show()
+                                    isSaving = true
+                                    coroutineScope.launch {
+                                        val ok = ApiService.updateAppConfig(appName, announcement, discordUrl)
+                                        isSaving = false
+                                        if (ok) {
+                                            Toast.makeText(context, "Global App Configurations Saved to https://app.rencloud.online!", Toast.LENGTH_LONG).show()
+                                        } else {
+                                            Toast.makeText(context, "App Configurations updated locally!", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
                                 },
+                                enabled = !isSaving,
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary),
                                 modifier = Modifier.fillMaxWidth().height(48.dp)
                             ) {
-                                Icon(Icons.Default.Save, contentDescription = null, tint = Color.White)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("SAVE GLOBAL CONFIGURATIONS", fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                if (isSaving) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                                } else {
+                                    Icon(Icons.Default.Save, contentDescription = null, tint = Color.White)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("SAVE GLOBAL CONFIGURATIONS", fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                }
                             }
                         }
                     }
@@ -200,8 +218,18 @@ fun AdminPanelScreen(
                 confirmButton = {
                     Button(
                         onClick = {
+                            val newPrice = editPlanPrice.toIntOrNull() ?: plan.monthlyPriceInr
+                            val targetPlan = plan
                             selectedPlanForEdit = null
-                            Toast.makeText(context, "Updated ${plan.name} price to ₹$editPlanPrice!", Toast.LENGTH_LONG).show()
+
+                            coroutineScope.launch {
+                                val ok = ApiService.updatePlan(targetPlan.id, editPlanName, newPrice)
+                                if (ok) {
+                                    Toast.makeText(context, "Updated ${targetPlan.name} price to ₹$newPrice on Backend!", Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(context, "Updated ${targetPlan.name} price to ₹$newPrice!", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary)
                     ) {

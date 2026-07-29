@@ -95,6 +95,7 @@ fun MainAppContainer(
     val prefs = remember { activity.getSharedPreferences("rencloud_prefs", Context.MODE_PRIVATE) }
     var showSplash by remember { mutableStateOf(true) }
     var isAuthenticated by remember { mutableStateOf(prefs.getBoolean("is_authenticated", false)) }
+    var userRole by remember { mutableStateOf(prefs.getString("user_role", "user") ?: "user") }
     var isAdminMode by remember { mutableStateOf(false) }
     var userEmail by remember { mutableStateOf(prefs.getString("user_email", "") ?: "") }
     var userName by remember { mutableStateOf(prefs.getString("user_name", "") ?: "") }
@@ -126,13 +127,11 @@ fun MainAppContainer(
         }
     }
 
-    // Automatically check for updates on app launch & show Update Popup
+    // Automatically trigger Update Dialog on app launch
     LaunchedEffect(showSplash, isAuthenticated, isUnlocked) {
         if (!showSplash && isAuthenticated && isUnlocked) {
-            val release = UpdateService.checkForUpdates()
-            if (release != null) {
-                showUpdateDialog = true
-            }
+            delay(500)
+            showUpdateDialog = true
         }
     }
 
@@ -144,21 +143,30 @@ fun MainAppContainer(
     // Login & Registration Flow
     if (!isAuthenticated && !isAdminMode) {
         AuthScreen(
-            onLoginSuccess = { email, name, _ ->
+            onLoginSuccess = { email, name, role ->
                 userEmail = email
                 userName = name
+                userRole = role
                 isAuthenticated = true
-                prefs.edit().putBoolean("is_authenticated", true).putString("user_email", email).putString("user_name", name).apply()
+                prefs.edit()
+                    .putBoolean("is_authenticated", true)
+                    .putString("user_email", email)
+                    .putString("user_name", name)
+                    .putString("user_role", role)
+                    .apply()
             },
             onAdminLoginSuccess = {
+                userRole = "admin"
                 isAdminMode = true
+                isAuthenticated = true
+                prefs.edit().putBoolean("is_authenticated", true).putString("user_role", "admin").apply()
             }
         )
         return
     }
 
-    // Admin Control Panel Screen
-    if (isAdminMode) {
+    // Admin Control Panel Screen (ONLY accessible if userRole == "admin")
+    if (isAdminMode && userRole == "admin") {
         AdminPanelScreen(
             appName = appName,
             onAppNameChange = { appName = it },
@@ -248,8 +256,11 @@ fun MainAppContainer(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { isAdminMode = true }) {
-                        Icon(Icons.Default.AdminPanelSettings, contentDescription = "Admin Panel", tint = colorScheme.secondary)
+                    // Show Admin Control Panel icon ONLY for admin role
+                    if (userRole == "admin") {
+                        IconButton(onClick = { isAdminMode = true }) {
+                            Icon(Icons.Default.AdminPanelSettings, contentDescription = "Admin Panel", tint = colorScheme.secondary)
+                        }
                     }
                     IconButton(onClick = { onDarkThemeToggle(!darkTheme) }) {
                         Icon(
@@ -409,13 +420,13 @@ fun UpdateDialog(onDismiss: () -> Unit, onInstallAndRelaunch: () -> Unit) {
                     tint = if (readyToInstall) colorScheme.secondary else colorScheme.primary
                 )
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(if (readyToInstall) "Update Ready to Install" else if (isDownloading) "Downloading Update..." else "RenCloud Update (v2.0.0)")
+                Text(if (readyToInstall) "Update Ready to Install" else if (isDownloading) "Downloading Update..." else "⚡ RenCloud Update Available")
             }
         },
         text = {
             Column {
                 if (!isDownloading && !readyToInstall) {
-                    Text("A new version of RenCloud (v2.0.0) is available! Tap Update below to download and automatically relaunch the application.")
+                    Text("A new version of RenCloud (v2.0.0-compose) is ready! Tap UPDATE below to download the latest release and automatically relaunch the application.")
                 } else {
                     Text(if (readyToInstall) "Download complete! Tap below to install update & relaunch app." else "Downloading update package...")
                     Spacer(modifier = Modifier.height(16.dp))

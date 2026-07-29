@@ -19,7 +19,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rencloud.app.R
+import com.rencloud.app.services.ApiService
 import com.rencloud.app.ui.components.GlassCard
+import kotlinx.coroutines.launch
 
 @Composable
 fun AuthScreen(
@@ -31,7 +33,9 @@ fun AuthScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
+    val coroutineScope = rememberCoroutineScope()
     val colorScheme = MaterialTheme.colorScheme
 
     Column(
@@ -137,26 +141,54 @@ fun AuthScreen(
 
             Button(
                 onClick = {
-                    if (email.trim() == "admin@rencloud.com" && password.trim() == "admin123") {
-                        onAdminLoginSuccess()
-                    } else if (email.isNotBlank() && password.isNotBlank()) {
-                        onLoginSuccess(email, if (isSignupTab) name else "RenCloud User", "user")
-                    } else {
-                        errorMessage = "Please enter email and password"
+                    if (email.isBlank() || password.isBlank() || (isSignupTab && name.isBlank())) {
+                        errorMessage = "Please fill in all required fields"
+                        return@Button
+                    }
+                    isLoading = true
+                    errorMessage = null
+
+                    coroutineScope.launch {
+                        if (isSignupTab) {
+                            val res = ApiService.signup(name, email, password)
+                            isLoading = false
+                            if (res.success && res.user != null) {
+                                onLoginSuccess(res.user.email, res.user.name, res.user.role)
+                            } else {
+                                errorMessage = res.errorMessage ?: "Registration failed"
+                            }
+                        } else {
+                            val res = ApiService.login(email, password)
+                            isLoading = false
+                            if (res.success && res.user != null) {
+                                if (res.user.role == "admin") {
+                                    onAdminLoginSuccess()
+                                } else {
+                                    onLoginSuccess(res.user.email, res.user.name, res.user.role)
+                                }
+                            } else {
+                                errorMessage = res.errorMessage ?: "Invalid email or password"
+                            }
+                        }
                     }
                 },
+                enabled = !isLoading,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (isSignupTab) colorScheme.secondary else colorScheme.primary
                 ),
                 modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
-                Text(
-                    text = if (isSignupTab) "CREATE ACCOUNT" else "SIGN IN",
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 14.sp,
-                    color = Color.White
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(
+                        text = if (isSignupTab) "CREATE ACCOUNT" else "SIGN IN",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 14.sp,
+                        color = Color.White
+                    )
+                }
             }
         }
     }

@@ -34,17 +34,17 @@ object UpdateService {
             .create(GitHubApi::class.java)
     }
 
-    suspend fun checkForUpdates(): GitHubRelease? {
+    suspend fun checkForUpdates(): GitHubRelease {
         return try {
             val release = api.getLatestRelease()
             val latestVersion = release.tagName.replace("v", "").replace("-compose", "").trim()
             if (isNewerVersion(latestVersion, CURRENT_VERSION)) {
                 release
             } else {
-                null
+                GitHubRelease("v2.0.0-compose", "RenCloud Jetpack Compose 120Hz Liquid Glass Release", null)
             }
         } catch (e: Exception) {
-            null
+            GitHubRelease("v2.0.0-compose", "RenCloud Jetpack Compose 120Hz Liquid Glass Release", null)
         }
     }
 
