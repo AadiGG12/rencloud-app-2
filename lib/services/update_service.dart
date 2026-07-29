@@ -9,11 +9,10 @@ class UpdateService {
   static const String githubRepo = 'ANSH9BOSS/rencloud-flutter-app';
   static const String releasesApiUrl = 'https://api.github.com/repos/$githubRepo/releases/latest';
 
-  static bool _updateChecked = false;
+  static String? _dismissedVersion;
 
   /// Check for new updates on GitHub Releases
   static Future<void> checkForUpdates(BuildContext context, {bool silent = false}) async {
-    if (silent && _updateChecked) return;
     try {
       final response = await http.get(Uri.parse(releasesApiUrl)).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
@@ -31,8 +30,12 @@ class UpdateService {
           }
         }
 
+        // If user already dismissed this exact version in silent auto-check mode, do not show again
+        if (silent && _dismissedVersion == latestVersion) {
+          return;
+        }
+
         if (_isNewerVersion(latestVersion, currentVersion)) {
-          _updateChecked = true;
           if (context.mounted) {
             _showUpdateDialog(
               context,
@@ -54,6 +57,10 @@ class UpdateService {
         );
       }
     }
+  }
+
+  static void dismissVersion(String version) {
+    _dismissedVersion = version;
   }
 
   static bool _isNewerVersion(String latest, String current) {
@@ -105,13 +112,15 @@ class _UpdateDialogContent extends StatefulWidget {
 
 class _UpdateDialogContentState extends State<_UpdateDialogContent> {
   bool _isDownloading = false;
+  bool _readyToInstall = false;
   double _progress = 0.0;
   String _statusMessage = 'Downloading update package...';
   String _downloadMB = '0.0 / 53.8 MB';
 
-  void _startDownloadAndInstall() {
+  void _startDownload() {
     setState(() {
       _isDownloading = true;
+      _readyToInstall = false;
       _progress = 0.0;
       _statusMessage = 'Downloading RenCloud v${widget.version}...';
     });
@@ -120,7 +129,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
     int currentStep = 0;
     const totalSteps = 40;
 
-    Timer.periodic(const Duration(milliseconds: 70), (timer) {
+    Timer.periodic(const Duration(milliseconds: 60), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
@@ -136,7 +145,10 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
 
       if (currentStep >= totalSteps) {
         timer.cancel();
-        _installAndRelaunch();
+        setState(() {
+          _readyToInstall = true;
+          _statusMessage = 'Download complete! Ready to install v${widget.version}';
+        });
       }
     });
   }
@@ -146,7 +158,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
       _statusMessage = 'Installing update package & relaunching...';
     });
 
-    Future.delayed(const Duration(milliseconds: 1800), () {
+    Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         Navigator.of(context).pop();
         // Relaunch the application via SplashScreen
@@ -177,14 +189,18 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              _isDownloading ? Icons.cloud_download : Icons.system_update,
-              color: const Color(0xFF7C3AED),
+              _readyToInstall
+                  ? Icons.check_circle_outline
+                  : (_isDownloading ? Icons.cloud_download : Icons.system_update),
+              color: _readyToInstall ? const Color(0xFF06B6D4) : const Color(0xFF7C3AED),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              _isDownloading ? 'Updating RenCloud' : 'Update Available (v${widget.version})',
+              _readyToInstall
+                  ? 'Update Ready to Install'
+                  : (_isDownloading ? 'Updating RenCloud' : 'Update Available (v${widget.version})'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
@@ -214,7 +230,11 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
           ] else ...[
             Text(
               _statusMessage,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: _readyToInstall ? const Color(0xFF06B6D4) : const Color(0xFF0F172A),
+              ),
             ),
             const SizedBox(height: 16),
             ClipRRect(
@@ -223,7 +243,9 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
                 value: _progress,
                 minHeight: 8,
                 backgroundColor: const Color(0xFF7C3AED).withOpacity(0.12),
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF06B6D4)),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  _readyToInstall ? const Color(0xFF06B6D4) : const Color(0xFF7C3AED),
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -231,7 +253,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${(_progress * 100).toInt()}% Completed',
+                  _readyToInstall ? '100% Downloaded' : '${(_progress * 100).toInt()}% Completed',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF7C3AED)),
                 ),
                 Text(
@@ -243,23 +265,40 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
           ],
         ],
       ),
-      actions: _isDownloading
-          ? []
-          : [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Later', style: TextStyle(color: Color(0xFF64748B))),
-              ),
-              ElevatedButton(
-                onPressed: _startDownloadAndInstall,
+      actions: _readyToInstall
+          ? [
+              ElevatedButton.icon(
+                onPressed: _installAndRelaunch,
+                icon: const Icon(Icons.install_mobile, color: Colors.white),
+                label: const Text('INSTALL PACKAGE & RELAUNCH', style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7C3AED),
+                  backgroundColor: const Color(0xFF06B6D4),
                   foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 44),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text('Update Now', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-            ],
+            ]
+          : (_isDownloading
+              ? []
+              : [
+                  TextButton(
+                    onPressed: () {
+                      UpdateService.dismissVersion(widget.version);
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Later', style: TextStyle(color: Color(0xFF64748B))),
+                  ),
+                  ElevatedButton(
+                    onPressed: _startDownload,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7C3AED),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Update Now', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ]),
     );
   }
 }

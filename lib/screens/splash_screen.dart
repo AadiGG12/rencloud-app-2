@@ -68,8 +68,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) {
-              final isMobile = MediaQuery.of(context).size.width < 700;
-              return isMobile ? const MobileHomeScreen() : const HomeScreen();
+              final isPhone = MediaQuery.of(context).size.shortestSide < 600;
+              return isPhone ? const MobileHomeScreen() : const HomeScreen();
             },
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(

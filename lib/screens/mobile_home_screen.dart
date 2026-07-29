@@ -34,6 +34,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
   Widget build(BuildContext context) {
     final plans = ref.watch(filteredPlansProvider);
     final cycle = ref.watch(billingCycleProvider);
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
 
     final List<Widget> pages = [
       // Tab 0: Home Catalog
@@ -93,18 +94,39 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
             const CategoryTabs(),
             const SizedBox(height: 16),
 
-            // Catalog List
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: plans.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: SizedBox(
-                    height: 340,
-                    child: PlanCard(plan: plans[index]),
-                  ),
+            // Catalog List / Grid
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (isLandscape || constraints.maxWidth > 550) {
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.9,
+                    ),
+                    itemCount: plans.length,
+                    itemBuilder: (context, index) {
+                      return PlanCard(plan: plans[index]);
+                    },
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: plans.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: SizedBox(
+                        height: 340,
+                        child: PlanCard(plan: plans[index]),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -119,7 +141,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
       ),
 
       // Tab 2: Support & Account
-      Padding(
+      SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -199,18 +221,40 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
         ],
         elevation: 0.5,
       ),
-      body: pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (idx) => setState(() => _currentIndex = idx),
-        selectedItemColor: AppTheme.primaryPurple,
-        unselectedItemColor: AppTheme.textSecondary,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.cloud), label: 'Catalog'),
-          BottomNavigationBarItem(icon: Icon(Icons.calculate), label: 'Calculator'),
-          BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: 'Support'),
-        ],
-      ),
+      body: isLandscape
+          ? Row(
+              children: [
+                // NavigationRail for Landscape Mode
+                NavigationRail(
+                  selectedIndex: _currentIndex,
+                  onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
+                  labelType: NavigationRailLabelType.all,
+                  selectedIconTheme: const IconThemeData(color: AppTheme.primaryPurple),
+                  unselectedIconTheme: const IconThemeData(color: AppTheme.textSecondary),
+                  destinations: const [
+                    NavigationRailDestination(icon: Icon(Icons.cloud), label: Text('Catalog')),
+                    NavigationRailDestination(icon: Icon(Icons.calculate), label: Text('Calculator')),
+                    NavigationRailDestination(icon: Icon(Icons.support_agent), label: Text('Support')),
+                  ],
+                ),
+                const VerticalDivider(thickness: 1, width: 1, color: AppTheme.borderLight),
+                Expanded(child: pages[_currentIndex]),
+              ],
+            )
+          : pages[_currentIndex],
+      bottomNavigationBar: isLandscape
+          ? null
+          : BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (idx) => setState(() => _currentIndex = idx),
+              selectedItemColor: AppTheme.primaryPurple,
+              unselectedItemColor: AppTheme.textSecondary,
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.cloud), label: 'Catalog'),
+                BottomNavigationBarItem(icon: Icon(Icons.calculate), label: 'Calculator'),
+                BottomNavigationBarItem(icon: Icon(Icons.support_agent), label: 'Support'),
+              ],
+            ),
     );
   }
 }
