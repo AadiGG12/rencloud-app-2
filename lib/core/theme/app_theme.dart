@@ -7,27 +7,32 @@ class AppTheme {
   static const Color accentAqua = Color(0xFF06B6D4); // Neon Aqua / Cyan
   static const Color accentAquaLight = Color(0xFFECFEFF);
   static const Color backgroundLight = Color(0xFFF8FAFC); // Pure Crisp Slate White
-  static const Color cardSurface = Colors.white;
-  static const Color textPrimary = Color(0xFF0F172A); // Dark Slate
+  static const Color backgroundDark = Color(0xFF0F172A); // Deep Navy Dark
+  static const Color cardSurfaceLight = Colors.white;
+  static const Color cardSurfaceDark = Color(0xFF1E293B); // Deep Navy Surface
+  static const Color textPrimary = Color(0xFF0F172A); // Dark Slate (Alias)
+  static const Color textPrimaryLight = Color(0xFF0F172A);
+  static const Color textPrimaryDark = Color(0xFFF8FAFC);
   static const Color textSecondary = Color(0xFF64748B);
   static const Color borderLight = Color(0xFFE2E8F0);
-  static const Color popularBadgeBg = Color(0xFF06B6D4); // Bright Aqua Popular Tag
-  static const Color popularBadgeText = Colors.white;
+  static const Color borderDark = Color(0xFF334155);
 
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.light,
       scaffoldBackgroundColor: backgroundLight,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryPurple,
+        brightness: Brightness.light,
         primary: primaryPurple,
         secondary: accentAqua,
-        surface: cardSurface,
+        surface: cardSurfaceLight,
         background: backgroundLight,
-        onSurface: textPrimary,
+        onSurface: textPrimaryLight,
       ),
       cardTheme: CardThemeData(
-        color: cardSurface,
+        color: cardSurfaceLight,
         elevation: 1,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -40,7 +45,43 @@ class AppTheme {
         scrolledUnderElevation: 1,
         iconTheme: IconThemeData(color: primaryPurple),
         titleTextStyle: TextStyle(
-          color: textPrimary,
+          color: textPrimaryLight,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: backgroundDark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primaryPurple,
+        brightness: Brightness.dark,
+        primary: primaryPurple,
+        secondary: accentAqua,
+        surface: cardSurfaceDark,
+        background: backgroundDark,
+        onSurface: textPrimaryDark,
+      ),
+      cardTheme: CardThemeData(
+        color: cardSurfaceDark,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: borderDark, width: 1),
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1E293B),
+        elevation: 0,
+        scrolledUnderElevation: 1,
+        iconTheme: IconThemeData(color: accentAqua),
+        titleTextStyle: TextStyle(
+          color: textPrimaryDark,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
