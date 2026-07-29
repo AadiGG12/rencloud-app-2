@@ -32,7 +32,6 @@ class AppTheme {
         primary: primaryPurple,
         secondary: accentAqua,
         surface: cardSurfaceLight,
-        background: backgroundLight,
         onSurface: textPrimaryLight,
       ),
       cardTheme: CardThemeData(
@@ -71,7 +70,6 @@ class AppTheme {
         primary: primaryPurple,
         secondary: accentAqua,
         surface: cardSurfaceDark,
-        background: backgroundDark,
         onSurface: textPrimaryDark,
       ),
       cardTheme: CardThemeData(

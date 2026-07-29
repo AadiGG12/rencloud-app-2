@@ -17,12 +17,12 @@ class ServerPerformanceWidget extends ConsumerWidget {
         color: isDark ? AppTheme.cardSurfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppTheme.accentAqua.withOpacity(0.35),
+          color: AppTheme.accentAqua.withValues(alpha: 0.35),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.accentAqua.withOpacity(isDark ? 0.2 : 0.08),
+            color: AppTheme.accentAqua.withValues(alpha: isDark ? 0.2 : 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -62,9 +62,9 @@ class ServerPerformanceWidget extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.15),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF10B981).withOpacity(0.4)),
+                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   children: [
@@ -136,9 +136,9 @@ class ServerPerformanceWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -177,7 +177,7 @@ class ServerPerformanceWidget extends ConsumerWidget {
           child: LinearProgressIndicator(
             value: percentage,
             minHeight: 5,
-            backgroundColor: color.withOpacity(0.12),
+            backgroundColor: color.withValues(alpha: 0.12),
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),

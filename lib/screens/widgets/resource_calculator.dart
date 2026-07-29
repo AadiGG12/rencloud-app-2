@@ -22,10 +22,10 @@ class ResourceCalculator extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isDark ? AppTheme.cardSurfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? AppTheme.borderDark : AppTheme.primaryPurple.withOpacity(0.2)),
+        border: Border.all(color: isDark ? AppTheme.borderDark : AppTheme.primaryPurple.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryPurple.withOpacity(isDark ? 0.2 : 0.05),
+            color: AppTheme.primaryPurple.withValues(alpha: isDark ? 0.2 : 0.05),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -62,9 +62,9 @@ class ResourceCalculator extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentAquaLight.withOpacity(isDark ? 0.15 : 1.0),
+                  color: AppTheme.accentAquaLight.withValues(alpha: isDark ? 0.15 : 1.0),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.accentAqua.withOpacity(0.4)),
+                  border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.4)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -183,9 +183,9 @@ class ResourceCalculator extends ConsumerWidget {
         SliderTheme(
           data: SliderThemeData(
             activeTrackColor: AppTheme.primaryPurple,
-            inactiveTrackColor: AppTheme.primaryPurple.withOpacity(0.15),
+            inactiveTrackColor: AppTheme.primaryPurple.withValues(alpha: 0.15),
             thumbColor: AppTheme.accentAqua,
-            overlayColor: AppTheme.accentAqua.withOpacity(0.2),
+            overlayColor: AppTheme.accentAqua.withValues(alpha: 0.2),
             valueIndicatorTextStyle: const TextStyle(color: Colors.white),
           ),
           child: Slider(

@@ -66,12 +66,12 @@ class _PlanCardState extends ConsumerState<PlanCard> with SingleTickerProviderSt
                 gradient: LinearGradient(
                   colors: widget.plan.isPopular
                       ? [
-                          AppTheme.primaryPurple.withOpacity(glowOpacity),
-                          AppTheme.accentAqua.withOpacity(glowOpacity),
+                          AppTheme.primaryPurple.withValues(alpha: glowOpacity),
+                          AppTheme.accentAqua.withValues(alpha: glowOpacity),
                         ]
                       : [
-                          (isDark ? AppTheme.borderDark : AppTheme.borderLight).withOpacity(0.8),
-                          (isDark ? AppTheme.borderDark : AppTheme.borderLight).withOpacity(0.3),
+                          (isDark ? AppTheme.borderDark : AppTheme.borderLight).withValues(alpha: 0.8),
+                          (isDark ? AppTheme.borderDark : AppTheme.borderLight).withValues(alpha: 0.3),
                         ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -79,8 +79,8 @@ class _PlanCardState extends ConsumerState<PlanCard> with SingleTickerProviderSt
                 boxShadow: [
                   BoxShadow(
                     color: widget.plan.isPopular
-                        ? AppTheme.accentAqua.withOpacity(glowOpacity * 0.5)
-                        : AppTheme.primaryPurple.withOpacity(_isPressed ? 0.2 : 0.05),
+                        ? AppTheme.accentAqua.withValues(alpha: glowOpacity * 0.5)
+                        : AppTheme.primaryPurple.withValues(alpha: _isPressed ? 0.2 : 0.05),
                     blurRadius: widget.plan.isPopular ? 18 : 12,
                     spreadRadius: widget.plan.isPopular ? 1.5 : 0,
                     offset: const Offset(0, 4),
@@ -91,8 +91,8 @@ class _PlanCardState extends ConsumerState<PlanCard> with SingleTickerProviderSt
               child: Container(
                 decoration: BoxDecoration(
                   color: isDark
-                      ? const Color(0xFF1E293B).withOpacity(0.92)
-                      : Colors.white.withOpacity(0.95),
+                      ? const Color(0xFF1E293B).withValues(alpha: 0.92)
+                      : Colors.white.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Stack(
@@ -108,9 +108,9 @@ class _PlanCardState extends ConsumerState<PlanCard> with SingleTickerProviderSt
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.accentAqua.withOpacity(0.12),
+                                  color: AppTheme.accentAqua.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: AppTheme.accentAqua.withOpacity(0.35)),
+                                  border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.35)),
                                 ),
                                 child: Text(
                                   widget.plan.categoryName.toUpperCase(),
@@ -127,7 +127,7 @@ class _PlanCardState extends ConsumerState<PlanCard> with SingleTickerProviderSt
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryPurple.withOpacity(0.12),
+                                    color: AppTheme.primaryPurple.withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(14),
                                   ),
                                   child: Text(
@@ -221,7 +221,7 @@ class _PlanCardState extends ConsumerState<PlanCard> with SingleTickerProviderSt
                                 boxShadow: widget.plan.isPopular
                                     ? [
                                         BoxShadow(
-                                          color: AppTheme.primaryPurple.withOpacity(0.35),
+                                          color: AppTheme.primaryPurple.withValues(alpha: 0.35),
                                           blurRadius: 10,
                                           offset: const Offset(0, 3),
                                         ),
@@ -274,7 +274,7 @@ class _PlanCardState extends ConsumerState<PlanCard> with SingleTickerProviderSt
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.accentAqua.withOpacity(0.4),
+                                color: AppTheme.accentAqua.withValues(alpha: 0.4),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -316,7 +316,7 @@ class _PlanCardState extends ConsumerState<PlanCard> with SingleTickerProviderSt
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppTheme.primaryPurple.withOpacity(0.1),
+              color: AppTheme.primaryPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(icon, size: 14, color: AppTheme.primaryPurple),

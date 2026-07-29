@@ -17,18 +17,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 1200), () {
-        if (mounted) {
-          UpdateService.checkForUpdates(context, silent: true);
-        }
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final plans = ref.watch(filteredPlansProvider);
     final cycle = ref.watch(billingCycleProvider);
@@ -61,7 +49,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               decoration: BoxDecoration(
                 color: AppTheme.accentAquaLight,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.accentAqua.withOpacity(0.4)),
+                border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.4)),
               ),
               child: const Text(
                 '55 PLANS',
@@ -134,7 +122,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryPurple.withOpacity(0.08),
+                        color: AppTheme.primaryPurple.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Row(
@@ -148,7 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 color: cycle == BillingCycle.monthly ? Colors.white : Colors.transparent,
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: cycle == BillingCycle.monthly
-                                    ? [BoxShadow(color: AppTheme.primaryPurple.withOpacity(0.1), blurRadius: 4)]
+                                    ? [BoxShadow(color: AppTheme.primaryPurple.withValues(alpha: 0.1), blurRadius: 4)]
                                     : [],
                               ),
                               child: Text(
@@ -169,7 +157,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 color: cycle == BillingCycle.annual ? AppTheme.primaryPurple : Colors.transparent,
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: cycle == BillingCycle.annual
-                                    ? [BoxShadow(color: AppTheme.primaryPurple.withOpacity(0.2), blurRadius: 6)]
+                                    ? [BoxShadow(color: AppTheme.primaryPurple.withValues(alpha: 0.2), blurRadius: 6)]
                                     : [],
                               ),
                               child: Row(

@@ -18,18 +18,6 @@ class MobileHomeScreen extends ConsumerStatefulWidget {
 class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
   int _currentIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 1200), () {
-        if (mounted) {
-          UpdateService.checkForUpdates(context, silent: true);
-        }
-      });
-    });
-  }
-
   void _showDiscordDialog() {
     showDialog(
       context: context,
@@ -128,7 +116,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryPurple.withOpacity(0.15),
+                    color: AppTheme.primaryPurple.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.fingerprint, size: 72, color: AppTheme.accentAqua),
@@ -532,7 +520,7 @@ class _BiometricPromptDialogState extends State<_BiometricPromptDialog> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: _isAuthenticating ? AppTheme.accentAqua.withOpacity(0.2) : AppTheme.primaryPurple.withOpacity(0.1),
+                color: _isAuthenticating ? AppTheme.accentAqua.withValues(alpha: 0.2) : AppTheme.primaryPurple.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: _isAuthenticating ? AppTheme.accentAqua : AppTheme.primaryPurple,

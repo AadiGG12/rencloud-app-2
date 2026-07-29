@@ -1,19 +1,18 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import '../screens/splash_screen.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 
 class UpdateService {
-  static const String currentVersion = '1.3.0';
-  static const String githubRepo = 'ANSH9BOSS/rencloud-flutter-app';
+  static const String currentVersion = '1.4.0';
+  static const String githubRepo = 'AadiGG12/rencloud-app-2';
   static const String releasesApiUrl = 'https://api.github.com/repos/$githubRepo/releases/latest';
 
   static String? _dismissedVersion;
 
-  /// Check for new updates on GitHub Releases
+  /// Check for new updates on GitHub Releases (manual check only)
   static Future<void> checkForUpdates(BuildContext context, {bool silent = false}) async {
     try {
       final response = await http.get(Uri.parse(releasesApiUrl)).timeout(const Duration(seconds: 5));
@@ -21,8 +20,8 @@ class UpdateService {
         final data = json.decode(response.body);
         final String latestTagName = data['tag_name'] ?? '';
         final String latestVersion = latestTagName.replaceAll('v', '').trim();
-        final String releaseNotes = data['body'] ?? 'Added 120Hz high refresh rate display mode, interactive biometrics verification dialog, renamed to RenCloud, and fixed resource calculator.';
-        
+        final String releaseNotes = data['body'] ?? 'Latest update available.';
+
         List<dynamic> assets = data['assets'] ?? [];
         String? apkDownloadUrl;
         for (var asset in assets) {
@@ -116,10 +115,20 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
   bool _isDownloading = false;
   bool _readyToInstall = false;
   double _progress = 0.0;
-  String _statusMessage = 'Downloading update package...';
-  String _downloadMB = '0.0 / 54.8 MB';
+  String _statusMessage = 'Preparing download...';
+  String _downloadMB = '0.0 MB';
+  String? _downloadedFilePath;
 
-  void _startDownload() {
+  Future<void> _startDownload() async {
+    if (widget.downloadUrl == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No APK found in the latest release')),
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isDownloading = true;
       _readyToInstall = false;
@@ -127,46 +136,81 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
       _statusMessage = 'Downloading RenCloud v${widget.version}...';
     });
 
-    const totalMB = 54.8;
-    int currentStep = 0;
-    const totalSteps = 40;
+    try {
+      // Get local storage directory
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/rencloud-v${widget.version}.apk';
+      final file = File(filePath);
 
-    Timer.periodic(const Duration(milliseconds: 50), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
+      // Stream download with progress
+      final response = await http.Client().send(
+        http.Request('GET', Uri.parse(widget.downloadUrl!)),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Server returned ${response.statusCode}');
       }
-      currentStep++;
-      final double newProgress = (currentStep / totalSteps).clamp(0.0, 1.0);
-      final double downloadedMB = (newProgress * totalMB);
+
+      final contentLength = response.contentLength ?? 0;
+      int bytesReceived = 0;
+      final sink = file.openWrite();
+
+      await for (final chunk in response.stream) {
+        sink.add(chunk);
+        bytesReceived += chunk.length;
+
+        if (contentLength > 0) {
+          final newProgress = bytesReceived / contentLength;
+          final downloadedMB = bytesReceived / (1024 * 1024);
+          final totalMB = contentLength / (1024 * 1024);
+
+          setState(() {
+            _progress = newProgress.clamp(0.0, 1.0);
+            _downloadMB = '${downloadedMB.toStringAsFixed(1)} / ${totalMB.toStringAsFixed(1)} MB';
+          });
+        }
+      }
+
+      await sink.flush();
+      await sink.close();
 
       setState(() {
-        _progress = newProgress;
-        _downloadMB = '${downloadedMB.toStringAsFixed(1)} / $totalMB MB';
+        _readyToInstall = true;
+        _progress = 1.0;
+        _statusMessage = 'Update downloaded! Tap below to install.';
+        _downloadedFilePath = filePath;
       });
-
-      if (currentStep >= totalSteps) {
-        timer.cancel();
-        setState(() {
-          _readyToInstall = true;
-          _statusMessage = 'Update downloaded! Tap below to install & close app.';
-        });
-      }
-    });
+    } catch (e) {
+      setState(() {
+        _isDownloading = false;
+        _statusMessage = 'Download failed: $e';
+      });
+    }
   }
 
-  void _installAndCloseApp() {
+  void _installApk() async {
+    if (_downloadedFilePath == null) return;
+
     setState(() {
-      _statusMessage = 'Closing app for package installation...';
+      _statusMessage = 'Opening package installer...';
     });
 
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      // Fully close application natively
-      SystemNavigator.pop();
-      try {
-        exit(0);
-      } catch (_) {}
-    });
+    try {
+      final result = await OpenFilex.open(_downloadedFilePath!);
+      if (result.type != ResultType.done) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not open installer: ${result.message}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error opening APK: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -178,7 +222,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF7C3AED).withOpacity(0.1),
+              color: const Color.fromARGB(26, 124, 58, 237),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -192,8 +236,8 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
           Expanded(
             child: Text(
               _readyToInstall
-                  ? 'Update Package Ready'
-                  : (_isDownloading ? 'Downloading Update' : 'Update Available (v${widget.version})'),
+                  ? 'Update Ready to Install'
+                  : (_isDownloading ? 'Downloading...' : 'Update Available (v${widget.version})'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
@@ -203,9 +247,9 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!_isDownloading) ...[
+          if (!_isDownloading && !_readyToInstall) ...[
             const Text(
-              'A new version of RenCloud is available with 120Hz high refresh rate, interactive biometrics, and performance upgrades!',
+              'A new version of RenCloud is ready for download.',
               style: TextStyle(fontSize: 13, color: Color(0xFF0F172A)),
             ),
             const SizedBox(height: 12),
@@ -235,7 +279,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
               child: LinearProgressIndicator(
                 value: _progress,
                 minHeight: 8,
-                backgroundColor: const Color(0xFF7C3AED).withOpacity(0.12),
+                backgroundColor: const Color.fromARGB(31, 124, 58, 237),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   _readyToInstall ? const Color(0xFF06B6D4) : const Color(0xFF7C3AED),
                 ),
@@ -246,7 +290,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  _readyToInstall ? '100% Downloaded' : '${(_progress * 100).toInt()}% Completed',
+                  _readyToInstall ? '100% Downloaded' : '${(_progress * 100).toInt()}%',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF7C3AED)),
                 ),
                 Text(
@@ -261,9 +305,9 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
       actions: _readyToInstall
           ? [
               ElevatedButton.icon(
-                onPressed: _installAndCloseApp,
-                icon: const Icon(Icons.exit_to_app, color: Colors.white),
-                label: const Text('INSTALL & EXIT APP', style: TextStyle(fontWeight: FontWeight.bold)),
+                onPressed: _installApk,
+                icon: const Icon(Icons.system_update_alt, color: Colors.white),
+                label: const Text('INSTALL UPDATE', style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF06B6D4),
                   foregroundColor: Colors.white,

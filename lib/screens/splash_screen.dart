@@ -116,8 +116,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            AppTheme.accentAqua.withOpacity(0.25),
-                            AppTheme.accentAqua.withOpacity(0.0),
+                            AppTheme.accentAqua.withValues(alpha: 0.25),
+                            AppTheme.accentAqua.withValues(alpha: 0.0),
                           ],
                         ),
                       ),
@@ -133,8 +133,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            AppTheme.primaryPurple.withOpacity(0.25),
-                            AppTheme.primaryPurple.withOpacity(0.0),
+                            AppTheme.primaryPurple.withValues(alpha: 0.25),
+                            AppTheme.primaryPurple.withValues(alpha: 0.0),
                           ],
                         ),
                       ),
@@ -170,7 +170,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryPurple.withOpacity(0.3),
+                            color: AppTheme.primaryPurple.withValues(alpha: 0.3),
                             blurRadius: 24,
                             spreadRadius: 2,
                           ),
@@ -260,7 +260,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         decoration: BoxDecoration(
                           color: AppTheme.accentAquaLight,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppTheme.accentAqua.withOpacity(0.3)),
+                          border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.3)),
                         ),
                         child: const Text(
                           '⚡ ULTRA HIGH PERFORMANCE CLOUD',
@@ -284,7 +284,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
-                    backgroundColor: AppTheme.primaryPurple.withOpacity(0.1),
+                    backgroundColor: AppTheme.primaryPurple.withValues(alpha: 0.1),
                     valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentAqua),
                     minHeight: 4,
                   ),
