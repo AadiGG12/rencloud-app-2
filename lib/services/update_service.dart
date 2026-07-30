@@ -15,8 +15,8 @@ class UpdateService {
 
   /// Check for new updates on GitHub Releases with strict cache-busting
   static Future<void> checkForUpdates(BuildContext context, {bool silent = false}) async {
-    final installedVersion = currentVersion;
-    debugPrint('[UpdateService] Installed app version: $installedVersion');
+    final installedVersion = await AppVersion.getInstalledVersion();
+    debugPrint('[UpdateService] Installed app version (PackageManager): $installedVersion');
 
     try {
       // 1. Force fresh fetch by appending cache-busting timestamp parameter
