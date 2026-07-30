@@ -102,14 +102,14 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
       } else {
         setState(() {
           _isLoading = false;
-          _error = 'Authentication failed. Please check your credentials and try again.';
+          _error = 'Authentication failed. Please check:\n\n1. Your Pterodactyl panel email and password\n2. Your internet connection\n3. That the panel at panel.rencloud.online is accessible';
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _error = 'Authentication failed. Please check your credentials and try again.';
+        _error = 'Could not connect to the server. The backend may not be deployed yet. Please try again later or check your connection.';
       });
     }
   }

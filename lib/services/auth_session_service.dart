@@ -78,7 +78,7 @@ class AuthSessionService {
     return true;
   }
 
-  /// Authenticate user via backend API
+  /// Authenticate user via backend API (with direct panel fallback)
   static Future<PanelUser?> authenticateUser({
     required String emailOrUsername,
     required String password,
@@ -101,6 +101,8 @@ class AuthSessionService {
           (cleanInput.contains('@') ? cleanInput.split('@')[0] : cleanInput);
       final bool isAdmin = userData['is_admin'] == true;
 
+      debugPrint('[AuthSession] Login successful via ${result['auth_source']}');
+
       return PanelUser(
         id: userId,
         uuid: '',
@@ -115,9 +117,7 @@ class AuthSessionService {
         updatedAt: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('[AuthSession] Backend auth failed: $e');
-
-      debugPrint('[AuthSession] Backend auth failed. Ensure the backend server is running.');
+      debugPrint('[AuthSession] All auth methods failed: $e');
       return null;
     }
   }
