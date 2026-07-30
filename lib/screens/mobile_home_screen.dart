@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/rencloud_plan.dart';
 import '../providers/catalog_provider.dart';
 import '../core/constants/app_version.dart';
+import '../providers/app_update_provider.dart';
 import '../core/theme/app_theme.dart';
 import '../services/update_service.dart';
 import '../services/biometric_service.dart';
@@ -103,7 +104,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
     final themeMode = ref.watch(themeModeProvider);
     final currency = ref.watch(currencyProvider);
     final biometric = ref.watch(biometricProvider);
-    final installedVersionAsync = ref.watch(installedVersionProvider);
+    final installedVersionAsync = ref.watch(installedPackageVersionProvider);
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 

@@ -2,23 +2,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class AppVersion {
-  static String _cachedVersion = '1.6.3';
-
   /// Directly query Android PackageManager for the installed APK version name
   static Future<String> getInstalledVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
       if (info.version.isNotEmpty) {
-        _cachedVersion = info.version;
+        return info.version;
       }
     } catch (_) {}
-    return _cachedVersion;
+    return '1.6.4';
   }
 
-  static String get version => _cachedVersion;
+  static String get version => '1.6.4';
 }
 
 /// Riverpod provider for installed app version directly from Android PackageManager
 final installedVersionProvider = FutureProvider<String>((ref) async {
-  return await AppVersion.getInstalledVersion();
+  final info = await PackageInfo.fromPlatform();
+  return info.version.isNotEmpty ? info.version : '1.6.4';
 });
