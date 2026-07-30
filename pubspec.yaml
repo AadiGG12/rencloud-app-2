@@ -1,7 +1,7 @@
 name: rencloud_flutter
 description: RenCloud Service Catalog & Pricing Showcase App
 publish_to: 'none'
-version: 1.9.0+260
+version: 1.9.1+270
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

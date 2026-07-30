@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'widgets/resource_calculator.dart';
 import 'widgets/biometric_lock_overlay.dart';
 import 'auth/rencloud_auth_screen.dart';
+import 'admin/admin_control_center.dart';
 import 'widgets/vertical_3d_plan_carousel.dart';
 
 class MobileHomeScreen extends ConsumerStatefulWidget {
@@ -483,6 +484,18 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
               HapticFeedback.selectionClick();
               ref.read(themeModeProvider.notifier).state =
                   themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+            },
+          ),
+          // Admin Control Center Button
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings_rounded, color: AppTheme.metallicGold, size: 26),
+            tooltip: 'Admin Control Center',
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminControlCenter()),
+              );
             },
           ),
           // User Account Login & Registration Icon
