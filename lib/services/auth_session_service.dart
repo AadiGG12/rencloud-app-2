@@ -69,6 +69,8 @@ class AuthSessionService {
       isAdmin: isAdmin,
       email: email,
       username: username,
+      panelUrl: panelUrl,
+      apiKey: apiKey,
     );
 
     // Initialize Admin or Client services depending on role

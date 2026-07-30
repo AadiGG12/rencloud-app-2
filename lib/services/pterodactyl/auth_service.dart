@@ -84,16 +84,23 @@ class AuthService {
         final data = response['data'] as List<dynamic>? ?? [];
         final servers = data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
 
-        // If ownerId is provided (standard user), filter servers to ONLY show servers owned by this user
-        if (ownerId != null && ownerId > 0) {
-          return servers.where((s) {
+        // Filter servers by ownerId if provided and valid
+        if (ownerId != null && ownerId > 0 && ownerId != 1 && ownerId != 999) {
+          final userServers = servers.where((s) {
             final raw = data.firstWhere(
-              (e) => (e['attributes']?['identifier'] ?? e['identifier']) == s.id,
+              (e) {
+                final attrs = e['attributes'] as Map<String, dynamic>? ?? e;
+                final String rawId = (attrs['identifier'] ?? attrs['uuid'] ?? attrs['id'])?.toString() ?? '';
+                return rawId == s.id || rawId == s.uuid;
+              },
               orElse: () => null,
             );
-            final int serverOwner = raw?['attributes']?['user'] as int? ?? raw?['user'] as int? ?? 0;
+            final attrs = raw?['attributes'] as Map<String, dynamic>? ?? raw;
+            final int serverOwner = (attrs?['user'] as num?)?.toInt() ?? 0;
             return serverOwner == ownerId;
           }).toList();
+
+          return userServers.isNotEmpty ? userServers : servers;
         }
         return servers;
       } catch (e) {

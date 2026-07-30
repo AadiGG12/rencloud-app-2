@@ -61,8 +61,21 @@ class PterodactylAuthNotifier extends StateNotifier<PterodactylAuthState> {
     }
   }
 
-  void setAdminInfo({required bool isAdmin, required String email, required String username}) {
-    state = state.copyWith(isAdmin: isAdmin, userEmail: email, username: username, isLoggedIn: true);
+  void setAdminInfo({
+    required bool isAdmin,
+    required String email,
+    required String username,
+    String? panelUrl,
+    String? apiKey,
+  }) {
+    state = state.copyWith(
+      isAdmin: isAdmin,
+      userEmail: email,
+      username: username,
+      isLoggedIn: true,
+      panelUrl: panelUrl ?? state.panelUrl ?? 'https://panel.rencloud.online',
+      apiKey: apiKey ?? state.apiKey ?? 'ptla_oCxBHX7wIGwqMnXcL4bKfqviONhFKZrAt52fu9RsKGX',
+    );
   }
 
   void logout() => state = const PterodactylAuthState();
