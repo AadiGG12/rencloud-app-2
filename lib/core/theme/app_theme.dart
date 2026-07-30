@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Production Metallic Design System for RenCloud
+/// 3D Skeuomorphic Design System for RenCloud
 class AppTheme {
-  // Metallic Color Palette Tokens
-  static const Color primaryPurple = Color(0xFF38BDF8); // Metallic Cyber Steel (Primary)
-  static const Color primaryDarkPurple = Color(0xFF0284C7); // Deep Steel Blue
-  static const Color accentAqua = Color(0xFF38BDF8); // Platinum Cyan Accent
+  // Skeuomorphic & Metallic Palette Tokens
+  static const Color primaryPurple = Color(0xFF38BDF8); // Metallic Cyber Steel
+  static const Color primaryDarkPurple = Color(0xFF0284C7);
+  static const Color accentAqua = Color(0xFF38BDF8);
   static const Color accentAquaLight = Color(0xFFF0F9FF);
   
-  // Metallic Steel & Titanium Tones
   static const Color metallicSilver = Color(0xFFE2E8F0);
   static const Color metallicPlatinum = Color(0xFFCBD5E1);
   static const Color metallicSteel = Color(0xFF475569);
@@ -19,27 +18,27 @@ class AppTheme {
   static const Color metallicGold = Color(0xFFF59E0B);
   static const Color metallicBronze = Color(0xFFD97706);
 
-  static const Color backgroundLight = Color(0xFFF1F5F9); // Light Metallic Slate
-  static const Color backgroundDark = Color(0xFF0B0F19); // Metallic Dark Titanium
-  static const Color cardSurfaceLight = Colors.white;
-  static const Color cardSurfaceDark = Color(0xFF161F33); // Metallic Dark Surface
+  static const Color backgroundLight = Color(0xFFE2E8F0); // Skeuomorphic Light Slate
+  static const Color backgroundDark = Color(0xFF090E17); // Skeuomorphic Dark Titanium
+  static const Color cardSurfaceLight = Color(0xFFECFEFF);
+  static const Color cardSurfaceDark = Color(0xFF131C2E);
   
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textPrimaryLight = Color(0xFF0F172A);
   static const Color textPrimaryDark = Color(0xFFF8FAFC);
-  static const Color textSecondary = Color(0xFF94A3B8); // Metallic Slate Subtitle
+  static const Color textSecondary = Color(0xFF94A3B8);
   static const Color borderLight = Color(0xFFCBD5E1);
   static const Color borderDark = Color(0xFF334155);
 
-  // Metallic Linear Gradients
+  // Metallic & Skeuomorphic Gradients
   static const LinearGradient metallicSilverGradient = LinearGradient(
-    colors: [Color(0xFFF8FAFC), Color(0xFFCBD5E1), Color(0xFF94A3B8)],
+    colors: [Color(0xFFFFFFFF), Color(0xFFE2E8F0), Color(0xFFCBD5E1)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient metallicDarkGradient = LinearGradient(
-    colors: [Color(0xFF1E293B), Color(0xFF0F172A), Color(0xFF090D16)],
+    colors: [Color(0xFF1E2D4A), Color(0xFF111929), Color(0xFF0A0F1A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -74,16 +73,23 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: cardSurfaceLight,
-        elevation: 2,
+        elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: borderLight, width: 1.2),
+          side: const BorderSide(color: Colors.white, width: 1.5),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 5,
+          shadowColor: const Color(0xFFB8C4D9),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFFF8FAFC),
-        elevation: 0,
-        scrolledUnderElevation: 1,
+        backgroundColor: const Color(0xFFE2E8F0),
+        elevation: 2,
+        scrolledUnderElevation: 2,
         iconTheme: const IconThemeData(color: primaryDarkPurple),
         titleTextStyle: GoogleFonts.outfit(
           color: textPrimaryLight,
@@ -112,16 +118,23 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: cardSurfaceDark,
-        elevation: 3,
+        elevation: 5,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: borderDark, width: 1.2),
+          side: const BorderSide(color: Color(0xFF2B3A52), width: 1.5),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 6,
+          shadowColor: Colors.black54,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFF0F172A),
-        elevation: 0,
-        scrolledUnderElevation: 1,
+        backgroundColor: const Color(0xFF0D1422),
+        elevation: 2,
+        scrolledUnderElevation: 2,
         iconTheme: const IconThemeData(color: accentAqua),
         titleTextStyle: GoogleFonts.outfit(
           color: textPrimaryDark,
