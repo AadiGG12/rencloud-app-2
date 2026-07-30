@@ -234,24 +234,22 @@ class _PlanCardState extends ConsumerState<PlanCard> with TickerProviderStateMix
             ],
           ),
 
-          // Popular Badge
+          // Metallic Popular Badge
           if (widget.plan.isPopular)
             Positioned(
               top: 0,
               right: 28,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.accentAqua, Color(0xFF0284C7)],
-                  ),
+                  gradient: AppTheme.metallicGoldGradient,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(6),
                     bottomRight: Radius.circular(6),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.accentAqua.withValues(alpha: 0.4),
+                      color: AppTheme.metallicGold.withValues(alpha: 0.4),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -260,12 +258,12 @@ class _PlanCardState extends ConsumerState<PlanCard> with TickerProviderStateMix
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.auto_awesome, size: 10, color: Colors.white),
+                    Icon(Icons.auto_awesome, size: 10, color: Colors.black87),
                     SizedBox(width: 3),
                     Text(
                       'POPULAR',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Colors.black87,
                         fontSize: 8,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 0.5,
@@ -322,10 +320,21 @@ class _PlanCardState extends ConsumerState<PlanCard> with TickerProviderStateMix
 
           const SizedBox(height: 10),
 
-          // Order / Deploy Button
-          SizedBox(
+          // Metallic Order / Deploy Button
+          Container(
             width: double.infinity,
             height: 38,
+            decoration: BoxDecoration(
+              gradient: AppTheme.metallicSteelGradient,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryPurple.withValues(alpha: 0.35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
             child: ElevatedButton.icon(
               onPressed: () {
                 HapticFeedback.mediumImpact();
@@ -340,9 +349,9 @@ class _PlanCardState extends ConsumerState<PlanCard> with TickerProviderStateMix
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryPurple,
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                elevation: 3,
               ),
             ),
           ),

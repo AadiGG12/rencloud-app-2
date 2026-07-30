@@ -449,15 +449,20 @@ class _AdminBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
       decoration: BoxDecoration(
-        color: AppTheme.accentAqua.withValues(alpha: 0.2),
+        gradient: AppTheme.metallicGoldGradient,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.metallicGold.withValues(alpha: 0.3),
+            blurRadius: 4,
+          ),
+        ],
       ),
       child: const Text(
-        'Admin',
-        style: TextStyle(fontSize: 9, color: AppTheme.accentAqua, fontWeight: FontWeight.bold),
+        'ADMIN',
+        style: TextStyle(fontSize: 9, color: Colors.black87, fontWeight: FontWeight.w900, letterSpacing: 0.5),
       ),
     );
   }

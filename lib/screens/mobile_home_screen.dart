@@ -500,7 +500,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   unselectedIconTheme: const IconThemeData(color: AppTheme.textSecondary),
                   destinations: const [
                     NavigationRailDestination(icon: Icon(Icons.cloud), label: Text('Catalog')),
-                    NavigationRailDestination(icon: Icon(Icons.calculate), label: Text('Calculator')),
+                    NavigationRailDestination(icon: Icon(Icons.tune_rounded), label: Text('Custom Plan')),
                     NavigationRailDestination(icon: Icon(Icons.settings), label: Text('Settings')),
                   ],
                 ),
@@ -521,7 +521,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
               unselectedItemColor: AppTheme.textSecondary,
               items: const [
                 BottomNavigationBarItem(icon: Icon(Icons.cloud), label: 'Catalog'),
-                BottomNavigationBarItem(icon: Icon(Icons.calculate), label: 'Calculator'),
+                BottomNavigationBarItem(icon: Icon(Icons.tune_rounded), label: 'Custom Plan'),
                 BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
               ],
             ),

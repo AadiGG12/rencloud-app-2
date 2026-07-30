@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../core/theme/app_theme.dart';
 
 /// Ultra-Fast, 120 FPS Glassmorphism Card Component
 /// Hardware-accelerated translucent glass card optimized for smooth 120Hz scrolling.
@@ -33,21 +32,21 @@ class GlassCard extends StatelessWidget {
 
     final cardDecoration = BoxDecoration(
       color: isDark
-          ? const Color(0xFF1E293B).withValues(alpha: 0.85)
-          : Colors.white.withValues(alpha: 0.92),
+          ? const Color(0xFF131C2E).withValues(alpha: 0.92)
+          : Colors.white.withValues(alpha: 0.95),
       borderRadius: br,
       border: Border.all(
         color: borderColor ??
             (isDark
-                ? Colors.white.withValues(alpha: 0.12)
-                : AppTheme.primaryPurple.withValues(alpha: 0.12)),
-        width: 1.1,
+                ? const Color(0xFF334155)
+                : const Color(0xFFCBD5E1)),
+        width: 1.2,
       ),
       boxShadow: [
         BoxShadow(
           color: isDark
-              ? Colors.black.withValues(alpha: 0.3)
-              : AppTheme.primaryPurple.withValues(alpha: 0.06),
+              ? Colors.black.withValues(alpha: 0.4)
+              : const Color(0xFF64748B).withValues(alpha: 0.1),
           blurRadius: 10,
           spreadRadius: 0,
           offset: const Offset(0, 3),

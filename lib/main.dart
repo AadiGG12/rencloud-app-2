@@ -5,11 +5,12 @@ import 'core/constants/app_version.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/catalog_provider.dart';
 import 'screens/splash_screen.dart';
+import 'screens/widgets/theme_reveal_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppVersion.init();
-  await ApiClient.init();  // Initialize secure backend API client
+  await ApiClient.init(); // Initialize secure backend API client
   runApp(
     const ProviderScope(
       child: RenCloudApp(),
@@ -30,6 +31,12 @@ class RenCloudApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      builder: (context, child) {
+        return ThemeRevealWrapper(
+          themeMode: themeMode,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: const SplashScreen(),
     );
   }
