@@ -1,23 +1,28 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class AppVersion {
-  /// Directly query Android PackageManager for the installed APK version name
-  static Future<String> getInstalledVersion() async {
+  static String _installedVersionName = '1.6.5';
+  static int _installedBuildNumber = 60;
+
+  /// Read installed package info directly from native Android PackageManager BEFORE runApp()
+  static Future<void> init() async {
     try {
       final info = await PackageInfo.fromPlatform();
       if (info.version.isNotEmpty) {
-        return info.version;
+        _installedVersionName = info.version;
+        _installedBuildNumber = int.tryParse(info.buildNumber) ?? 60;
+        debugPrint('[AppVersion] Native Android PackageManager version: $_installedVersionName (build $_installedBuildNumber)');
       }
-    } catch (_) {}
-    return '1.6.4';
+    } catch (e) {
+      debugPrint('[AppVersion] Failed to read PackageManager info: $e');
+    }
   }
 
-  static String get version => '1.6.4';
-}
+  /// Synchronously returns the exact version name read from native Android PackageManager
+  static String get version => _installedVersionName;
 
-/// Riverpod provider for installed app version directly from Android PackageManager
-final installedVersionProvider = FutureProvider<String>((ref) async {
-  final info = await PackageInfo.fromPlatform();
-  return info.version.isNotEmpty ? info.version : '1.6.4';
-});
+  static Future<String> getInstalledVersion() async => _installedVersionName;
+
+  static int get buildNumber => _installedBuildNumber;
+}

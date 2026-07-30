@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/rencloud_plan.dart';
 import '../providers/catalog_provider.dart';
 import '../core/constants/app_version.dart';
-import '../providers/app_update_provider.dart';
 import '../core/theme/app_theme.dart';
 import '../services/update_service.dart';
 import '../services/biometric_service.dart';
@@ -104,7 +103,6 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
     final themeMode = ref.watch(themeModeProvider);
     final currency = ref.watch(currencyProvider);
     final biometric = ref.watch(biometricProvider);
-    final installedVersionAsync = ref.watch(installedPackageVersionProvider);
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -302,7 +300,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                       border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.4)),
                     ),
                     child: Text(
-                      'RenCloud v${installedVersionAsync.value ?? AppVersion.version} (Installed APK)',
+                      'RenCloud v${AppVersion.version} (Installed APK)',
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.accentAqua),
                     ),
                   ),
@@ -410,7 +408,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                       children: [
                         const Text('App Version', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                         const SizedBox(height: 2),
-                        Text('RenCloud v${installedVersionAsync.value ?? AppVersion.version}', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                        Text('RenCloud v${AppVersion.version}', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                       ],
                     ),
                   ),
@@ -421,7 +419,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      'v${installedVersionAsync.value ?? AppVersion.version}',
+                      'v${AppVersion.version}',
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
                     ),
                   ),
@@ -482,7 +480,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
             const SizedBox(height: 24),
             Center(
               child: Text(
-                'RenCloud App Version v${installedVersionAsync.value ?? AppVersion.version}',
+                'RenCloud App Version v${AppVersion.version}',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
               ),
             ),

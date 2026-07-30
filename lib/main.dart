@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/constants/app_version.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/catalog_provider.dart';
 import 'screens/splash_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppVersion.init();
   runApp(
     const ProviderScope(
       child: RenCloudApp(),

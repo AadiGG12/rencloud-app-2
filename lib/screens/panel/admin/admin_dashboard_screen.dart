@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_version.dart';
-import '../../../providers/app_update_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/pterodactyl_provider.dart';
@@ -96,7 +95,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 color: AppTheme.accentAqua.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Text('v${ref.watch(installedPackageVersionProvider).value ?? AppVersion.version}', style: const TextStyle(fontSize: 10, color: AppTheme.accentAqua, fontWeight: FontWeight.bold)),
+              child: Text('v${AppVersion.version}', style: const TextStyle(fontSize: 10, color: AppTheme.accentAqua, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
