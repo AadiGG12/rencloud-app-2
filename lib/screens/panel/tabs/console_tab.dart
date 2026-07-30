@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/pterodactyl_provider.dart';
-import '../../../services/pterodactyl/auth_service.dart';
+import '../../../services/backend/server_service.dart';
 
 class ConsoleTab extends ConsumerStatefulWidget {
   final String serverId;
@@ -36,14 +36,14 @@ class _ConsoleTabState extends ConsumerState<ConsoleTab> {
     if (auth.panelUrl == null || auth.apiKey == null) return;
 
     try {
-      final creds = await AuthService.getWebSocketCredentials(auth.panelUrl!, auth.apiKey!, widget.serverId);
-      final wsUrl = creds.socket;
+      final creds = await BackendServerService.getWebSocketCredentials(widget.serverId);
+      final wsUrl = creds['socket']?.toString() ?? '';
 
       _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
       await _channel!.ready;
 
       // Authenticate
-      _channel!.sink.add(json.encode({'event': 'auth', 'args': [creds.token]}));
+      _channel!.sink.add(json.encode({'event': 'auth', 'args': [creds['token'] ?? '']}));
 
       _sub = _channel!.stream.listen(
         (data) {
@@ -98,8 +98,8 @@ class _ConsoleTabState extends ConsumerState<ConsoleTab> {
     final auth = ref.read(pterodactylAuthProvider);
     if (auth.panelUrl == null || auth.apiKey == null) return;
     try {
-      final creds = await AuthService.getWebSocketCredentials(auth.panelUrl!, auth.apiKey!, widget.serverId);
-      _channel!.sink.add(json.encode({'event': 'auth', 'args': [creds.token]}));
+      final creds = await BackendServerService.getWebSocketCredentials(widget.serverId);
+      _channel!.sink.add(json.encode({'event': 'auth', 'args': [creds['token'] ?? '']}));
     } catch (_) {}
   }
 
@@ -122,7 +122,7 @@ class _ConsoleTabState extends ConsumerState<ConsoleTab> {
     final auth = ref.read(pterodactylAuthProvider);
     if (auth.panelUrl == null || auth.apiKey == null) return;
     try {
-      await AuthService.sendPowerAction(auth.panelUrl!, auth.apiKey!, widget.serverId, action);
+      await BackendServerService.sendPowerSignal(widget.serverId, action);
       setState(() => _lines.add('[Power: $action]'));
     } catch (e) {
       setState(() => _lines.add('[Power failed: $e]'));

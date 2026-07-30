@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/pterodactyl/server_model.dart';
-import '../services/pterodactyl/pterodactyl_client.dart';
+import '../services/backend/server_service.dart';
 import '../services/pterodactyl/auth_service.dart';
 
 // Auth State
@@ -74,7 +74,7 @@ class PterodactylAuthNotifier extends StateNotifier<PterodactylAuthState> {
       username: username,
       isLoggedIn: true,
       panelUrl: panelUrl ?? state.panelUrl ?? 'https://panel.rencloud.online',
-      apiKey: apiKey ?? state.apiKey ?? 'ptla_oCxBHX7wIGwqMnXcL4bKfqviONhFKZrAt52fu9RsKGX',
+      apiKey: apiKey,  // NEVER use a hardcoded fallback API key - security critical!
     );
   }
 
@@ -98,23 +98,15 @@ class ServerListState {
 }
 
 class ServerListNotifier extends StateNotifier<ServerListState> {
-  PterodactylClient? _client;
-
   ServerListNotifier() : super(const ServerListState());
 
-  void setClient(PterodactylClient client) => _client = client;
-
-  Future<void> fetchServers([int? ownerId]) async {
-    if (_client == null) return;
+  Future<void> fetchServers() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final servers = await AuthService.fetchServers(_client!.panelUrl, _client!.apiKey, ownerId: ownerId);
+      final servers = await BackendServerService.listServers();
       state = ServerListState(servers: servers);
     } catch (e) {
-      final errStr = e.toString();
-      final cleanMsg = errStr.contains('403') || errStr.contains('AccessDenied')
-          ? 'Unauthorized access (403). Please verify your panel credentials.'
-          : errStr.replaceAll(RegExp(r'PterodactylException:?\s*'), '').trim();
+      final cleanMsg = 'Failed to load servers. Please try again.';
       state = state.copyWith(isLoading: false, error: cleanMsg);
     }
   }
@@ -122,12 +114,10 @@ class ServerListNotifier extends StateNotifier<ServerListState> {
 
 final pterodactylServerListProvider = StateNotifierProvider<ServerListNotifier, ServerListState>((ref) => ServerListNotifier());
 
-// Server Resources
+// Server Resources - fetched through backend
 final serverResourcesProvider = FutureProvider.family<ServerResources?, String>((ref, serverId) async {
-  final auth = ref.watch(pterodactylAuthProvider);
-  if (auth.panelUrl == null || auth.apiKey == null) return null;
   try {
-    return await AuthService.fetchResources(auth.panelUrl!, auth.apiKey!, serverId);
+    return await BackendServerService.getResources(serverId);
   } catch (_) {
     return null;
   }

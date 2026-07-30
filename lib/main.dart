@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/api_client.dart';
 import 'core/constants/app_version.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/catalog_provider.dart';
@@ -8,6 +9,7 @@ import 'screens/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppVersion.init();
+  await ApiClient.init();  // Initialize secure backend API client
   runApp(
     const ProviderScope(
       child: RenCloudApp(),

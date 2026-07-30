@@ -5,8 +5,6 @@ import '../../models/pterodactyl/server_model.dart';
 import '../../models/pterodactyl/panel_user_model.dart';
 import '../../providers/pterodactyl_provider.dart';
 import '../../providers/admin_provider.dart';
-import '../../services/pterodactyl/admin_service.dart';
-import '../../services/pterodactyl/pterodactyl_client.dart';
 import '../../services/auth_session_service.dart';
 import 'admin/admin_dashboard_screen.dart';
 import '../mobile_home_screen.dart';
@@ -37,9 +35,6 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
   bool _isLoading = false;
   String? _error;
 
-  static const String _defaultPanelUrl = 'https://panel.rencloud.online';
-  static const String _defaultApiKey = 'ptla_oCxBHX7wIGwqMnXcL4bKfqviONhFKZrAt52fu9RsKGX';
-
   @override
   void dispose() {
     _emailController.dispose();
@@ -62,22 +57,13 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
     });
 
     try {
-      // 1. Authenticate & lookup user in panel database to differentiate role
+      // 1. Authenticate via secure backend proxy
       final PanelUser? matchedUser = await AuthSessionService.authenticateUser(
         emailOrUsername: email,
         password: password,
       );
 
-      final service = AdminService(_defaultPanelUrl, _defaultApiKey);
-      await ref.read(adminAuthProvider.notifier).login(_defaultPanelUrl, _defaultApiKey);
-      ref.read(adminUserListProvider.notifier).setService(service);
-      ref.read(adminAllServersProvider.notifier).setService(service);
-
-      final client = PterodactylClient(panelUrl: _defaultPanelUrl, apiKey: _defaultApiKey);
-      ref.read(pterodactylServerListProvider.notifier).setClient(client);
-
       if (matchedUser != null) {
-        // User found in panel database!
         final bool isAdmin = matchedUser.isAdmin;
         final String userEmail = matchedUser.email;
         final String username = matchedUser.username;
@@ -90,7 +76,7 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
           username: username,
         );
 
-        // Save persistent login session so user stays logged in across app restarts!
+        // Save persistent login session
         await AuthSessionService.saveSession(
           email: userEmail,
           username: username,
@@ -101,15 +87,12 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
         if (!mounted) return;
         setState(() => _isLoading = false);
 
-        // Differentiate navigation based on actual role:
         if (isAdmin) {
-          // Admin User -> Admin Dashboard
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
           );
         } else {
-          // Standard User -> My Servers screen (Only their servers, no admin access)
           ref.read(pterodactylServerListProvider.notifier).fetchServers();
           Navigator.pushReplacement(
             context,
@@ -117,32 +100,10 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
           );
         }
       } else {
-        // Fallback for standard client user if not listed in application API
-        final bool isGmail = email.contains('@');
-        final String userEmail = isGmail ? email : '$email@rencloud.online';
-        final String username = isGmail ? email.split('@')[0] : email;
-
-        ref.read(pterodactylAuthProvider.notifier).setAdminInfo(
-          isAdmin: false, // Standard user by default
-          email: userEmail,
-          username: username,
-        );
-
-        await AuthSessionService.saveSession(
-          email: userEmail,
-          username: username,
-          userId: 0,
-          isAdmin: false,
-        );
-
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-
-        ref.read(pterodactylServerListProvider.notifier).fetchServers();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const PterodactylServerListScreen()),
-        );
+        setState(() {
+          _isLoading = false;
+          _error = 'Authentication failed. Please check your credentials and try again.';
+        });
       }
     } catch (e) {
       if (!mounted) return;

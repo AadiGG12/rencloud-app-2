@@ -1,5 +1,6 @@
 import '../../models/pterodactyl/server_model.dart';
 import 'pterodactyl_client.dart';
+import '../backend/server_service.dart';
 
 /// The type of API key detected.
 enum ApiKeyType { client, application, unknown }
@@ -62,6 +63,7 @@ class AuthService {
     return ApiKeyType.unknown;
   }
 
+  @Deprecated('Use BackendServerService for secure backend-proxied operations')
   /// Fetch the authenticated user's account info (checks admin status).
   static Future<UserAccount> fetchAccount(String panelUrl, String apiKey) async {
     final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey);
@@ -69,89 +71,51 @@ class AuthService {
     return UserAccount.fromJson(response);
   }
 
+  /// Fetch servers through the secure backend proxy.
+  /// NO Pterodactyl API keys are used on the client.
   static Future<List<PterodactylServer>> fetchServers(
     String panelUrl,
     String apiKey, {
     int? ownerId,
     String? userEmail,
   }) async {
-    const String masterKey = 'ptla_oCxBHX7wIGwqMnXcL4bKfqviONhFKZrAt52fu9RsKGX';
-    final String activeKey = apiKey.isNotEmpty ? apiKey : masterKey;
-
-    // 1. If key starts with ptlc_, try Client API first
-    if (activeKey.startsWith('ptlc_')) {
-      try {
-        final client = PterodactylClient(panelUrl: panelUrl, apiKey: activeKey, apiBase: '/api/client');
-        final response = await client.get('');
-        final data = response['data'] as List<dynamic>? ?? [];
-        return data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
-      } catch (e) {
-        // Fallback to Application API masterKey below
-      }
-    }
-
-    // 2. Try Application API with provided key or masterKey
+    // SECURITY: All server fetching is done through the backend proxy.
+    // The backend holds the PTLA key server-side.
+    // This method is kept for API compatibility but delegates to BackendServerService.
     try {
-      final adminKey = activeKey.startsWith('ptla_') ? activeKey : masterKey;
-      final adminClient = PterodactylClient(panelUrl: panelUrl, apiKey: adminKey, apiBase: '/api/application');
-      final response = await adminClient.get('/servers');
-      final data = response['data'] as List<dynamic>? ?? [];
-      final servers = data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
-
-      // Filter servers by ownerId if provided
-      if (ownerId != null && ownerId > 0 && ownerId != 1 && ownerId != 999) {
-        final userServers = servers.where((s) {
-          final raw = data.firstWhere(
-            (e) {
-              final attrs = e['attributes'] as Map<String, dynamic>? ?? e;
-              final String rawId = (attrs['identifier'] ?? attrs['uuid'] ?? attrs['id'])?.toString() ?? '';
-              return rawId == s.id || rawId == s.uuid;
-            },
-            orElse: () => null,
-          );
-          final attrs = raw?['attributes'] as Map<String, dynamic>? ?? raw;
-          final int serverOwner = (attrs?['user'] as num?)?.toInt() ?? 0;
-          return serverOwner == ownerId;
-        }).toList();
-
-        return userServers.isNotEmpty ? userServers : servers;
-      }
-      return servers;
+      return await BackendServerService.listServers();
     } catch (e) {
-      // 3. Final Fallback: Try Client API with activeKey
-      try {
-        final client = PterodactylClient(panelUrl: panelUrl, apiKey: activeKey, apiBase: '/api/client');
-        final response = await client.get('');
-        final data = response['data'] as List<dynamic>? ?? [];
-        return data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
-      } catch (_) {
-        throw PterodactylException('Unauthorized access (403). Please verify your panel login or API key.');
-      }
+      throw PterodactylException('Failed to fetch servers: $e');
     }
   }
 
+  @Deprecated('Use BackendServerService for secure backend-proxied operations')
   static Future<PterodactylServer> fetchServerDetail(String panelUrl, String apiKey, String serverId) async {
     final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey);
     final response = await client.get('/servers/$serverId');
     return PterodactylServer.fromJson(response);
   }
 
+  @Deprecated('Use BackendServerService.getResources() instead')
   static Future<ServerResources> fetchResources(String panelUrl, String apiKey, String serverId) async {
     final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey);
     final response = await client.get('/servers/$serverId/resources');
     return ServerResources.fromJson(response);
   }
 
+  @Deprecated('Use BackendServerService.sendPowerSignal() instead')
   static Future<void> sendPowerAction(String panelUrl, String apiKey, String serverId, String action) async {
     final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey);
     await client.post('/servers/$serverId/power', body: {'signal': action});
   }
 
+  @Deprecated('Use BackendServerService.sendCommand() instead')
   static Future<void> sendCommand(String panelUrl, String apiKey, String serverId, String command) async {
     final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey);
     await client.post('/servers/$serverId/command', body: {'command': command});
   }
 
+  @Deprecated('Use BackendServerService.getWebSocketCredentials() instead')
   static Future<WebSocketCredentials> getWebSocketCredentials(String panelUrl, String apiKey, String serverId) async {
     final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey);
     final response = await client.get('/servers/$serverId/websocket');
