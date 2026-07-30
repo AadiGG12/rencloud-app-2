@@ -24,6 +24,16 @@ class MobileHomeScreen extends ConsumerStatefulWidget {
 class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
   int _currentIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        UpdateService.checkForUpdates(context, silent: true);
+      }
+    });
+  }
+
   void _showDiscordDialog() {
     showDialog(
       context: context,
@@ -195,9 +205,9 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   itemCount: plans.length,
                   itemBuilder: (context, index) {
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
+                      padding: const EdgeInsets.only(bottom: 8.0),
                       child: SizedBox(
-                        height: 340,
+                        height: 230,
                         child: PlanCard(plan: plans[index]),
                       ),
                     );

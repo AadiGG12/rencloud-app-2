@@ -6,6 +6,7 @@ import '../../models/pterodactyl/panel_user_model.dart';
 import '../../providers/pterodactyl_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../services/auth_session_service.dart';
+import '../../services/update_service.dart';
 import 'admin/admin_dashboard_screen.dart';
 import '../mobile_home_screen.dart';
 import '../home_screen.dart';
@@ -279,6 +280,9 @@ class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerL
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(pterodactylServerListProvider.notifier).fetchServers();
+      if (mounted) {
+        UpdateService.checkForUpdates(context, silent: true);
+      }
     });
   }
 

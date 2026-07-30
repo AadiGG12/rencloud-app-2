@@ -44,13 +44,8 @@ class _ShimmerLoadingState extends State<ShimmerLoading> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final baseColor = isDark
-        ? const Color(0xFF1E2638)
-        : const Color(0xFFE2E8F0);
-    final highlightColor = isDark
-        ? const Color(0xFF2D374D)
-        : const Color(0xFFF1F5F9);
+    const baseColor = Color(0xFF0F172A);
+    const highlightColor = Color(0xFF1E293B);
 
     return AnimatedBuilder(
       animation: _animation,
