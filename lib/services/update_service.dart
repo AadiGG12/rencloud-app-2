@@ -13,31 +13,60 @@ class UpdateService {
 
   static String? _dismissedVersion;
 
-  /// Check for new updates on GitHub Releases (manual check only)
+  /// Check for new updates on GitHub Releases with strict cache-busting
   static Future<void> checkForUpdates(BuildContext context, {bool silent = false}) async {
-    try {
-      final response = await http.get(Uri.parse(releasesApiUrl)).timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final String latestTagName = data['tag_name'] ?? '';
-        final String latestVersion = latestTagName.replaceAll('v', '').trim();
-        final String releaseNotes = data['body'] ?? 'Latest update available.';
+    final installedVersion = currentVersion;
+    debugPrint('[UpdateService] Installed app version: $installedVersion');
 
-        List<dynamic> assets = data['assets'] ?? [];
+    try {
+      // 1. Force fresh fetch by appending cache-busting timestamp parameter
+      final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+      final requestUri = Uri.parse('$releasesApiUrl?t=$cacheBuster');
+
+      debugPrint('[UpdateService] Fetching latest release directly from GitHub: $requestUri');
+
+      final response = await http.get(
+        requestUri,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      ).timeout(const Duration(seconds: 7));
+
+      debugPrint('[UpdateService] Raw GitHub API response status: ${response.statusCode}');
+      debugPrint('[UpdateService] Raw GitHub API response: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final String latestTagName = data['tag_name'] as String? ?? '';
+        final String latestVersion = latestTagName.replaceAll(RegExp(r'[^0-9.]'), '').trim();
+        final String releaseNotes = data['body'] as String? ?? 'Latest update available.';
+
+        debugPrint('[UpdateService] Latest version fetched from GitHub: $latestVersion');
+
+        List<dynamic> assets = data['assets'] as List<dynamic>? ?? [];
         String? apkDownloadUrl;
         for (var asset in assets) {
-          if (asset['name'].toString().endsWith('.apk')) {
+          if (asset['name'].toString().toLowerCase().endsWith('.apk')) {
             apkDownloadUrl = asset['browser_download_url'];
             break;
           }
         }
 
-        // If user already dismissed this exact version in silent auto-check mode, do not show again
+        final bool isUpdateAvailable = _isNewerVersion(latestVersion, installedVersion);
+        debugPrint('[UpdateService] Version comparison result (latest: $latestVersion vs current: $installedVersion): isNewer=$isUpdateAvailable');
+        debugPrint('[UpdateService] Whether an update is available: $isUpdateAvailable');
+
+        // If user already dismissed this exact version in silent auto-check mode, skip dialog
         if (silent && _dismissedVersion == latestVersion) {
+          debugPrint('[UpdateService] Silent check: version $latestVersion was previously dismissed');
           return;
         }
 
-        if (_isNewerVersion(latestVersion, currentVersion)) {
+        if (isUpdateAvailable) {
           if (context.mounted) {
             _showUpdateDialog(
               context,
@@ -48,11 +77,14 @@ class UpdateService {
           }
         } else if (!silent && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('You are on the latest version of RenCloud (v$currentVersion)')),
+            SnackBar(content: Text('You are on the latest version of RenCloud (v$installedVersion)')),
           );
         }
+      } else {
+        throw Exception('GitHub API HTTP ${response.statusCode}');
       }
     } catch (e) {
+      debugPrint('[UpdateService] Update check failed: $e');
       if (!silent && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Could not check for updates: $e')),
@@ -65,16 +97,26 @@ class UpdateService {
     _dismissedVersion = version;
   }
 
+  /// True Semantic Versioning comparison (major.minor.patch)
   static bool _isNewerVersion(String latest, String current) {
-    if (latest.isEmpty) return false;
-    List<int> latestParts = latest.split('.').map((e) => int.tryParse(e) ?? 0).toList();
-    List<int> currentParts = current.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+    final latestSemver = _parseSemver(latest);
+    final currentSemver = _parseSemver(current);
 
-    for (int i = 0; i < latestParts.length && i < currentParts.length; i++) {
-      if (latestParts[i] > currentParts[i]) return true;
-      if (latestParts[i] < currentParts[i]) return false;
+    for (int i = 0; i < 3; i++) {
+      if (latestSemver[i] > currentSemver[i]) return true;
+      if (latestSemver[i] < currentSemver[i]) return false;
     }
-    return latestParts.length > currentParts.length;
+    return false;
+  }
+
+  static List<int> _parseSemver(String versionStr) {
+    final cleaned = versionStr.replaceAll(RegExp(r'[^0-9.]'), '').trim();
+    final parts = cleaned.split('.');
+    final semver = <int>[0, 0, 0];
+    for (int i = 0; i < parts.length && i < 3; i++) {
+      semver[i] = int.tryParse(parts[i]) ?? 0;
+    }
+    return semver;
   }
 
   static void _showUpdateDialog(
@@ -138,7 +180,6 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
     });
 
     try {
-      // Get local storage directory
       final dir = await getApplicationDocumentsDirectory();
       final filePath = '${dir.path}/rencloud-v${widget.version}.apk';
       final file = File(filePath);
@@ -146,7 +187,6 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
         try { await file.delete(); } catch (_) {}
       }
 
-      // Stream download with progress
       final response = await http.Client().send(
         http.Request('GET', Uri.parse(widget.downloadUrl!)),
       );
