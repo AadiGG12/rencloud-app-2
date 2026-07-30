@@ -90,6 +90,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -100,6 +101,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             },
           ),
           title: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
             Container(
               padding: const EdgeInsets.all(6),

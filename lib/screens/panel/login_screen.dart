@@ -9,7 +9,10 @@ import '../../services/auth_session_service.dart';
 import 'admin/admin_dashboard_screen.dart';
 import '../mobile_home_screen.dart';
 import '../home_screen.dart';
+import 'package:flutter/services.dart';
 import '../widgets/biometric_lock_overlay.dart';
+import '../widgets/glass_card.dart';
+import '../widgets/shimmer_loading.dart';
 import 'tabs/console_tab.dart';
 import 'tabs/files_tab.dart';
 import 'tabs/databases_tab.dart';
@@ -306,7 +309,9 @@ class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerL
               );
             },
           ),
+          centerTitle: true,
           title: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Text('My Servers'),
               if (auth.isAdmin) ...[const SizedBox(width: 8), _AdminBadge()],
@@ -391,10 +396,13 @@ class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerL
                 ],
               ),
             ),
-          // Server List
           Expanded(
             child: state.isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: 4,
+                    itemBuilder: (_, __) => const ServerCardSkeleton(),
+                  )
                 : state.error != null
                     ? Center(
                         child: Column(
@@ -461,19 +469,17 @@ class _ServerCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final resourcesAsync = ref.watch(serverResourcesProvider(server.id));
 
-    return Card(
+    return GlassCard(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      color: isDark ? AppTheme.cardSurfaceDark : Colors.white,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () => Navigator.push(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => PterodactylServerDetailScreen(server: server)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+        );
+      },
+      child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -534,8 +540,6 @@ class _ServerCard extends ConsumerWidget {
               ),
             ],
           ),
-        ),
-      ),
     );
   }
 }

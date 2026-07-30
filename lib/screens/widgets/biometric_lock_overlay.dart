@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/catalog_provider.dart';
@@ -54,6 +55,7 @@ class _BiometricLockOverlayState extends ConsumerState<BiometricLockOverlay> wit
       _isAuthenticating = false;
 
       if (success) {
+        HapticFeedback.mediumImpact();
         ref.read(biometricProvider.notifier).unlock();
       }
     }

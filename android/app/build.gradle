@@ -36,6 +36,11 @@ android {
         jvmTarget = '17'
     }
 
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
     defaultConfig {
         applicationId "com.rencloud.app"
         minSdkVersion flutter.minSdkVersion

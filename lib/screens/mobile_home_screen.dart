@@ -10,6 +10,7 @@ import '../services/biometric_service.dart';
 import 'panel/login_screen.dart';
 import 'widgets/category_tabs.dart';
 import 'widgets/plan_card.dart';
+import 'package:flutter/services.dart';
 import 'widgets/resource_calculator.dart';
 import 'widgets/biometric_lock_overlay.dart';
 
@@ -434,7 +435,9 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
     return BiometricLockOverlay(
       child: Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
               'assets/images/logo.png',
@@ -451,6 +454,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
             icon: Icon(themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode, color: AppTheme.primaryPurple),
             tooltip: 'Toggle Dark / Light Theme',
             onPressed: () {
+              HapticFeedback.selectionClick();
               ref.read(themeModeProvider.notifier).state =
                   themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
             },
@@ -459,10 +463,13 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
           IconButton(
             icon: const Icon(Icons.account_circle, color: AppTheme.accentAqua, size: 28),
             tooltip: 'User Profile & Panel Login',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PterodactylLoginScreen()),
-            ),
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PterodactylLoginScreen()),
+              );
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -474,7 +481,10 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 // NavigationRail for Landscape Mode
                 NavigationRail(
                   selectedIndex: _currentIndex,
-                  onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
+                  onDestinationSelected: (idx) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _currentIndex = idx);
+                  },
                   labelType: NavigationRailLabelType.all,
                   selectedIconTheme: const IconThemeData(color: AppTheme.primaryPurple),
                   unselectedIconTheme: const IconThemeData(color: AppTheme.textSecondary),
@@ -493,7 +503,10 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
           ? null
           : BottomNavigationBar(
               currentIndex: _currentIndex,
-              onTap: (idx) => setState(() => _currentIndex = idx),
+              onTap: (idx) {
+                HapticFeedback.selectionClick();
+                setState(() => _currentIndex = idx);
+              },
               selectedItemColor: AppTheme.primaryPurple,
               unselectedItemColor: AppTheme.textSecondary,
               items: const [
