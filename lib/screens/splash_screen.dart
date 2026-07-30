@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
+import '../providers/pterodactyl_provider.dart';
+import '../services/auth_session_service.dart';
 import 'mobile_home_screen.dart';
 import 'home_screen.dart';
+import 'panel/login_screen.dart';
+import 'panel/admin/admin_dashboard_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
   late AnimationController _logoController;
   late AnimationController _rotationController;
   late AnimationController _pulseController;
@@ -61,25 +66,34 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     _logoController.forward();
 
-    // Transition to main screen after 3 seconds
-    Future.delayed(const Duration(milliseconds: 3200), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) {
-              final isPhone = MediaQuery.of(context).size.shortestSide < 600;
-              return isPhone ? const MobileHomeScreen() : const HomeScreen();
-            },
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-                child: child,
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 700),
-          ),
-        );
+    // Transition to main screen or saved session screen
+    Future.delayed(const Duration(milliseconds: 3200), () async {
+      if (!mounted) return;
+
+      final bool restored = await AuthSessionService.restoreSession(ref);
+      if (!mounted) return;
+
+      Widget targetScreen;
+      if (restored) {
+        final auth = ref.read(pterodactylAuthProvider);
+        targetScreen = auth.isAdmin ? const AdminDashboardScreen() : const PterodactylServerListScreen();
+      } else {
+        final isPhone = MediaQuery.of(context).size.shortestSide < 600;
+        targetScreen = isPhone ? const MobileHomeScreen() : const HomeScreen();
       }
+
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => targetScreen,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 700),
+        ),
+      );
     });
   }
 

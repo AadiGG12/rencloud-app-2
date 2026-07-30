@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/pterodactyl/panel_user_model.dart';
 import '../../../providers/admin_provider.dart';
+import '../../../providers/pterodactyl_provider.dart';
 import '../../../services/pterodactyl/user_sync_service.dart';
-import 'admin_login_screen.dart';
+import '../../../services/auth_session_service.dart';
+import '../login_screen.dart';
 import 'admin_user_detail_screen.dart';
 import 'admin_user_create_dialog.dart';
 
@@ -119,14 +121,16 @@ class _AdminUserListScreenState extends ConsumerState<AdminUserListScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
+            onPressed: () async {
+              await AuthSessionService.clearSession();
               ref.read(adminAuthProvider.notifier).logout();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const _AdminLoginRedirect(),
-                ),
-              );
+              ref.read(pterodactylAuthProvider.notifier).logout();
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PterodactylLoginScreen()),
+                );
+              }
             },
             tooltip: 'Disconnect',
           ),
@@ -246,14 +250,6 @@ class _AdminUserListScreenState extends ConsumerState<AdminUserListScreen> {
   }
 }
 
-class _AdminLoginRedirect extends ConsumerWidget {
-  const _AdminLoginRedirect();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return const AdminLoginScreen();
-  }
-}
 
 class _UserCard extends StatelessWidget {
   final PanelUser user;
