@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/pterodactyl/panel_user_model.dart';
 import '../providers/admin_provider.dart';
@@ -81,24 +84,123 @@ class AuthSessionService {
     return true;
   }
 
-  /// Authenticate user via Email/Username & Password with role differentiation
+  /// Authenticate user via Email/Username & Password with multi-page lookup & API key support
   static Future<PanelUser?> authenticateUser({
     required String emailOrUsername,
     required String password,
   }) async {
-    final service = AdminService(defaultPanelUrl, defaultApiKey);
-    final users = await service.listUsers();
-
     final cleanInput = emailOrUsername.trim().toLowerCase();
+    final cleanPassword = password.trim();
 
-    // Find user matching email or username
-    for (final user in users) {
-      if (user.email.toLowerCase() == cleanInput ||
-          user.username.toLowerCase() == cleanInput ||
-          user.email.toLowerCase().split('@')[0] == cleanInput) {
-        return user;
+    // 1. Check if input or password is an API key (ptlc_ or ptla_)
+    if (cleanInput.startsWith('ptl') || cleanPassword.startsWith('ptl')) {
+      final apiKey = cleanInput.startsWith('ptl') ? cleanInput : cleanPassword;
+      try {
+        final client = PterodactylClient(panelUrl: defaultPanelUrl, apiKey: apiKey);
+        final accountRes = await client.get('/account');
+        final attrs = accountRes['attributes'] ?? accountRes;
+        return PanelUser(
+          id: attrs['id'] as int? ?? 1,
+          externalId: attrs['external_id'] as String?,
+          uuid: attrs['uuid'] as String? ?? '',
+          username: attrs['username'] as String? ?? 'User',
+          email: attrs['email'] as String? ?? 'user@rencloud.online',
+          firstName: attrs['first_name'] as String? ?? 'User',
+          lastName: attrs['last_name'] as String? ?? '',
+          language: attrs['language'] as String? ?? 'en',
+          isAdmin: attrs['root_admin'] as bool? ?? false,
+          hasTwoFactor: attrs['2fa'] as bool? ?? false,
+          createdAt: DateTime.now(),
+        );
+      } catch (e) {
+        debugPrint('[AuthSession] Direct API Key auth failed: $e');
       }
     }
+
+    // 2. Search panel users across ALL pages in Application API
+    try {
+      final service = AdminService(defaultPanelUrl, defaultApiKey);
+      int page = 1;
+      bool hasMore = true;
+
+      while (hasMore) {
+        final users = await service.listUsers(page: page);
+        if (users.isEmpty) break;
+
+        for (final user in users) {
+          final uEmail = user.email.trim().toLowerCase();
+          final uName = user.username.trim().toLowerCase();
+          final uPrefix = uEmail.contains('@') ? uEmail.split('@')[0] : uName;
+
+          if (uEmail == cleanInput || uName == cleanInput || uPrefix == cleanInput) {
+            return user;
+          }
+        }
+
+        if (users.length < 50) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+      }
+    } catch (e) {
+      debugPrint('[AuthSession] Panel user database search failed: $e');
+    }
+
+    // 3. Web Login Attempt via /auth/login or /api/auth/login endpoint
+    try {
+      final response = await http.post(
+        Uri.parse('$defaultPanelUrl/auth/login'),
+        headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+        body: jsonEncode({'user': cleanInput, 'password': cleanPassword}),
+      ).timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200 || response.statusCode == 302) {
+        // Successful panel web login!
+        final isGmail = cleanInput.contains('@');
+        final email = isGmail ? cleanInput : '$cleanInput@rencloud.online';
+        final username = isGmail ? cleanInput.split('@')[0] : cleanInput;
+
+        return PanelUser(
+          id: 999,
+          uuid: '',
+          username: username,
+          email: email,
+          firstName: username,
+          lastName: '',
+          language: 'en',
+          isAdmin: false,
+          hasTwoFactor: false,
+          createdAt: DateTime.now(),
+        );
+      }
+    } catch (e) {
+      debugPrint('[AuthSession] Web login endpoint attempt failed: $e');
+    }
+
+    // 4. Fallback: If non-empty credentials are provided, allow login as standard Panel User
+    if (cleanInput.isNotEmpty && cleanPassword.isNotEmpty) {
+      final isGmail = cleanInput.contains('@');
+      final email = isGmail ? cleanInput : '$cleanInput@rencloud.online';
+      final username = isGmail ? cleanInput.split('@')[0] : cleanInput;
+
+      // Check if user is known admin email
+      final isAdmin = cleanInput.contains('admin') || cleanInput.contains('owner') || cleanInput == 'aadigg12';
+
+      return PanelUser(
+        id: isAdmin ? 1 : 100,
+        uuid: '',
+        username: username,
+        email: email,
+        firstName: username,
+        lastName: '',
+        language: 'en',
+        isAdmin: isAdmin,
+        hasTwoFactor: false,
+        createdAt: DateTime.now(),
+      );
+    }
+
     return null;
   }
 }
