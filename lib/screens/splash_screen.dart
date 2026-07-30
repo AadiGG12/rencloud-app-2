@@ -194,12 +194,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                     ),
                   ),
 
-                  // Inner White Container Mask
+                  // Inner Dark Container Mask
                   Container(
                     width: 128,
                     height: 128,
                     decoration: const BoxDecoration(
-                      color: Colors.white,
+                      color: Color(0xFF090D16),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -220,9 +220,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                       width: 110,
                       height: 110,
                       padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF090D16),
                         shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.5), width: 1.5),
                       ),
                       child: Image.asset(
                         'assets/images/logo.png',

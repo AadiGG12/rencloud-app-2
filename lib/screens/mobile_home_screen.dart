@@ -456,16 +456,17 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 color: const Color(0xFF090D16),
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.5), width: 1.2),
+                border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.6), width: 1.2),
               ),
               child: Image.asset(
                 'assets/images/logo.png',
-                height: 22,
-                errorBuilder: (_, __, ___) => const Icon(Icons.cloud, color: AppTheme.accentAqua, size: 20),
+                height: 28,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Icon(Icons.cloud, color: AppTheme.accentAqua, size: 24),
               ),
             ),
             const SizedBox(width: 10),
