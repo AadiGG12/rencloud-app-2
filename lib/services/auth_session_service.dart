@@ -111,6 +111,7 @@ class AuthSessionService {
           isAdmin: attrs['root_admin'] as bool? ?? false,
           hasTwoFactor: attrs['2fa'] as bool? ?? false,
           createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
       } catch (e) {
         debugPrint('[AuthSession] Direct API Key auth failed: $e');
@@ -172,6 +173,7 @@ class AuthSessionService {
           isAdmin: false,
           hasTwoFactor: false,
           createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
       }
     } catch (e) {
@@ -198,6 +200,7 @@ class AuthSessionService {
         isAdmin: isAdmin,
         hasTwoFactor: false,
         createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
     }
 
