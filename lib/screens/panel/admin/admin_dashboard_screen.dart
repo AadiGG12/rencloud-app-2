@@ -8,6 +8,7 @@ import '../../../services/auth_session_service.dart';
 import '../login_screen.dart';
 import '../../mobile_home_screen.dart';
 import '../../home_screen.dart';
+import '../../widgets/biometric_lock_overlay.dart';
 import 'admin_user_list_screen.dart';
 import 'dart:async';
 import '../../../services/pterodactyl/user_sync_service.dart';
@@ -77,7 +78,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final usersState = ref.watch(adminUserListProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return PopScope(
+    return BiometricLockOverlay(
+      child: PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
@@ -372,7 +374,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         ),
       ),
     ),
-  );
+  ),
+);
   }
 
   String _formatBytes(int bytes) {

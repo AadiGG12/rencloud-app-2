@@ -9,6 +9,7 @@ import '../../services/auth_session_service.dart';
 import 'admin/admin_dashboard_screen.dart';
 import '../mobile_home_screen.dart';
 import '../home_screen.dart';
+import '../widgets/biometric_lock_overlay.dart';
 import 'tabs/console_tab.dart';
 import 'tabs/files_tab.dart';
 import 'tabs/databases_tab.dart';
@@ -284,7 +285,8 @@ class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerL
     final auth = ref.watch(pterodactylAuthProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return PopScope(
+    return BiometricLockOverlay(
+      child: PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
@@ -426,7 +428,8 @@ class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerL
         ],
       ),
     ),
-  );
+  ),
+);
   }
 }
 

@@ -11,6 +11,7 @@ import 'panel/login_screen.dart';
 import 'widgets/category_tabs.dart';
 import 'widgets/plan_card.dart';
 import 'widgets/resource_calculator.dart';
+import 'widgets/biometric_lock_overlay.dart';
 
 class MobileHomeScreen extends ConsumerStatefulWidget {
   const MobileHomeScreen({super.key});
@@ -108,71 +109,6 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
     final biometric = ref.watch(biometricProvider);
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Biometric Security Lock Overlay Screen
-    if (biometric.isEnabled && !biometric.isUnlocked) {
-      return Scaffold(
-        backgroundColor: AppTheme.backgroundDark,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryPurple.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.fingerprint, size: 72, color: AppTheme.accentAqua),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'RenCloud Biometric Lock',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Touch fingerprint sensor or scan Face ID to unlock RenCloud',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppTheme.textSecondary),
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (bContext) => _BiometricPromptDialog(
-                        onSuccess: () {
-                          Navigator.pop(bContext);
-                          ref.read(biometricProvider.notifier).unlock();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Fingerprint / Face ID Unlocked Successfully!'),
-                              backgroundColor: Color(0xFF10B981),
-                            ),
-                          );
-                        },
-                        onCancel: () => Navigator.pop(bContext),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.fingerprint, color: Colors.white),
-                  label: const Text('Scan Fingerprint / Face ID to Unlock', style: TextStyle(fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryPurple,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
 
     final List<Widget> pages = [
       // Tab 0: Home Catalog
@@ -495,7 +431,8 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
       ),
     ];
 
-    return Scaffold(
+    return BiometricLockOverlay(
+      child: Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
@@ -565,6 +502,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
               ],
             ),
+      ),
     );
   }
 }
