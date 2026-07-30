@@ -29,8 +29,8 @@ class PterodactylLoginScreen extends ConsumerStatefulWidget {
 
 class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen> {
   final _panelUrlController = TextEditingController(text: 'https://panel.rencloud.online');
-  final _apiKeyController = TextEditingController();
-  bool _obscureKey = true;
+  final _apiKeyController = TextEditingController(text: 'ptla_oCxBHX7wIGwqMnXcL4bKfqviONhFKZrAt52fu9RsKGX');
+  bool _obscureKey = false;
   bool _isLoading = false;
   String? _error;
 

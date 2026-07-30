@@ -4,6 +4,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../providers/admin_provider.dart';
 import '../login_screen.dart';
 import 'admin_user_list_screen.dart';
+import 'dart:async';
+import '../../../services/pterodactyl/user_sync_service.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -13,13 +15,54 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
+  StreamSubscription<List<UserSyncEvent>>? _syncSub;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(adminAllServersProvider.notifier).fetchAllServers();
       ref.read(adminUserListProvider.notifier).fetchUsers();
+
+      // Listen for real-time user sync events
+      final syncService = ref.read(adminUserListProvider.notifier).syncService;
+      _syncSub = syncService?.events.listen((events) {
+        if (!mounted) return;
+        for (final event in events) {
+          final color = event.type == UserSyncEventType.added
+              ? const Color(0xFF10B981)
+              : event.type == UserSyncEventType.removed
+                  ? Colors.red
+                  : AppTheme.accentAqua;
+          final icon = event.type == UserSyncEventType.added
+              ? Icons.person_add
+              : event.type == UserSyncEventType.removed
+                  ? Icons.person_remove
+                  : Icons.edit;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(icon, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(event.description)),
+                ],
+              ),
+              backgroundColor: color,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _syncSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -72,6 +115,58 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ─── Real-Time Sync Status Banner ────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF10B981).withValues(alpha: 0.15),
+                    AppTheme.accentAqua.withValues(alpha: 0.08),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF10B981),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x4010B981),
+                          blurRadius: 6,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Real-Time Sync Active',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Panel users sync every 5s',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             // ─── Stats Cards ─────────────────────────────────────
             Row(
               children: [

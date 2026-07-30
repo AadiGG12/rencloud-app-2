@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/pterodactyl/panel_user_model.dart';
 import '../services/pterodactyl/admin_service.dart';
+import '../services/pterodactyl/user_sync_service.dart';
 
 // ─── Admin Auth State ────────────────────────────────────────────────
 
@@ -78,12 +79,41 @@ class AdminUserListState {
 
 class AdminUserListNotifier extends StateNotifier<AdminUserListState> {
   AdminService? _service;
+  UserSyncService? _syncService;
 
   AdminUserListNotifier() : super(const AdminUserListState());
 
-  void setService(AdminService service) => _service = service;
+  void setService(AdminService service) {
+    _service = service;
+
+    // Create and start the real-time sync service
+    _syncService?.dispose();
+    _syncService = UserSyncService(
+      adminService: service,
+      pollInterval: const Duration(seconds: 5),
+    );
+
+    // When sync detects changes, update state
+    _syncService!.onUsersUpdated = (users) {
+      if (mounted) {
+        state = AdminUserListState(users: users);
+      }
+    };
+
+    // Start real-time sync
+    _syncService!.startSync();
+  }
+
+  /// Get the sync service for listening to events
+  UserSyncService? get syncService => _syncService;
 
   Future<void> fetchUsers() async {
+    if (_syncService != null) {
+      // Use sync service for immediate refresh
+      state = state.copyWith(isLoading: true, error: null);
+      await _syncService!.syncNow();
+      return;
+    }
     if (_service == null) return;
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -110,7 +140,12 @@ class AdminUserListNotifier extends StateNotifier<AdminUserListState> {
         lastName: lastName,
         rootAdmin: rootAdmin,
       );
-      await fetchUsers();
+      // Force immediate sync to pick up the new user
+      if (_syncService != null) {
+        await _syncService!.syncNow();
+      } else {
+        await fetchUsers();
+      }
       return true;
     } catch (e) {
       return false;
@@ -121,7 +156,12 @@ class AdminUserListNotifier extends StateNotifier<AdminUserListState> {
     if (_service == null) return false;
     try {
       await _service!.updateUser(userId, rootAdmin: rootAdmin);
-      await fetchUsers();
+      // Force immediate sync
+      if (_syncService != null) {
+        await _syncService!.syncNow();
+      } else {
+        await fetchUsers();
+      }
       return true;
     } catch (e) {
       return false;
@@ -132,11 +172,22 @@ class AdminUserListNotifier extends StateNotifier<AdminUserListState> {
     if (_service == null) return false;
     try {
       await _service!.deleteUser(userId);
-      await fetchUsers();
+      // Force immediate sync
+      if (_syncService != null) {
+        await _syncService!.syncNow();
+      } else {
+        await fetchUsers();
+      }
       return true;
     } catch (e) {
       return false;
     }
+  }
+
+  @override
+  void dispose() {
+    _syncService?.dispose();
+    super.dispose();
   }
 }
 
@@ -225,4 +276,13 @@ final adminDashboardStatsProvider = Provider<AdminDashboardStats>((ref) {
     totalMemoryMb: totalMemory,
     totalDiskMb: totalDisk,
   );
+});
+
+// ─── User Sync Events Stream ─────────────────────────────────────────
+
+final userSyncEventsProvider = StreamProvider<List<UserSyncEvent>>((ref) {
+  final notifier = ref.watch(adminUserListProvider.notifier);
+  final syncService = notifier.syncService;
+  if (syncService == null) return const Stream.empty();
+  return syncService.events;
 });

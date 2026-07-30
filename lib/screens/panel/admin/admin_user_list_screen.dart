@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/pterodactyl/panel_user_model.dart';
 import '../../../providers/admin_provider.dart';
+import '../../../services/pterodactyl/user_sync_service.dart';
 import 'admin_login_screen.dart';
 import 'admin_user_detail_screen.dart';
 import 'admin_user_create_dialog.dart';
@@ -16,6 +18,51 @@ class AdminUserListScreen extends ConsumerStatefulWidget {
 
 class _AdminUserListScreenState extends ConsumerState<AdminUserListScreen> {
   String _searchQuery = '';
+  StreamSubscription<List<UserSyncEvent>>? _syncSub;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final syncService = ref.read(adminUserListProvider.notifier).syncService;
+      _syncSub = syncService?.events.listen((events) {
+        if (!mounted) return;
+        for (final event in events) {
+          final color = event.type == UserSyncEventType.added
+              ? const Color(0xFF10B981)
+              : event.type == UserSyncEventType.removed
+                  ? Colors.red
+                  : AppTheme.accentAqua;
+          final icon = event.type == UserSyncEventType.added
+              ? Icons.person_add
+              : event.type == UserSyncEventType.removed
+                  ? Icons.person_remove
+                  : Icons.edit;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(icon, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(event.description)),
+                ],
+              ),
+              backgroundColor: color,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _syncSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +80,38 @@ class _AdminUserListScreenState extends ConsumerState<AdminUserListScreen> {
       appBar: AppBar(
         title: const Text('Panel Users'),
         actions: [
+          // Real-time sync indicator
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFF10B981),
+                  ),
+                ),
+                const SizedBox(width: 5),
+                const Text(
+                  'LIVE',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF10B981),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.read(adminUserListProvider.notifier).fetchUsers(),
