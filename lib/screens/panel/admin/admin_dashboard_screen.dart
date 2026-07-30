@@ -95,7 +95,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 color: AppTheme.accentAqua.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Text('v${UpdateService.currentVersion}', style: TextStyle(fontSize: 10, color: AppTheme.accentAqua, fontWeight: FontWeight.bold)),
+              child: Text('v${UpdateService.currentVersion}', style: const TextStyle(fontSize: 10, color: AppTheme.accentAqua, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
