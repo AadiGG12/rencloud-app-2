@@ -1,7 +1,7 @@
 name: rencloud_flutter
 description: RenCloud Service Catalog & Pricing Showcase App
 publish_to: 'none'
-version: 1.8.4+240
+version: 1.8.5+250
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -35,7 +35,7 @@ flutter_launcher_icons:
   image_path: "assets/images/logo.png"
   min_sdk_android: 21
   adaptive_icon_background: "#090D16"
-  adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_foreground: "assets/images/logo_adaptive_fg.png"
 
 flutter:
   uses-material-design: true
