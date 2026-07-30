@@ -142,6 +142,9 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
       final dir = await getApplicationDocumentsDirectory();
       final filePath = '${dir.path}/rencloud-v${widget.version}.apk';
       final file = File(filePath);
+      if (await file.exists()) {
+        try { await file.delete(); } catch (_) {}
+      }
 
       // Stream download with progress
       final response = await http.Client().send(
