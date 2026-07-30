@@ -70,6 +70,10 @@ class _PlanCardState extends ConsumerState<PlanCard> with TickerProviderStateMix
     final priceInr = widget.plan.getPriceForCycle(cycle);
     final formattedPrice = CurrencyHelper.format(priceInr, currency);
 
+    if (_flipController.isDismissed && !_showBack) {
+      return _buildFrontContent(context, formattedPrice, cycle, isDark);
+    }
+
     return AnimatedBuilder(
       animation: _flipAnimation,
       builder: (context, child) {

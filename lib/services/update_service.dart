@@ -99,6 +99,8 @@ class UpdateService {
 
   /// True Semantic Versioning comparison (major.minor.patch)
   static bool _isNewerVersion(String latest, String current) {
+    if (latest.trim() == current.trim()) return false;
+
     final latestSemver = _parseSemver(latest);
     final currentSemver = _parseSemver(current);
 
