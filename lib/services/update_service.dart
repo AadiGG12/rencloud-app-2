@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/constants/app_version.dart';
 
 class UpdateService {
@@ -182,7 +183,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
     });
 
     try {
-      final dir = await getApplicationDocumentsDirectory();
+      final dir = await getTemporaryDirectory();
       final filePath = '${dir.path}/rencloud-v${widget.version}.apk';
       final file = File(filePath);
       if (await file.exists()) {
@@ -246,7 +247,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
       if (result.type != ResultType.done) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not open installer: ${result.message}')),
+            SnackBar(content: Text('Installer note: ${result.message}')),
           );
         }
       }
@@ -353,11 +354,11 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
               ElevatedButton.icon(
                 onPressed: _installApk,
                 icon: const Icon(Icons.system_update_alt, color: Colors.white),
-                label: const Text('INSTALL UPDATE', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: const Text('INSTALL NOW', style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF06B6D4),
                   foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 48),
+                  minimumSize: const Size(double.infinity, 44),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
@@ -365,6 +366,14 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
           : (_isDownloading
               ? []
               : [
+                  TextButton(
+                    onPressed: () {
+                      launchUrl(Uri.parse(widget.downloadUrl!), mode: LaunchMode.externalApplication);
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Browser Download', style: TextStyle(color: Color(0xFF7C3AED))),
+                  ),
+                  const Spacer(),
                   TextButton(
                     onPressed: () {
                       UpdateService.dismissVersion(widget.version);
@@ -379,7 +388,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: const Text('Update Now', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('UPDATE NOW', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ]),
     );
