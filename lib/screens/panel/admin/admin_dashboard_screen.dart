@@ -6,6 +6,8 @@ import '../../../providers/admin_provider.dart';
 import '../../../providers/pterodactyl_provider.dart';
 import '../../../services/auth_session_service.dart';
 import '../login_screen.dart';
+import '../../mobile_home_screen.dart';
+import '../../home_screen.dart';
 import 'admin_user_list_screen.dart';
 import 'dart:async';
 import '../../../services/pterodactyl/user_sync_service.dart';
@@ -75,10 +77,28 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final usersState = ref.watch(adminUserListProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        final isPhone = MediaQuery.of(context).size.shortestSide < 600;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => isPhone ? const MobileHomeScreen() : const HomeScreen()),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              final isPhone = MediaQuery.of(context).size.shortestSide < 600;
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => isPhone ? const MobileHomeScreen() : const HomeScreen()),
+              );
+            },
+          ),
+          title: Row(
+            children: [
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
@@ -351,7 +371,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   String _formatBytes(int bytes) {

@@ -4,6 +4,7 @@ import '../models/rencloud_plan.dart';
 import '../providers/catalog_provider.dart';
 import '../core/constants/app_version.dart';
 import '../core/theme/app_theme.dart';
+import '../services/app_settings_service.dart';
 import '../services/update_service.dart';
 import '../services/biometric_service.dart';
 import 'panel/login_screen.dart';
@@ -67,6 +68,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
   void _triggerBiometricTestDialog(bool enable) {
     if (!enable) {
       ref.read(biometricProvider.notifier).toggleBiometrics(false);
+      AppSettingsService.saveBiometrics(false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Biometric Security Lock Disabled')),
       );
@@ -80,6 +82,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
         return _BiometricPromptDialog(
           onSuccess: () {
             ref.read(biometricProvider.notifier).toggleBiometrics(true);
+            AppSettingsService.saveBiometrics(true);
             Navigator.pop(dialogContext);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -323,7 +326,9 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode, color: AppTheme.primaryPurple),
                 value: themeMode == ThemeMode.dark,
                 onChanged: (val) {
-                  ref.read(themeModeProvider.notifier).state = val ? ThemeMode.dark : ThemeMode.light;
+                  final mode = val ? ThemeMode.dark : ThemeMode.light;
+                  ref.read(themeModeProvider.notifier).state = mode;
+                  AppSettingsService.saveThemeMode(mode);
                 },
               ),
             ),
@@ -359,6 +364,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                     onChanged: (val) {
                       if (val != null) {
                         ref.read(currencyProvider.notifier).state = val;
+                        AppSettingsService.saveCurrency(val);
                       }
                     },
                   ),

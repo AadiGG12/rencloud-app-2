@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/pterodactyl_provider.dart';
 import '../services/auth_session_service.dart';
+import '../services/app_settings_service.dart';
 import 'mobile_home_screen.dart';
 import 'home_screen.dart';
 import 'panel/login_screen.dart';
@@ -70,6 +71,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
     Future.delayed(const Duration(milliseconds: 3200), () async {
       if (!mounted) return;
 
+      await AppSettingsService.restoreSettings(ref);
       final bool restored = await AuthSessionService.restoreSession(ref);
       if (!mounted) return;
 

@@ -29,19 +29,26 @@ class PterodactylServer {
 
   factory PterodactylServer.fromJson(Map<String, dynamic> json) {
     final attrs = json['attributes'] as Map<String, dynamic>? ?? json;
+    final String serverId = (attrs['identifier'] ?? attrs['uuid'] ?? attrs['id'])?.toString() ?? '';
+    final String serverUuid = (attrs['uuid'] ?? attrs['identifier'] ?? '')?.toString() ?? '';
+    final String serverName = (attrs['name'] ?? 'Server')?.toString() ?? '';
+    final String serverNode = (attrs['node'] ?? '')?.toString() ?? '';
+    final String sftp = (attrs['sftp_details'] ?? '')?.toString() ?? '';
+    final String desc = (attrs['description'] ?? '')?.toString() ?? '';
+
     return PterodactylServer(
-      id: attrs['identifier'] as String? ?? '',
-      uuid: attrs['uuid'] as String? ?? '',
-      name: attrs['name'] as String? ?? '',
-      node: attrs['node'] as String? ?? '',
-      sftpDetails: attrs['sftp_details'] as String? ?? '',
-      description: attrs['description'] as String? ?? '',
+      id: serverId,
+      uuid: serverUuid,
+      name: serverName,
+      node: serverNode,
+      sftpDetails: sftp,
+      description: desc,
       isSuspended: attrs['is_suspended'] as bool? ?? attrs['suspended'] as bool? ?? false,
       isInstalling: attrs['is_installing'] as bool? ?? attrs['installing'] as bool? ?? false,
-      isTransferring: attrs['is_transferring'] as bool? ?? false,
+      isTransferring: attrs['is_transferring'] as bool? ?? attrs['transferring'] as bool? ?? false,
       limits: ServerLimits.fromJson(attrs['limits'] as Map<String, dynamic>? ?? {}),
       featureLimits: ServerFeatureLimits.fromJson(attrs['feature_limits'] as Map<String, dynamic>? ?? {}),
-      relationships: attrs['relationships'] != null
+      relationships: attrs['relationships'] is Map<String, dynamic>
           ? ServerRelationships.fromJson(attrs['relationships'] as Map<String, dynamic>)
           : null,
     );
@@ -74,11 +81,11 @@ class ServerLimits {
   });
 
   factory ServerLimits.fromJson(Map<String, dynamic> json) => ServerLimits(
-    memory: json['memory'] as int? ?? 0,
-    swap: json['swap'] as int? ?? 0,
-    disk: json['disk'] as int? ?? 0,
-    io: json['io'] as int? ?? 500,
-    cpu: json['cpu'] as int? ?? 0,
+    memory: (json['memory'] as num?)?.toInt() ?? 0,
+    swap: (json['swap'] as num?)?.toInt() ?? 0,
+    disk: (json['disk'] as num?)?.toInt() ?? 0,
+    io: (json['io'] as num?)?.toInt() ?? 500,
+    cpu: (json['cpu'] as num?)?.toInt() ?? 0,
   );
 }
 
@@ -94,9 +101,9 @@ class ServerFeatureLimits {
   });
 
   factory ServerFeatureLimits.fromJson(Map<String, dynamic> json) => ServerFeatureLimits(
-    databases: json['databases'] as int? ?? 0,
-    allocations: json['allocations'] as int? ?? 0,
-    backups: json['backups'] as int? ?? 0,
+    databases: (json['databases'] as num?)?.toInt() ?? 0,
+    allocations: (json['allocations'] as num?)?.toInt() ?? 0,
+    backups: (json['backups'] as num?)?.toInt() ?? 0,
   );
 }
 

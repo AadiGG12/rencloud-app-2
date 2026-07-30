@@ -9,6 +9,8 @@ import '../../services/pterodactyl/admin_service.dart';
 import '../../services/pterodactyl/pterodactyl_client.dart';
 import '../../services/auth_session_service.dart';
 import 'admin/admin_dashboard_screen.dart';
+import '../mobile_home_screen.dart';
+import '../home_screen.dart';
 import 'tabs/console_tab.dart';
 import 'tabs/files_tab.dart';
 import 'tabs/databases_tab.dart';
@@ -321,14 +323,32 @@ class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerL
     final auth = ref.watch(pterodactylAuthProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Text('My Servers'),
-            if (auth.isAdmin) ...[const SizedBox(width: 8), _AdminBadge()],
-          ],
-        ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        final isPhone = MediaQuery.of(context).size.shortestSide < 600;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => isPhone ? const MobileHomeScreen() : const HomeScreen()),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              final isPhone = MediaQuery.of(context).size.shortestSide < 600;
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => isPhone ? const MobileHomeScreen() : const HomeScreen()),
+              );
+            },
+          ),
+          title: Row(
+            children: [
+              const Text('My Servers'),
+              if (auth.isAdmin) ...[const SizedBox(width: 8), _AdminBadge()],
+            ],
+          ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -444,7 +464,8 @@ class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerL
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
