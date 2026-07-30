@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/pterodactyl_provider.dart';
 import '../../../services/auth_session_service.dart';
+import '../../../services/update_service.dart';
 import '../login_screen.dart';
 import 'admin_user_list_screen.dart';
 import 'dart:async';
@@ -86,8 +87,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               ),
               child: const Icon(Icons.admin_panel_settings, color: AppTheme.accentAqua, size: 20),
             ),
-            const SizedBox(width: 10),
             const Text('Admin Panel'),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.accentAqua.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text('v${UpdateService.currentVersion}', style: TextStyle(fontSize: 10, color: AppTheme.accentAqua, fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
         actions: [

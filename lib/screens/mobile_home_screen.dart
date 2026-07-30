@@ -290,8 +290,19 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   ),
                   const SizedBox(height: 12),
                   const Text('App Preferences & Security', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  const Text('Configure currency, biometrics, dark mode & app updates', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentAqua.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.4)),
+                    ),
+                    child: Text(
+                      'RenCloud v${UpdateService.currentVersion} (Latest Build)',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.accentAqua),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -463,6 +474,13 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 48),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Center(
+              child: Text(
+                'RenCloud App Version v${UpdateService.currentVersion}',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
               ),
             ),
           ],
