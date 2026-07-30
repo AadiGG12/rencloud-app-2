@@ -13,6 +13,7 @@ import 'widgets/plan_card.dart';
 import 'package:flutter/services.dart';
 import 'widgets/resource_calculator.dart';
 import 'widgets/biometric_lock_overlay.dart';
+import 'widgets/vertical_3d_plan_carousel.dart';
 
 class MobileHomeScreen extends ConsumerStatefulWidget {
   const MobileHomeScreen({super.key});
@@ -23,6 +24,21 @@ class MobileHomeScreen extends ConsumerStatefulWidget {
 
 class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
   int _currentIndex = 0;
+  bool _isPageLoading = false;
+
+  void _onTabChanged(int idx) {
+    if (_currentIndex == idx) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _isPageLoading = true;
+      _currentIndex = idx;
+    });
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() => _isPageLoading = false);
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -199,19 +215,9 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   );
                 }
 
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: plans.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: SizedBox(
-                        height: 230,
-                        child: PlanCard(plan: plans[index]),
-                      ),
-                    );
-                  },
+                return SizedBox(
+                  height: 520,
+                  child: Vertical3DPlanCarousel(plans: plans),
                 );
               },
             ),
@@ -449,10 +455,18 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'assets/images/logo.png',
-              height: 28,
-              errorBuilder: (_, __, ___) => const Icon(Icons.cloud, color: AppTheme.primaryPurple),
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF090D16),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.5), width: 1.2),
+              ),
+              child: Image.asset(
+                'assets/images/logo.png',
+                height: 22,
+                errorBuilder: (_, __, ___) => const Icon(Icons.cloud, color: AppTheme.accentAqua, size: 20),
+              ),
             ),
             const SizedBox(width: 10),
             const Text('RenCloud'),
@@ -485,39 +499,59 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
         ],
         elevation: 0.5,
       ),
-      body: isLandscape
-          ? Row(
-              children: [
-                // NavigationRail for Landscape Mode
-                NavigationRail(
-                  selectedIndex: _currentIndex,
-                  onDestinationSelected: (idx) {
-                    HapticFeedback.selectionClick();
-                    setState(() => _currentIndex = idx);
-                  },
-                  labelType: NavigationRailLabelType.all,
-                  selectedIconTheme: const IconThemeData(color: AppTheme.primaryPurple),
-                  unselectedIconTheme: const IconThemeData(color: AppTheme.textSecondary),
-                  destinations: const [
-                    NavigationRailDestination(icon: Icon(Icons.cloud), label: Text('Catalog')),
-                    NavigationRailDestination(icon: Icon(Icons.tune_rounded), label: Text('Custom Plan')),
-                    NavigationRailDestination(icon: Icon(Icons.settings), label: Text('Settings')),
-                  ],
-                ),
-                const VerticalDivider(thickness: 1, width: 1, color: AppTheme.borderLight),
-                Expanded(child: pages[_currentIndex]),
-              ],
-            )
-          : pages[_currentIndex],
+      body: Column(
+        children: [
+          if (_isPageLoading)
+            const LinearProgressIndicator(
+              minHeight: 3,
+              backgroundColor: Colors.transparent,
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentAqua),
+            ),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.98, end: 1.0).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey(_currentIndex),
+                child: isLandscape
+                    ? Row(
+                        children: [
+                          NavigationRail(
+                            selectedIndex: _currentIndex,
+                            onDestinationSelected: _onTabChanged,
+                            labelType: NavigationRailLabelType.all,
+                            selectedIconTheme: const IconThemeData(color: AppTheme.accentAqua),
+                            unselectedIconTheme: const IconThemeData(color: AppTheme.textSecondary),
+                            destinations: const [
+                              NavigationRailDestination(icon: Icon(Icons.cloud), label: Text('Catalog')),
+                              NavigationRailDestination(icon: Icon(Icons.tune_rounded), label: Text('Custom Plan')),
+                              NavigationRailDestination(icon: Icon(Icons.settings), label: Text('Settings')),
+                            ],
+                          ),
+                          const VerticalDivider(thickness: 1, width: 1, color: AppTheme.borderLight),
+                          Expanded(child: pages[_currentIndex]),
+                        ],
+                      )
+                    : pages[_currentIndex],
+              ),
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: isLandscape
           ? null
           : BottomNavigationBar(
               currentIndex: _currentIndex,
-              onTap: (idx) {
-                HapticFeedback.selectionClick();
-                setState(() => _currentIndex = idx);
-              },
-              selectedItemColor: AppTheme.primaryPurple,
+              onTap: _onTabChanged,
+              selectedItemColor: AppTheme.accentAqua,
               unselectedItemColor: AppTheme.textSecondary,
               items: const [
                 BottomNavigationBarItem(icon: Icon(Icons.cloud), label: 'Catalog'),
