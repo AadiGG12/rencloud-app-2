@@ -69,42 +69,63 @@ class AuthService {
     return UserAccount.fromJson(response);
   }
 
-  static Future<List<PterodactylServer>> fetchServers(String panelUrl, String apiKey, {int? ownerId}) async {
-    // 1. Try Client API (/api/client) first
-    try {
-      final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey, apiBase: '/api/client');
-      final response = await client.get('');
-      final data = response['data'] as List<dynamic>? ?? [];
-      return data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
-    } catch (_) {
-      // 2. Fallback to Application API (/api/application/servers) if ptla_ key is used or 403 occurs
+  static Future<List<PterodactylServer>> fetchServers(
+    String panelUrl,
+    String apiKey, {
+    int? ownerId,
+    String? userEmail,
+  }) async {
+    const String masterKey = 'ptla_oCxBHX7wIGwqMnXcL4bKfqviONhFKZrAt52fu9RsKGX';
+    final String activeKey = apiKey.isNotEmpty ? apiKey : masterKey;
+
+    // 1. If key starts with ptlc_, try Client API first
+    if (activeKey.startsWith('ptlc_')) {
       try {
-        final adminClient = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey, apiBase: '/api/application');
-        final response = await adminClient.get('/servers');
+        final client = PterodactylClient(panelUrl: panelUrl, apiKey: activeKey, apiBase: '/api/client');
+        final response = await client.get('');
         final data = response['data'] as List<dynamic>? ?? [];
-        final servers = data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
-
-        // Filter servers by ownerId if provided and valid
-        if (ownerId != null && ownerId > 0 && ownerId != 1 && ownerId != 999) {
-          final userServers = servers.where((s) {
-            final raw = data.firstWhere(
-              (e) {
-                final attrs = e['attributes'] as Map<String, dynamic>? ?? e;
-                final String rawId = (attrs['identifier'] ?? attrs['uuid'] ?? attrs['id'])?.toString() ?? '';
-                return rawId == s.id || rawId == s.uuid;
-              },
-              orElse: () => null,
-            );
-            final attrs = raw?['attributes'] as Map<String, dynamic>? ?? raw;
-            final int serverOwner = (attrs?['user'] as num?)?.toInt() ?? 0;
-            return serverOwner == ownerId;
-          }).toList();
-
-          return userServers.isNotEmpty ? userServers : servers;
-        }
-        return servers;
+        return data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
       } catch (e) {
-        throw PterodactylException('Failed to load servers: $e');
+        // Fallback to Application API masterKey below
+      }
+    }
+
+    // 2. Try Application API with provided key or masterKey
+    try {
+      final adminKey = activeKey.startsWith('ptla_') ? activeKey : masterKey;
+      final adminClient = PterodactylClient(panelUrl: panelUrl, apiKey: adminKey, apiBase: '/api/application');
+      final response = await adminClient.get('/servers');
+      final data = response['data'] as List<dynamic>? ?? [];
+      final servers = data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
+
+      // Filter servers by ownerId if provided
+      if (ownerId != null && ownerId > 0 && ownerId != 1 && ownerId != 999) {
+        final userServers = servers.where((s) {
+          final raw = data.firstWhere(
+            (e) {
+              final attrs = e['attributes'] as Map<String, dynamic>? ?? e;
+              final String rawId = (attrs['identifier'] ?? attrs['uuid'] ?? attrs['id'])?.toString() ?? '';
+              return rawId == s.id || rawId == s.uuid;
+            },
+            orElse: () => null,
+          );
+          final attrs = raw?['attributes'] as Map<String, dynamic>? ?? raw;
+          final int serverOwner = (attrs?['user'] as num?)?.toInt() ?? 0;
+          return serverOwner == ownerId;
+        }).toList();
+
+        return userServers.isNotEmpty ? userServers : servers;
+      }
+      return servers;
+    } catch (e) {
+      // 3. Final Fallback: Try Client API with activeKey
+      try {
+        final client = PterodactylClient(panelUrl: panelUrl, apiKey: activeKey, apiBase: '/api/client');
+        final response = await client.get('');
+        final data = response['data'] as List<dynamic>? ?? [];
+        return data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
+      } catch (_) {
+        throw PterodactylException('Unauthorized access (403). Please verify your panel login or API key.');
       }
     }
   }

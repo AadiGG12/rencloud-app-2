@@ -111,7 +111,11 @@ class ServerListNotifier extends StateNotifier<ServerListState> {
       final servers = await AuthService.fetchServers(_client!.panelUrl, _client!.apiKey, ownerId: ownerId);
       state = ServerListState(servers: servers);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Failed to load servers: $e');
+      final errStr = e.toString();
+      final cleanMsg = errStr.contains('403') || errStr.contains('AccessDenied')
+          ? 'Unauthorized access (403). Please verify your panel credentials.'
+          : errStr.replaceAll(RegExp(r'PterodactylException:?\s*'), '').trim();
+      state = state.copyWith(isLoading: false, error: cleanMsg);
     }
   }
 }
