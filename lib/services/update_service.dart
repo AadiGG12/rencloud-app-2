@@ -349,6 +349,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
           ],
         ],
       ),
+      actionsAlignment: MainAxisAlignment.end,
       actions: _readyToInstall
           ? [
               ElevatedButton.icon(
@@ -371,9 +372,8 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
                       launchUrl(Uri.parse(widget.downloadUrl!), mode: LaunchMode.externalApplication);
                       Navigator.pop(context);
                     },
-                    child: const Text('Browser Download', style: TextStyle(color: Color(0xFF7C3AED))),
+                    child: const Text('Browser Download', style: TextStyle(fontSize: 11, color: Color(0xFF38BDF8))),
                   ),
-                  const Spacer(),
                   TextButton(
                     onPressed: () {
                       UpdateService.dismissVersion(widget.version);
