@@ -13,6 +13,7 @@ import 'widgets/plan_card.dart';
 import 'package:flutter/services.dart';
 import 'widgets/resource_calculator.dart';
 import 'widgets/biometric_lock_overlay.dart';
+import 'auth/rencloud_auth_screen.dart';
 import 'widgets/vertical_3d_plan_carousel.dart';
 
 class MobileHomeScreen extends ConsumerStatefulWidget {
@@ -484,15 +485,15 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
             },
           ),
-          // User Profile / Panel Login Header Icon
+          // User Account Login & Registration Icon
           IconButton(
             icon: const Icon(Icons.account_circle, color: AppTheme.accentAqua, size: 28),
-            tooltip: 'User Profile & Panel Login',
+            tooltip: 'User Account & Login',
             onPressed: () {
               HapticFeedback.selectionClick();
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PterodactylLoginScreen()),
+                MaterialPageRoute(builder: (_) => const RenCloudAuthScreen()),
               );
             },
           ),
