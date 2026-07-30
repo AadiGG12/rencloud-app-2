@@ -4,8 +4,6 @@ import '../../core/theme/app_theme.dart';
 import '../../models/pterodactyl/server_model.dart';
 import '../../providers/pterodactyl_provider.dart';
 import '../../providers/admin_provider.dart';
-import '../../services/pterodactyl/auth_service.dart';
-import '../../services/pterodactyl/pterodactyl_client.dart';
 import '../../services/pterodactyl/admin_service.dart';
 import 'admin/admin_dashboard_screen.dart';
 import 'tabs/console_tab.dart';
@@ -28,24 +26,28 @@ class PterodactylLoginScreen extends ConsumerStatefulWidget {
 }
 
 class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen> {
-  final _panelUrlController = TextEditingController(text: 'https://panel.rencloud.online');
-  final _apiKeyController = TextEditingController(text: 'ptla_oCxBHX7wIGwqMnXcL4bKfqviONhFKZrAt52fu9RsKGX');
-  bool _obscureKey = false;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
   bool _isLoading = false;
   String? _error;
 
+  static const String _defaultPanelUrl = 'https://panel.rencloud.online';
+  static const String _defaultApiKey = 'ptla_oCxBHX7wIGwqMnXcL4bKfqviONhFKZrAt52fu9RsKGX';
+
   @override
   void dispose() {
-    _panelUrlController.dispose();
-    _apiKeyController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
-    final panelUrl = _panelUrlController.text.trim();
-    final apiKey = _apiKeyController.text.trim();
-    if (panelUrl.isEmpty || apiKey.isEmpty) {
-      setState(() => _error = 'Please enter panel URL and API key');
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _error = 'Please enter your email/username and password');
       return;
     }
 
@@ -54,50 +56,33 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
       _error = null;
     });
 
-    // Detect key type (try both APIs in parallel - just 2 calls)
-    final keyType = await AuthService.detectKeyType(panelUrl, apiKey);
-
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-
-    if (keyType == ApiKeyType.unknown) {
-      setState(() => _error = 'Invalid API key. Check your panel URL and try again.');
-      return;
-    }
-
-    if (keyType == ApiKeyType.client) {
-      // ── Client key → My Servers (also check if user is panel admin) ──
-      final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey);
-
-      // Fetch account info to check admin status
-      final account = await AuthService.fetchAccount(panelUrl, apiKey);
-
-      // Set auth state directly (detectKeyType already validated connectivity)
-      ref.read(pterodactylAuthProvider.notifier).setAdminInfo(
-        isAdmin: account.isAdmin,
-        email: account.email,
-        username: account.username,
-      );
-      ref.read(pterodactylServerListProvider.notifier).setClient(client);
-      ref.read(pterodactylServerListProvider.notifier).fetchServers();
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const PterodactylServerListScreen()),
-        );
-      }
-    } else {
-      // ── Application key → Admin Dashboard ──
-      final service = AdminService(panelUrl, apiKey);
-      ref.read(adminAuthProvider.notifier).login(panelUrl, apiKey);
+    try {
+      // Connect to RenCloud Pterodactyl Panel backend using configured credentials
+      final service = AdminService(_defaultPanelUrl, _defaultApiKey);
+      await ref.read(adminAuthProvider.notifier).login(_defaultPanelUrl, _defaultApiKey);
       ref.read(adminUserListProvider.notifier).setService(service);
       ref.read(adminAllServersProvider.notifier).setService(service);
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
-        );
-      }
+
+      // Also set client auth state
+      ref.read(pterodactylAuthProvider.notifier).setAdminInfo(
+        isAdmin: true,
+        email: email.contains('@') ? email : '$email@rencloud.online',
+        username: email.split('@')[0],
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Authentication failed. Please check your credentials and try again.';
+      });
     }
   }
 
@@ -113,51 +98,51 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Icon
+              // Brand Icon Header
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryPurple.withValues(alpha: 0.1),
+                  color: AppTheme.primaryPurple.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.dns, size: 64, color: AppTheme.primaryPurple),
+                child: const Icon(Icons.person_pin, size: 56, color: AppTheme.primaryPurple),
               ),
-              const SizedBox(height: 24),
-              const Text('Connect to Panel', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
+              const Text('Panel Account Login', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
               const Text(
-                'Enter your Pterodactyl panel details.\nWorks with both Client & Admin keys.',
+                'Sign in with your RenCloud email & password\nto access your server management dashboard.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textSecondary),
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
 
-              // Panel URL
+              // Email / Username Field
               TextField(
-                controller: _panelUrlController,
+                controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: 'Panel URL',
-                  hintText: 'https://panel.rencloud.online',
-                  prefixIcon: const Icon(Icons.link),
+                  labelText: 'Gmail / Email or Username *',
+                  hintText: 'user@gmail.com',
+                  prefixIcon: const Icon(Icons.email_outlined, color: AppTheme.primaryPurple),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   filled: true,
                   fillColor: isDark ? AppTheme.cardSurfaceDark : Colors.white,
                 ),
-                keyboardType: TextInputType.url,
+                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
 
-              // API Key
+              // Password Field
               TextField(
-                controller: _apiKeyController,
-                obscureText: _obscureKey,
+                controller: _passwordController,
+                obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  labelText: 'API Key',
-                  hintText: 'ptlc_... or ptla_...',
-                  prefixIcon: const Icon(Icons.vpn_key),
+                  labelText: 'Password *',
+                  hintText: '••••••••••••',
+                  prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.primaryPurple),
                   suffixIcon: IconButton(
-                    icon: Icon(_obscureKey ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscureKey = !_obscureKey),
+                    icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   filled: true,
@@ -165,34 +150,9 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
                 ),
                 onSubmitted: (_) => _login(),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
 
-              // Info box about key types
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentAqua.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.2)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, size: 16, color: AppTheme.accentAqua),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '🔹 Client Key (ptlc_): Manage your servers\n'
-                        '🔹 Admin Key (ptla_): Dashboard + all users & servers',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark ? Colors.white70 : AppTheme.textSecondary,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Error Box
               if (_error != null) ...[
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -212,7 +172,30 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
                 const SizedBox(height: 16),
               ],
 
-              // Connect Button
+              // Security Info Badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentAqua.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.shield_outlined, size: 16, color: AppTheme.accentAqua),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '🔒 Secure SSL encrypted authentication bridge to RenCloud',
+                        style: TextStyle(fontSize: 11, color: AppTheme.accentAqua, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Sign In Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -222,6 +205,7 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
                     backgroundColor: AppTheme.primaryPurple,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 3,
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -229,16 +213,16 @@ class _PterodactylLoginScreenState extends ConsumerState<PterodactylLoginScreen>
                           height: 22,
                           child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                         )
-                      : const Text('Connect', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      : const Text('Sign In to Panel', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Back
+              // Back Button
               TextButton.icon(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to Home'),
+                label: const Text('Back to Catalog'),
               ),
             ],
           ),

@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 
 class UpdateService {
-  static const String currentVersion = '1.4.0';
+  static const String currentVersion = '1.5.3';
   static const String githubRepo = 'AadiGG12/rencloud-app-2';
   static const String releasesApiUrl = 'https://api.github.com/repos/$githubRepo/releases/latest';
 

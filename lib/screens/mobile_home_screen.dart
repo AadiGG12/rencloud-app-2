@@ -4,6 +4,7 @@ import '../models/rencloud_plan.dart';
 import '../providers/catalog_provider.dart';
 import '../core/theme/app_theme.dart';
 import '../services/update_service.dart';
+import '../services/biometric_service.dart';
 import 'panel/login_screen.dart';
 import 'widgets/category_tabs.dart';
 import 'widgets/plan_card.dart';
@@ -447,11 +448,14 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
             },
           ),
-          // AppBar Update Button Action Icon
+          // User Profile / Panel Login Header Icon
           IconButton(
-            icon: const Icon(Icons.system_update, color: AppTheme.accentAqua),
-            tooltip: 'Check for App Updates',
-            onPressed: () => UpdateService.checkForUpdates(context, silent: false),
+            icon: const Icon(Icons.account_circle, color: AppTheme.accentAqua, size: 28),
+            tooltip: 'User Profile & Panel Login',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PterodactylLoginScreen()),
+            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -508,13 +512,35 @@ class _BiometricPromptDialog extends StatefulWidget {
 class _BiometricPromptDialogState extends State<_BiometricPromptDialog> {
   bool _isAuthenticating = false;
 
-  void _simulateScan() {
-    setState(() => _isAuthenticating = true);
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) {
-        widget.onSuccess();
-      }
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _authenticate();
     });
+  }
+
+  Future<void> _authenticate() async {
+    if (_isAuthenticating) return;
+    setState(() => _isAuthenticating = true);
+
+    final bool success = await BiometricService.authenticate(
+      reason: 'Scan your fingerprint or Face ID to verify identity',
+    );
+
+    if (mounted) {
+      setState(() => _isAuthenticating = false);
+      if (success) {
+        widget.onSuccess();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Biometric authentication failed or cancelled'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -534,7 +560,7 @@ class _BiometricPromptDialogState extends State<_BiometricPromptDialog> {
           const Text('Scan your fingerprint or face to verify identity for RenCloud security:'),
           const SizedBox(height: 24),
           GestureDetector(
-            onTap: _isAuthenticating ? null : _simulateScan,
+            onTap: _isAuthenticating ? null : _authenticate,
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -568,7 +594,7 @@ class _BiometricPromptDialogState extends State<_BiometricPromptDialog> {
           child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
         ),
         ElevatedButton(
-          onPressed: _simulateScan,
+          onPressed: _authenticate,
           style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryPurple, foregroundColor: Colors.white),
           child: const Text('Authenticate Now'),
         ),
