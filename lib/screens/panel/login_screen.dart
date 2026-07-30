@@ -308,6 +308,14 @@ class PterodactylServerListScreen extends ConsumerStatefulWidget {
 
 class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerListScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(pterodactylServerListProvider.notifier).fetchServers();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(pterodactylServerListProvider);
     final auth = ref.watch(pterodactylAuthProvider);

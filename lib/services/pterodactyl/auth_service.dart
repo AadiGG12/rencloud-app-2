@@ -69,11 +69,37 @@ class AuthService {
     return UserAccount.fromJson(response);
   }
 
-  static Future<List<PterodactylServer>> fetchServers(String panelUrl, String apiKey) async {
-    final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey);
-    final response = await client.get('');
-    final data = response['data'] as List<dynamic>? ?? [];
-    return data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
+  static Future<List<PterodactylServer>> fetchServers(String panelUrl, String apiKey, {int? ownerId}) async {
+    // 1. Try Client API (/api/client) first
+    try {
+      final client = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey, apiBase: '/api/client');
+      final response = await client.get('');
+      final data = response['data'] as List<dynamic>? ?? [];
+      return data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (_) {
+      // 2. Fallback to Application API (/api/application/servers) if ptla_ key is used or 403 occurs
+      try {
+        final adminClient = PterodactylClient(panelUrl: panelUrl, apiKey: apiKey, apiBase: '/api/application');
+        final response = await adminClient.get('/servers');
+        final data = response['data'] as List<dynamic>? ?? [];
+        final servers = data.map((e) => PterodactylServer.fromJson(e as Map<String, dynamic>)).toList();
+
+        // If ownerId is provided (standard user), filter servers to ONLY show servers owned by this user
+        if (ownerId != null && ownerId > 0) {
+          return servers.where((s) {
+            final raw = data.firstWhere(
+              (e) => (e['attributes']?['identifier'] ?? e['identifier']) == s.id,
+              orElse: () => null,
+            );
+            final int serverOwner = raw?['attributes']?['user'] as int? ?? raw?['user'] as int? ?? 0;
+            return serverOwner == ownerId;
+          }).toList();
+        }
+        return servers;
+      } catch (e) {
+        throw PterodactylException('Failed to load servers: $e');
+      }
+    }
   }
 
   static Future<PterodactylServer> fetchServerDetail(String panelUrl, String apiKey, String serverId) async {

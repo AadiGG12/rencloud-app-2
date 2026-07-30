@@ -91,11 +91,11 @@ class ServerListNotifier extends StateNotifier<ServerListState> {
 
   void setClient(PterodactylClient client) => _client = client;
 
-  Future<void> fetchServers() async {
+  Future<void> fetchServers([int? ownerId]) async {
     if (_client == null) return;
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final servers = await AuthService.fetchServers(_client!.panelUrl, _client!.apiKey);
+      final servers = await AuthService.fetchServers(_client!.panelUrl, _client!.apiKey, ownerId: ownerId);
       state = ServerListState(servers: servers);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Failed to load servers: $e');
