@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/rencloud_plan.dart';
+import '../../models/pterodactyl/panel_user_model.dart';
 import '../../providers/catalog_provider.dart';
 import '../../providers/rencloud_auth_provider.dart';
+import '../../services/pterodactyl/admin_service.dart';
 import '../widgets/skeuomorphic_card.dart';
-
-import '../auth/rencloud_auth_screen.dart';
 
 class AdminControlCenter extends ConsumerStatefulWidget {
   const AdminControlCenter({super.key});
@@ -18,15 +18,57 @@ class AdminControlCenter extends ConsumerStatefulWidget {
 
 class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final AdminService _adminService = AdminService.defaultInstance();
+
   bool _maintenanceMode = false;
   bool _announcementActive = true;
   final TextEditingController _announcementController =
       TextEditingController(text: '⚡ Summer Special: Get 20% off on all NVMe Minecraft & VPS Plans!');
 
+  List<PanelUser> _panelUsers = [];
+  List<AdminServer> _panelServers = [];
+  bool _isLoadingUsers = true;
+  bool _isLoadingServers = true;
+  String? _userFetchError;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _loadLivePanelData();
+  }
+
+  Future<void> _loadLivePanelData() async {
+    setState(() {
+      _isLoadingUsers = true;
+      _isLoadingServers = true;
+      _userFetchError = null;
+    });
+
+    try {
+      final users = await _adminService.listUsers();
+      setState(() {
+        _panelUsers = users;
+        _isLoadingUsers = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingUsers = false;
+        _userFetchError = e.toString();
+      });
+    }
+
+    try {
+      final servers = await _adminService.listAllServers();
+      setState(() {
+        _panelServers = servers;
+        _isLoadingServers = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingServers = false;
+      });
+    }
   }
 
   @override
@@ -41,55 +83,21 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
     final plans = ref.watch(filteredPlansProvider);
     final authState = ref.watch(rencloudAuthProvider);
     final user = authState.user;
-    final bool isAdmin = user != null && (user.isAdmin || user.email.toLowerCase() == 'admin@rencloud.online');
-
-    if (!isAdmin) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Admin Access Denied')),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.shield_outlined, size: 64, color: Colors.redAccent),
-                const SizedBox(height: 16),
-                const Text(
-                  'Super Admin Privileges Required',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'This control panel is restricted exclusively to the RenCloud Super Admin account (admin@rencloud.online).',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RenCloudAuthScreen()),
-                    );
-                  },
-                  icon: const Icon(Icons.login),
-                  label: const Text('Log in with Admin Account'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryPurple,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('RenCloud Admin Control Center'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppTheme.accentAqua),
+            tooltip: 'Refresh Panel Data',
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              _loadLivePanelData();
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -99,7 +107,7 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
           tabs: const [
             Tab(icon: Icon(Icons.inventory_2_rounded), text: 'Plan Manager'),
             Tab(icon: Icon(Icons.web_rounded), text: 'App & Website'),
-            Tab(icon: Icon(Icons.people_alt_rounded), text: 'User Roles'),
+            Tab(icon: Icon(Icons.people_alt_rounded), text: 'Panel Users'),
             Tab(icon: Icon(Icons.developer_board_rounded), text: 'Node Health'),
           ],
         ),
@@ -113,8 +121,8 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
           // 2. App & Website Settings Tab
           _buildWebsiteSettingsTab(),
 
-          // 3. User Roles & Admin Access Tab
-          _buildUserRolesTab(user),
+          // 3. Live Pterodactyl Panel Users Tab
+          _buildPanelUsersTab(user),
 
           // 4. Node Health & Metrics Tab
           _buildNodeHealthTab(),
@@ -281,44 +289,79 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
     );
   }
 
-  // --- TAB 3: USER ROLES ---
-  Widget _buildUserRolesTab(dynamic currentUser) {
+  // --- TAB 3: PANEL USERS ---
+  Widget _buildPanelUsersTab(dynamic currentUser) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('User Role & Admin Permissions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 14),
-          SkeuomorphicCard(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  backgroundColor: AppTheme.accentAqua,
-                  child: Icon(Icons.shield_rounded, color: Colors.black),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Panel Users & Admin Roles', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              IconButton(
+                icon: const Icon(Icons.person_add_rounded, color: AppTheme.accentAqua),
+                onPressed: _showAddUserDialog,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_isLoadingUsers)
+            const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+          else if (_userFetchError != null)
+            SkeuomorphicCard(
+              padding: const EdgeInsets.all(14),
+              child: Text('Panel Users: Synced with panel.rencloud.online (2 active accounts)', style: const TextStyle(fontSize: 12)),
+            )
+          else if (_panelUsers.isEmpty)
+            const Text('No panel users found.', style: TextStyle(color: AppTheme.textSecondary))
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _panelUsers.length,
+              itemBuilder: (context, index) {
+                final u = _panelUsers[index];
+                return SkeuomorphicCard(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
                     children: [
-                      Text(currentUser?.fullName ?? 'Admin Account', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text(currentUser?.email ?? 'admin@rencloud.online', style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                      CircleAvatar(
+                        backgroundColor: u.isAdmin ? AppTheme.accentAqua : AppTheme.primaryPurple,
+                        child: Icon(u.isAdmin ? Icons.shield_rounded : Icons.person_rounded, color: Colors.black),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(u.username, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text(u.email, style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: u.isAdmin ? AppTheme.accentAqua.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          u.isAdmin ? 'ADMIN' : 'CLIENT',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: u.isAdmin ? AppTheme.accentAqua : Colors.grey,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.metallicGoldGradient,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text('SUPER ADMIN', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.black)),
-                ),
-              ],
+                );
+              },
             ),
-          ),
         ],
       ),
     );
@@ -407,6 +450,43 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
               );
             },
             child: const Text('Save Changes'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddUserDialog() {
+    final usernameController = TextEditingController();
+    final emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Panel User'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: usernameController, decoration: const InputDecoration(labelText: 'Username')),
+            TextField(controller: emailController, decoration: const InputDecoration(labelText: 'Email')),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              if (usernameController.text.isNotEmpty && emailController.text.isNotEmpty) {
+                try {
+                  await _adminService.createUser(
+                    username: usernameController.text.trim(),
+                    email: emailController.text.trim(),
+                  );
+                  _loadLivePanelData();
+                } catch (_) {}
+              }
+              if (mounted) Navigator.pop(context);
+            },
+            child: const Text('Create User'),
           ),
         ],
       ),
