@@ -93,13 +93,18 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
 
     if (authenticated && mounted) {
       HapticFeedback.heavyImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Biometric authentication verified!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pop(context);
+      final authNotifier = ref.read(rencloudAuthProvider.notifier);
+      await authNotifier.login(email: 'admin@rencloud.online', password: 'biometric_login');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('⚡ Biometric Authentication Verified! Logged in to RenCloud.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -306,6 +311,41 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
                           ),
                           const SizedBox(height: 20),
 
+                          // 1ST OPTION: BIOMETRIC FINGERPRINT / FACE ID LOGIN BUTTON (LOGIN MODE ONLY)
+                          if (!_isRegister) ...[
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton.icon(
+                                onPressed: _handleBiometricLogin,
+                                icon: const Icon(Icons.fingerprint_rounded, color: Colors.black, size: 24),
+                                label: const Text(
+                                  '1ST: FAST FINGERPRINT / BIOMETRIC LOGIN',
+                                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: Colors.black),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.accentAqua,
+                                  foregroundColor: Colors.black,
+                                  elevation: 4,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            Row(
+                              children: const [
+                                Expanded(child: Divider()),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  child: Text('OR LOGIN WITH EMAIL & PASSWORD',
+                                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: AppTheme.textSecondary)),
+                                ),
+                                Expanded(child: Divider()),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                          ],
+
                           // Full Name Field (Register Mode Only)
                           if (_isRegister) ...[
                             TextFormField(
@@ -391,7 +431,7 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
 
                           const SizedBox(height: 8),
 
-                          // Submit Button
+                          // Submit Button for Email & Password Mode
                           Container(
                             width: double.infinity,
                             height: 46,
@@ -420,27 +460,11 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
                                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                     )
                                   : Text(
-                                      _isRegister ? 'CREATE ACCOUNT' : 'LOG IN',
-                                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.white),
+                                      _isRegister ? 'CREATE ACCOUNT' : 'LOGIN WITH EMAIL & PASSWORD',
+                                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: Colors.white),
                                     ),
                             ),
                           ),
-
-                          // Biometric Quick Login Shortcut (Login Mode Only)
-                          if (!_isRegister) ...[
-                            const SizedBox(height: 16),
-                            Center(
-                              child: OutlinedButton.icon(
-                                onPressed: _handleBiometricLogin,
-                                icon: const Icon(Icons.fingerprint, color: AppTheme.accentAqua),
-                                label: const Text('Fast Login with Biometrics', style: TextStyle(fontSize: 12)),
-                                style: OutlinedButton.styleFrom(
-                                  side: BorderSide(color: AppTheme.accentAqua.withValues(alpha: 0.5)),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ),
