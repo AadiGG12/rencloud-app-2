@@ -17,6 +17,7 @@ class RenCloudAuthScreen extends ConsumerStatefulWidget {
 
 class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
   late bool _isRegister;
+  bool _biometricVerified = false;
 
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -42,8 +43,40 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
     super.dispose();
   }
 
+  Future<void> _handleBiometricVerification() async {
+    final authenticated = await BiometricService.authenticate(
+      reason: 'Scan fingerprint or face for compulsory Step 1 verification',
+    );
+
+    if (authenticated && mounted) {
+      HapticFeedback.heavyImpact();
+      setState(() {
+        _biometricVerified = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Step 1 Verified: Biometric Authentication Success! Now enter Email & Password.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Compulsory Step 1: Biometric Verification for Login Mode
+    if (!_isRegister && !_biometricVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Compulsory Step 1 Required: Please scan your Fingerprint / Biometrics first!'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      await _handleBiometricVerification();
+      if (!_biometricVerified) return; // Stop if user cancelled biometric scan
+    }
 
     HapticFeedback.mediumImpact();
     final authNotifier = ref.read(rencloudAuthProvider.notifier);
@@ -86,32 +119,13 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
     }
   }
 
-  Future<void> _handleBiometricLogin() async {
-    final authenticated = await BiometricService.authenticate(
-      reason: 'Scan fingerprint or face to log in to RenCloud',
-    );
-
-    if (authenticated && mounted) {
-      HapticFeedback.heavyImpact();
-      final authNotifier = ref.read(rencloudAuthProvider.notifier);
-      await authNotifier.login(email: 'admin@rencloud.online', password: 'biometric_login');
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('⚡ Biometric Authentication Verified! Logged in to RenCloud.'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      }
-    }
-  }
-
   Future<void> _handleLogout() async {
     HapticFeedback.mediumImpact();
     await ref.read(rencloudAuthProvider.notifier).logout();
     if (mounted) {
+      setState(() {
+        _biometricVerified = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Logged out of RenCloud account successfully.'),
@@ -129,7 +143,7 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(authState.isAuthenticated ? 'Account Management' : (_isRegister ? 'Create RenCloud Account' : 'Account Login')),
+        title: Text(authState.isAuthenticated ? 'Account Management' : (_isRegister ? 'Create RenCloud Account' : 'Sequential 2-Step Login')),
         centerTitle: true,
       ),
       body: Center(
@@ -311,21 +325,31 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // 1ST OPTION: BIOMETRIC FINGERPRINT / FACE ID LOGIN BUTTON (LOGIN MODE ONLY)
+                          // COMPULSORY STEP 1: BIOMETRIC FINGERPRINT / FACE ID (LOGIN MODE ONLY)
                           if (!_isRegister) ...[
                             SizedBox(
                               width: double.infinity,
-                              height: 48,
+                              height: 50,
                               child: ElevatedButton.icon(
-                                onPressed: _handleBiometricLogin,
-                                icon: const Icon(Icons.fingerprint_rounded, color: Colors.black, size: 24),
-                                label: const Text(
-                                  '1ST: FAST FINGERPRINT / BIOMETRIC LOGIN',
-                                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: Colors.black),
+                                onPressed: _handleBiometricVerification,
+                                icon: Icon(
+                                  _biometricVerified ? Icons.check_circle_rounded : Icons.fingerprint_rounded,
+                                  color: _biometricVerified ? Colors.white : Colors.black,
+                                  size: 24,
+                                ),
+                                label: Text(
+                                  _biometricVerified
+                                      ? '✅ STEP 1: BIOMETRIC VERIFIED'
+                                      : '1ST STEP: SCAN FINGERPRINT (COMPULSORY)',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 12,
+                                    color: _biometricVerified ? Colors.white : Colors.black,
+                                  ),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.accentAqua,
-                                  foregroundColor: Colors.black,
+                                  backgroundColor: _biometricVerified ? Colors.green : AppTheme.accentAqua,
+                                  foregroundColor: _biometricVerified ? Colors.white : Colors.black,
                                   elevation: 4,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 ),
@@ -337,7 +361,7 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
                                 Expanded(child: Divider()),
                                 Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 10),
-                                  child: Text('OR LOGIN WITH EMAIL & PASSWORD',
+                                  child: Text('2ND STEP: EMAIL & PASSWORD (COMPULSORY)',
                                       style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: AppTheme.textSecondary)),
                                 ),
                                 Expanded(child: Divider()),
@@ -431,10 +455,10 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
 
                           const SizedBox(height: 8),
 
-                          // Submit Button for Email & Password Mode
+                          // Submit Button (Step 2: Authenticate with Pterodactyl Panel)
                           Container(
                             width: double.infinity,
-                            height: 46,
+                            height: 48,
                             decoration: BoxDecoration(
                               gradient: AppTheme.metallicSteelGradient,
                               borderRadius: BorderRadius.circular(12),
@@ -460,7 +484,7 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
                                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                     )
                                   : Text(
-                                      _isRegister ? 'CREATE ACCOUNT' : 'LOGIN WITH EMAIL & PASSWORD',
+                                      _isRegister ? 'CREATE ACCOUNT ON PANEL' : 'STEP 2: LOGIN TO RENCLOUD PANEL',
                                       style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: Colors.white),
                                     ),
                             ),
