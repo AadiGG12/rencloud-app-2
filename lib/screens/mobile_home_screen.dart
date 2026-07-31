@@ -140,7 +140,7 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
     final biometric = ref.watch(biometricProvider);
     final authState = ref.watch(rencloudAuthProvider);
     final user = authState.user;
-    final bool isAdminAccount = user != null && (user.isAdmin || user.email.toLowerCase() == 'admin@rencloud.online');
+    final bool isAdminAccount = user != null && user.isAdmin;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
