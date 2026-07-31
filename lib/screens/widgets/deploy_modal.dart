@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import '../../models/rencloud_plan.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -13,35 +15,39 @@ class DeployModal extends StatefulWidget {
 }
 
 class _DeployModalState extends State<DeployModal> {
-  // Pterodactyl Synced Real Locations
-  String selectedRegion = 'Mumbai, India (IN-01)';
-  final List<String> panelLocations = [
-    'Mumbai, India (IN-01 Asia-South)',
-    'Singapore (SG-01 Asia-Southeast)',
-    'Frankfurt, Germany (DE-01 Europe)',
-    'N. Virginia, USA (US-EAST-01)',
+  static const String panelUrl = 'https://panel.rencloud.online';
+  static const String ptlaKey = 'ptla_ZOzmkCLdCNI7zzx69CvOCkVLrdgiZskY2v3bRhxepk0';
+
+  bool _isLoadingPanelData = true;
+
+  // Real Locations
+  String selectedRegion = 'India (Asia-South)';
+  List<String> panelLocations = [
+    'India (Asia-South)',
+    'Singapore (Asia-Southeast)',
   ];
 
-  // Pterodactyl Real Nodes
-  String selectedNode = 'Node 01 - AMD Ryzen 9 7950X (High Speed NVMe)';
-  final List<String> panelNodes = [
-    'Node 01 - AMD Ryzen 9 7950X (High Speed NVMe)',
-    'Node 02 - AMD EPYC 7763 (Extreme Performance)',
-    'Node 03 - Intel Core i9-14900K (Gaming Priority)',
-    'Node 04 - Auto Allocate Best Performance',
+  // Real Nodes
+  String selectedNode = 'India-amd-at3 (Node #9)';
+  List<String> panelNodes = [
+    'India-amd-at3 (Node #9)',
+    'at-intel-in6 (Node #14)',
+    'at-intel-in7 (Node #15)',
+    'at-ryzen-in (Node #16)',
+    'hx-intel-in8 (Node #20)',
+    'free-sg2 (Node #17)',
+    'free-sg3 (Node #19)',
   ];
 
-  // Minecraft Pterodactyl Eggs
-  String selectedEgg = 'Paper (Recommended - Anti-Lag)';
-  final List<String> minecraftEggs = [
-    'Paper (Recommended - Anti-Lag)',
-    'Purpur (Ultra High Performance)',
-    'Spigot / CraftBukkit',
-    'Vanilla Minecraft',
-    'Fabric (Modded)',
-    'Forge (Modded)',
-    'Velocity / BungeeCord Proxy',
-    'Geyser / Bedrock Crossplay',
+  // Real Minecraft Eggs
+  String selectedEgg = 'Paper (Egg #4 - Recommended)';
+  List<String> minecraftEggs = [
+    'Paper (Egg #4 - Recommended)',
+    'Vanilla Minecraft (Egg #5)',
+    'Forge Minecraft (Egg #2)',
+    'Bungeecord Proxy (Egg #1)',
+    'SpongeVanilla (Egg #3)',
+    'PocketmineMP (Bedrock/PE) (Egg #19)',
   ];
 
   // Selected Minecraft Version
@@ -55,8 +61,83 @@ class _DeployModalState extends State<DeployModal> {
     'Debian 12 Bookworm',
     'AlmaLinux 9',
     'Alpine Linux 3.20 (Lightweight)',
-    'Windows Server 2022',
+    'Node.js 21 Environment',
+    'Python 3.11 Environment',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLivePanelData();
+  }
+
+  Future<void> _fetchLivePanelData() async {
+    try {
+      final locResp = await http.get(
+        Uri.parse('$panelUrl/api/application/locations'),
+        headers: {
+          'Authorization': 'Bearer $ptlaKey',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 6));
+
+      final nodeResp = await http.get(
+        Uri.parse('$panelUrl/api/application/nodes'),
+        headers: {
+          'Authorization': 'Bearer $ptlaKey',
+          'Accept': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 6));
+
+      if (locResp.statusCode == 200) {
+        final data = json.decode(locResp.body);
+        final locs = data['data'] as List<dynamic>? ?? [];
+        if (locs.isNotEmpty) {
+          final fetchedLocs = locs.map((e) {
+            final a = e['attributes'];
+            final shortName = a['short'] ?? 'Location';
+            final longName = a['long'];
+            return longName != null && longName.toString().isNotEmpty
+                ? '$shortName ($longName)'
+                : shortName.toString();
+          }).toList();
+
+          if (mounted) {
+            setState(() {
+              panelLocations = fetchedLocs;
+              selectedRegion = fetchedLocs.first;
+            });
+          }
+        }
+      }
+
+      if (nodeResp.statusCode == 200) {
+        final data = json.decode(nodeResp.body);
+        final nodes = data['data'] as List<dynamic>? ?? [];
+        if (nodes.isNotEmpty) {
+          final fetchedNodes = nodes.map((e) {
+            final a = e['attributes'];
+            final name = a['name'] ?? 'Node';
+            final id = a['id'];
+            return '$name (Node #$id)';
+          }).toList();
+
+          if (mounted) {
+            setState(() {
+              panelNodes = fetchedNodes;
+              selectedNode = fetchedNodes.first;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[DeployModal] Live panel data fetch notice: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingPanelData = false);
+      }
+    }
+  }
 
   bool get isMinecraftService {
     final cat = widget.plan.categoryName.toLowerCase();
@@ -64,7 +145,6 @@ class _DeployModalState extends State<DeployModal> {
     return cat.contains('minecraft') || name.contains('minecraft') || cat.contains('mc');
   }
 
-  // Complete List of Minecraft Versions from Newest (1.21.4) to Oldest (1.7.10)
   final List<String> allMinecraftVersions = [
     '1.21.4 (Latest Release)',
     '1.21.3',
@@ -116,82 +196,80 @@ class _DeployModalState extends State<DeployModal> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Select Minecraft Version',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    // Search bar
-                    TextField(
-                      onChanged: (val) {
-                        setModalState(() => searchQuery = val);
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Search version (e.g. 1.21, 1.16.5, 1.8.9)...',
-                        prefixIcon: const Icon(Icons.search, color: AppTheme.accentAqua),
-                        filled: true,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    // Quick Filter Chips
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          ActionChip(
-                            label: const Text('Latest 1.21.4', style: TextStyle(fontSize: 10)),
-                            onPressed: () {
-                              setState(() => selectedVersion = '1.21.4 (Latest Release)');
-                              Navigator.pop(context);
-                            },
+                          const Text(
+                            'Select Minecraft Version',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(width: 6),
-                          ActionChip(
-                            label: const Text('1.20.1 Modded', style: TextStyle(fontSize: 10)),
-                            onPressed: () {
-                              setState(() => selectedVersion = '1.20.1 (Popular Modded)');
-                              Navigator.pop(context);
-                            },
-                          ),
-                          const SizedBox(width: 6),
-                          ActionChip(
-                            label: const Text('1.16.5', style: TextStyle(fontSize: 10)),
-                            onPressed: () {
-                              setState(() => selectedVersion = '1.16.5 (Popular Modded)');
-                              Navigator.pop(context);
-                            },
-                          ),
-                          const SizedBox(width: 6),
-                          ActionChip(
-                            label: const Text('1.8.9 PvP', style: TextStyle(fontSize: 10)),
-                            onPressed: () {
-                              setState(() => selectedVersion = '1.8.9 (Popular PvP)');
-                              Navigator.pop(context);
-                            },
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Divider(),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: filteredVersions.length,
+                      const SizedBox(height: 10),
+                      TextField(
+                        onChanged: (val) {
+                          setModalState(() => searchQuery = val);
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search version (e.g. 1.21, 1.16.5, 1.8.9)...',
+                          prefixIcon: const Icon(Icons.search, color: AppTheme.accentAqua),
+                          filled: true,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            ActionChip(
+                              label: const Text('Latest 1.21.4', style: TextStyle(fontSize: 10)),
+                              onPressed: () {
+                                setState(() => selectedVersion = '1.21.4 (Latest Release)');
+                                Navigator.pop(context);
+                              },
+                            ),
+                            const SizedBox(width: 6),
+                            ActionChip(
+                              label: const Text('1.20.1 Modded', style: TextStyle(fontSize: 10)),
+                              onPressed: () {
+                                setState(() => selectedVersion = '1.20.1 (Popular Modded)');
+                                Navigator.pop(context);
+                              },
+                            ),
+                            const SizedBox(width: 6),
+                            ActionChip(
+                              label: const Text('1.16.5', style: TextStyle(fontSize: 10)),
+                              onPressed: () {
+                                setState(() => selectedVersion = '1.16.5 (Popular Modded)');
+                                Navigator.pop(context);
+                              },
+                            ),
+                            const SizedBox(width: 6),
+                            ActionChip(
+                              label: const Text('1.8.9 PvP', style: TextStyle(fontSize: 10)),
+                              onPressed: () {
+                                setState(() => selectedVersion = '1.8.9 (Popular PvP)');
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Divider(),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: filteredVersions.length,
                         itemBuilder: (context, index) {
                           final v = filteredVersions[index];
                           final bool isSelected = v == selectedVersion;
@@ -217,8 +295,8 @@ class _DeployModalState extends State<DeployModal> {
                           );
                         },
                       ),
-                  ],
-                ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -297,17 +375,21 @@ class _DeployModalState extends State<DeployModal> {
               ),
               const SizedBox(height: 16),
 
-              // 1. SELECT SERVER REGION (Synced with Pterodactyl Panel)
+              // 1. SELECT SERVER REGION (Live Pterodactyl Locations)
               Row(
-                children: const [
-                  Icon(Icons.public_rounded, size: 16, color: AppTheme.accentAqua),
-                  SizedBox(width: 6),
-                  Text('Pterodactyl Server Region', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                children: [
+                  const Icon(Icons.public_rounded, size: 16, color: AppTheme.accentAqua),
+                  const SizedBox(width: 6),
+                  const Text('Pterodactyl Location', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  if (_isLoadingPanelData) ...[
+                    const SizedBox(width: 8),
+                    const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2)),
+                  ],
                 ],
               ),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: selectedRegion,
+                value: panelLocations.contains(selectedRegion) ? selectedRegion : panelLocations.first,
                 isExpanded: true,
                 items: panelLocations.map((r) => DropdownMenuItem(value: r, child: Text(r, style: const TextStyle(fontSize: 12)))).toList(),
                 onChanged: (val) => setState(() => selectedRegion = val!),
@@ -318,7 +400,7 @@ class _DeployModalState extends State<DeployModal> {
               ),
               const SizedBox(height: 14),
 
-              // 2. SELECT PTERODACTYL NODE
+              // 2. SELECT PTERODACTYL NODE (Live Pterodactyl Nodes)
               Row(
                 children: const [
                   Icon(Icons.dns_rounded, size: 16, color: AppTheme.primaryPurple),
@@ -328,7 +410,7 @@ class _DeployModalState extends State<DeployModal> {
               ),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: selectedNode,
+                value: panelNodes.contains(selectedNode) ? selectedNode : panelNodes.first,
                 isExpanded: true,
                 items: panelNodes.map((n) => DropdownMenuItem(value: n, child: Text(n, style: const TextStyle(fontSize: 12)))).toList(),
                 onChanged: (val) => setState(() => selectedNode = val!),
@@ -339,9 +421,8 @@ class _DeployModalState extends State<DeployModal> {
               ),
               const SizedBox(height: 14),
 
-              // 3. MINECRAFT SERVICE CUSTOM CONTROLS (EGG + VERSION)
+              // 3. MINECRAFT EGG + VERSION OR OS SELECTOR
               if (isMinecraftService) ...[
-                // Minecraft Egg Selector
                 Row(
                   children: const [
                     Icon(Icons.sports_esports_rounded, size: 16, color: Colors.green),
@@ -351,7 +432,7 @@ class _DeployModalState extends State<DeployModal> {
                 ),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
-                  value: selectedEgg,
+                  value: minecraftEggs.contains(selectedEgg) ? selectedEgg : minecraftEggs.first,
                   isExpanded: true,
                   items: minecraftEggs.map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 12)))).toList(),
                   onChanged: (val) => setState(() => selectedEgg = val!),
@@ -362,7 +443,6 @@ class _DeployModalState extends State<DeployModal> {
                 ),
                 const SizedBox(height: 14),
 
-                // Minecraft Version Dialog Launcher Tile
                 Row(
                   children: const [
                     Icon(Icons.tag_rounded, size: 16, color: AppTheme.metallicGold),
@@ -395,11 +475,10 @@ class _DeployModalState extends State<DeployModal> {
                 ),
                 const SizedBox(height: 16),
               ] else ...[
-                // Non-Minecraft OS Selector
                 const Text('Operating System / Image', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
-                  value: selectedOs,
+                  value: osOptions.contains(selectedOs) ? selectedOs : osOptions.first,
                   isExpanded: true,
                   items: osOptions.map((o) => DropdownMenuItem(value: o, child: Text(o, style: const TextStyle(fontSize: 12)))).toList(),
                   onChanged: (val) => setState(() => selectedOs = val!),
