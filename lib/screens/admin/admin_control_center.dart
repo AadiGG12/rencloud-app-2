@@ -369,12 +369,14 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
 
   // --- TAB 4: NODE HEALTH ---
   Widget _buildNodeHealthTab() {
+    final serverCount = _isLoadingServers ? '...' : '${_panelServers.length} Running';
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Node Health & Infrastructure', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+          const Text('Node Health & Active Infrastructure', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -382,11 +384,11 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
                 child: SkeuomorphicCard(
                   padding: const EdgeInsets.all(14),
                   child: Column(
-                    children: const [
-                      Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
-                      SizedBox(height: 6),
-                      Text('Active Nodes', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
-                      Text('12 / 12', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                    children: [
+                      const Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
+                      const SizedBox(height: 6),
+                      const Text('Active Nodes', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                      const Text('12 / 12 Online', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
                     ],
                   ),
                 ),
@@ -396,11 +398,11 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
                 child: SkeuomorphicCard(
                   padding: const EdgeInsets.all(14),
                   child: Column(
-                    children: const [
-                      Icon(Icons.memory_rounded, color: AppTheme.accentAqua, size: 28),
-                      SizedBox(height: 6),
-                      Text('RAM Capacity', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
-                      Text('64% Used', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                    children: [
+                      const Icon(Icons.dns_rounded, color: AppTheme.accentAqua, size: 28),
+                      const SizedBox(height: 6),
+                      const Text('Panel Servers', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                      Text(serverCount, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900)),
                     ],
                   ),
                 ),
