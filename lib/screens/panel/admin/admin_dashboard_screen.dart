@@ -308,7 +308,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             if (serversState.error != null)
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Text(serversState.error!, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                child: Text(serversState.error ?? '', style: const TextStyle(color: Colors.red, fontSize: 12)),
               )
             else if (serversState.servers.isEmpty && !serversState.isLoading)
               Container(

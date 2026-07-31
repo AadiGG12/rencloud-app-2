@@ -1,34 +1,63 @@
 name: rencloud_flutter
-description: RenCloud Service Catalog & Pricing Showcase App
+description: RenCloud - Enterprise Cloud Hosting Platform
 publish_to: 'none'
-version: 2.7.0+800
+version: 3.0.0+1000
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_riverpod: ^2.4.9
-  google_fonts: ^6.1.0
-  cupertino_icons: ^1.0.6
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Navigation
+  go_router: ^14.6.3
+
+  # UI & Design
+  google_fonts: ^6.3.0
+  cupertino_icons: ^1.0.8
+  lottie: ^3.3.1
+
+  # Charts & Graphs
+  fl_chart: ^0.70.2
+
+  # Networking
   http: ^1.2.0
   dio: ^5.7.0
-  path_provider: ^2.1.0
-  open_filex: ^4.3.0
+  dio_cache_interceptor: ^3.5.0
   web_socket_channel: ^2.4.0
-  local_auth: ^2.3.0
+
+  # Storage
   shared_preferences: ^2.2.2
-  package_info_plus: ^8.0.0
   flutter_secure_storage: ^9.2.4
-  url_launcher: ^6.2.5
+  path_provider: ^2.1.5
+
+  # Auth & Security
+  local_auth: ^2.3.0
+
+  # Notifications
+  flutter_local_notifications: ^18.0.1
+
+  # Utilities
+  package_info_plus: ^8.3.1
+  url_launcher: ^6.3.1
+  open_filex: ^4.3.2
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  build_runner: ^2.4.13
+  riverpod_generator: ^2.6.1
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/logo.png
+    - assets/images/
+    - assets/animations/

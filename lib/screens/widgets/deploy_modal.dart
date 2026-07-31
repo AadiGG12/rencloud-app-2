@@ -110,10 +110,12 @@ class _DeployModalState extends State<DeployModal> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Container(
                 width: 440,
-                height: 520,
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
                 padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -186,9 +188,10 @@ class _DeployModalState extends State<DeployModal> {
                     ),
                     const SizedBox(height: 10),
                     const Divider(),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: filteredVersions.length,
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filteredVersions.length,
                         itemBuilder: (context, index) {
                           final v = filteredVersions[index];
                           final bool isSelected = v == selectedVersion;
@@ -214,8 +217,8 @@ class _DeployModalState extends State<DeployModal> {
                           );
                         },
                       ),
-                    ),
                   ],
+                ),
                 ),
               ),
             );

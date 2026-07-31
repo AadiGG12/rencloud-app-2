@@ -405,7 +405,7 @@ class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerL
                 ? ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: 4,
-                    itemBuilder: (_, __) => const ServerCardSkeleton(),
+                    itemBuilder: (_, __) => const ShimmerCard(),
                   )
                 : state.error != null
                     ? Center(
@@ -414,7 +414,7 @@ class _PterodactylServerListScreenState extends ConsumerState<PterodactylServerL
                           children: [
                             const Icon(Icons.error_outline, size: 48, color: Colors.red),
                             const SizedBox(height: 16),
-                            Text(state.error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+                            Text(state.error ?? '', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: () => ref.read(pterodactylServerListProvider.notifier).fetchServers(),

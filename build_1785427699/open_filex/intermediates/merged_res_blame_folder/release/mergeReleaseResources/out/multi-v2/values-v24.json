@@ -1,0 +1,34 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.crazecoder.openfile.open_filex-release-29:/values-v24/values-v24.xml",
+            "map": [
+                {
+                    "source": "/home/ubuntu/.gradle/caches/transforms-4/6732cc494d0d4b2f1f5089215bbe2fc3/transformed/appcompat-1.6.1/res/values-v24/values-v24.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,212",
+                        "endColumns": "156,134",
+                        "endOffsets": "207,342"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.crazecoder.openfile.open_filex-mergeReleaseResources-27:/values-v24/values-v24.xml",
+            "map": [
+                {
+                    "source": "/home/ubuntu/.gradle/caches/transforms-4/6732cc494d0d4b2f1f5089215bbe2fc3/transformed/appcompat-1.6.1/res/values-v24/values-v24.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,212",
+                        "endColumns": "156,134",
+                        "endOffsets": "207,342"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -47,11 +47,13 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
 
     try {
       final users = await _adminService.listUsers();
+      if (!mounted) return;
       setState(() {
         _panelUsers = users;
         _isLoadingUsers = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoadingUsers = false;
         _userFetchError = e.toString();
@@ -60,11 +62,13 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
 
     try {
       final servers = await _adminService.listAllServers();
+      if (!mounted) return;
       setState(() {
         _panelServers = servers;
         _isLoadingServers = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoadingServers = false;
       });

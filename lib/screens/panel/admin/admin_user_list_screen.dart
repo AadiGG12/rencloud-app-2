@@ -208,7 +208,7 @@ class _AdminUserListScreenState extends ConsumerState<AdminUserListScreen> {
                           children: [
                             const Icon(Icons.error_outline, size: 48, color: Colors.red),
                             const SizedBox(height: 16),
-                            Text(state.error!, textAlign: TextAlign.center),
+                            Text(state.error ?? '', textAlign: TextAlign.center),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               onPressed: () => ref.read(adminUserListProvider.notifier).fetchUsers(),

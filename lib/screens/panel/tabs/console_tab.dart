@@ -100,7 +100,10 @@ class _ConsoleTabState extends ConsumerState<ConsoleTab> {
     try {
       final creds = await BackendServerService.getWebSocketCredentials(widget.serverId);
       _channel!.sink.add(json.encode({'event': 'auth', 'args': [creds['token'] ?? '']}));
-    } catch (_) {}
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _lines.add('Token renewal failed: $e'));
+    }
   }
 
   void _reconnect() {
@@ -123,8 +126,10 @@ class _ConsoleTabState extends ConsumerState<ConsoleTab> {
     if (auth.panelUrl == null || auth.apiKey == null) return;
     try {
       await BackendServerService.sendPowerSignal(widget.serverId, action);
+      if (!mounted) return;
       setState(() => _lines.add('[Power: $action]'));
     } catch (e) {
+      if (!mounted) return;
       setState(() => _lines.add('[Power failed: $e]'));
     }
   }

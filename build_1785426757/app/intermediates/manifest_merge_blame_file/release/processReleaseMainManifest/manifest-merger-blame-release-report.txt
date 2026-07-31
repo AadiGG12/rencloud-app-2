@@ -1,0 +1,209 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.rencloud.app"
+4    android:versionCode="100"
+5    android:versionName="1.6.9" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:4:5-66
+11-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:4:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:5:5-78
+12-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:5:22-76
+13    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+13-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:6:5-82
+13-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:6:22-80
+14    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+14-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:7:5-71
+14-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:7:22-69
+15    <uses-permission
+15-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:8:5-107
+16        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+16-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:8:22-78
+17        android:maxSdkVersion="28" />
+17-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:8:79-105
+18    <uses-permission
+18-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:8:5-10:38
+19        android:name="android.permission.READ_EXTERNAL_STORAGE"
+19-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:9:9-64
+20        android:maxSdkVersion="32" />
+20-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:10:9-35
+21    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+21-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:5-76
+21-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:11:22-73
+22    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+22-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:12:5-75
+22-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:12:22-72
+23    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" /> <!-- suppress DeprecatedClassUsageInspection -->
+23-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:13:5-75
+23-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:13:22-72
+24    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+24-->[androidx.biometric:biometric:1.1.0] /home/ubuntu/.gradle/caches/transforms-4/b0979f82bb731d288d39b2439904c61b/transformed/biometric-1.1.0/AndroidManifest.xml:27:5-74
+24-->[androidx.biometric:biometric:1.1.0] /home/ubuntu/.gradle/caches/transforms-4/b0979f82bb731d288d39b2439904c61b/transformed/biometric-1.1.0/AndroidManifest.xml:27:22-71
+25
+26    <permission
+26-->[androidx.core:core:1.13.1] /home/ubuntu/.gradle/caches/transforms-4/19ff9370a08cf9ce177b308a2222a21a/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+27        android:name="com.rencloud.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+27-->[androidx.core:core:1.13.1] /home/ubuntu/.gradle/caches/transforms-4/19ff9370a08cf9ce177b308a2222a21a/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+28        android:protectionLevel="signature" />
+28-->[androidx.core:core:1.13.1] /home/ubuntu/.gradle/caches/transforms-4/19ff9370a08cf9ce177b308a2222a21a/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+29
+30    <uses-permission android:name="com.rencloud.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+30-->[androidx.core:core:1.13.1] /home/ubuntu/.gradle/caches/transforms-4/19ff9370a08cf9ce177b308a2222a21a/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+30-->[androidx.core:core:1.13.1] /home/ubuntu/.gradle/caches/transforms-4/19ff9370a08cf9ce177b308a2222a21a/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+31
+32    <application
+33        android:name="android.app.Application"
+33-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:12:9-42
+34        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+34-->[androidx.core:core:1.13.1] /home/ubuntu/.gradle/caches/transforms-4/19ff9370a08cf9ce177b308a2222a21a/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
+35        android:extractNativeLibs="true"
+36        android:icon="@mipmap/ic_launcher"
+36-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:13:9-43
+37        android:label="RenCloud" >
+37-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:11:9-33
+38        <activity
+38-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:14:9-30:20
+39            android:name="com.rencloud.app.MainActivity"
+39-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:15:13-41
+40            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+40-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:19:13-163
+41            android:exported="true"
+41-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:16:13-36
+42            android:hardwareAccelerated="true"
+42-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:20:13-47
+43            android:launchMode="singleTop"
+43-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:17:13-43
+44            android:theme="@style/LaunchTheme"
+44-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:18:13-47
+45            android:windowSoftInputMode="adjustResize" >
+45-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:21:13-55
+46            <meta-data
+46-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:22:13-25:17
+47                android:name="io.flutter.embedding.android.NormalTheme"
+47-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:23:15-70
+48                android:value="@style/NormalTheme" />
+48-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:24:15-49
+49
+50            <intent-filter>
+50-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:26:13-29:29
+51                <action android:name="android.intent.action.MAIN" />
+51-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:27:17-68
+51-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:27:25-66
+52
+53                <category android:name="android.intent.category.LAUNCHER" />
+53-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:28:17-76
+53-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:28:27-74
+54            </intent-filter>
+55        </activity>
+56
+57        <meta-data
+57-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:31:9-33:33
+58            android:name="flutterEmbedding"
+58-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:32:13-44
+59            android:value="2" />
+59-->/home/ubuntu/rencloud-flutter-app/android/app/src/main/AndroidManifest.xml:33:13-30
+60
+61        <provider
+61-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:16:9-25:20
+62            android:name="com.crazecoder.openfile.FileProvider"
+62-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:17:13-64
+63            android:authorities="com.rencloud.app.fileProvider.com.crazecoder.openfile"
+63-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:18:13-88
+64            android:exported="false"
+64-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:19:13-37
+65            android:grantUriPermissions="true" >
+65-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:20:13-47
+66            <meta-data
+66-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:22:13-24:53
+67                android:name="android.support.FILE_PROVIDER_PATHS"
+67-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:23:17-67
+68                android:resource="@xml/filepaths" />
+68-->[:open_filex] /home/ubuntu/rencloud-flutter-app/build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml:24:17-50
+69        </provider>
+70
+71        <uses-library
+71-->[androidx.window:window:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/c3efc1004741e48d5630f3ab704a1985/transformed/jetified-window-1.2.0/AndroidManifest.xml:23:9-25:40
+72            android:name="androidx.window.extensions"
+72-->[androidx.window:window:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/c3efc1004741e48d5630f3ab704a1985/transformed/jetified-window-1.2.0/AndroidManifest.xml:24:13-54
+73            android:required="false" />
+73-->[androidx.window:window:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/c3efc1004741e48d5630f3ab704a1985/transformed/jetified-window-1.2.0/AndroidManifest.xml:25:13-37
+74        <uses-library
+74-->[androidx.window:window:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/c3efc1004741e48d5630f3ab704a1985/transformed/jetified-window-1.2.0/AndroidManifest.xml:26:9-28:40
+75            android:name="androidx.window.sidecar"
+75-->[androidx.window:window:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/c3efc1004741e48d5630f3ab704a1985/transformed/jetified-window-1.2.0/AndroidManifest.xml:27:13-51
+76            android:required="false" />
+76-->[androidx.window:window:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/c3efc1004741e48d5630f3ab704a1985/transformed/jetified-window-1.2.0/AndroidManifest.xml:28:13-37
+77
+78        <provider
+78-->[androidx.emoji2:emoji2:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/9f6fdaaa60f852319099e9cc220fbfd2/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+79            android:name="androidx.startup.InitializationProvider"
+79-->[androidx.emoji2:emoji2:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/9f6fdaaa60f852319099e9cc220fbfd2/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:25:13-67
+80            android:authorities="com.rencloud.app.androidx-startup"
+80-->[androidx.emoji2:emoji2:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/9f6fdaaa60f852319099e9cc220fbfd2/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:26:13-68
+81            android:exported="false" >
+81-->[androidx.emoji2:emoji2:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/9f6fdaaa60f852319099e9cc220fbfd2/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:27:13-37
+82            <meta-data
+82-->[androidx.emoji2:emoji2:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/9f6fdaaa60f852319099e9cc220fbfd2/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+83                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+83-->[androidx.emoji2:emoji2:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/9f6fdaaa60f852319099e9cc220fbfd2/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:30:17-75
+84                android:value="androidx.startup" />
+84-->[androidx.emoji2:emoji2:1.2.0] /home/ubuntu/.gradle/caches/transforms-4/9f6fdaaa60f852319099e9cc220fbfd2/transformed/jetified-emoji2-1.2.0/AndroidManifest.xml:31:17-49
+85            <meta-data
+85-->[androidx.lifecycle:lifecycle-process:2.7.0] /home/ubuntu/.gradle/caches/transforms-4/570f8e1948cfa93e76f9b7d71ab56a81/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:29:13-31:52
+86                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+86-->[androidx.lifecycle:lifecycle-process:2.7.0] /home/ubuntu/.gradle/caches/transforms-4/570f8e1948cfa93e76f9b7d71ab56a81/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:30:17-78
+87                android:value="androidx.startup" />
+87-->[androidx.lifecycle:lifecycle-process:2.7.0] /home/ubuntu/.gradle/caches/transforms-4/570f8e1948cfa93e76f9b7d71ab56a81/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:31:17-49
+88            <meta-data
+88-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+89                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+89-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+90                android:value="androidx.startup" />
+90-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+91        </provider>
+92
+93        <receiver
+93-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+94            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+94-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+95            android:directBootAware="false"
+95-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+96            android:enabled="true"
+96-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+97            android:exported="true"
+97-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+98            android:permission="android.permission.DUMP" >
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+99            <intent-filter>
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+100                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+100-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+100-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+101            </intent-filter>
+102            <intent-filter>
+102-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+103                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+103-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+103-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+104            </intent-filter>
+105            <intent-filter>
+105-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+106                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+106-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+106-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+107            </intent-filter>
+108            <intent-filter>
+108-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+109                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+109-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+109-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/ubuntu/.gradle/caches/transforms-4/a70319c3ffc28803adf049c91b604d32/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+110            </intent-filter>
+111        </receiver>
+112    </application>
+113
+114</manifest>

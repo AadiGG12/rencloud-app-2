@@ -32,8 +32,10 @@ class _FilesTabState extends ConsumerState<FilesTab> {
     if (service == null) return;
     try {
       final files = await service.listFiles(_currentDir);
+      if (!mounted) return;
       setState(() { _files = files; _isLoading = false; _error = null; });
     } catch (e) {
+      if (!mounted) return;
       setState(() { _isLoading = false; _error = e.toString(); });
     }
   }
@@ -46,14 +48,15 @@ class _FilesTabState extends ConsumerState<FilesTab> {
   }
 
   Future<void> _createFolder() async {
+    final c = TextEditingController();
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) {
-        final c = TextEditingController();
         return AlertDialog(title: const Text('Create Folder'), content: TextField(controller: c, decoration: const InputDecoration(labelText: 'Folder name'), autofocus: true),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')), ElevatedButton(onPressed: () => Navigator.pop(ctx, c.text), child: const Text('Create'))]);
       },
     );
+    c.dispose();
     if (name != null && name.isNotEmpty) {
       await _getService()?.createFolder(name, _currentDir);
       _loadFiles();
@@ -75,14 +78,15 @@ class _FilesTabState extends ConsumerState<FilesTab> {
   }
 
   Future<void> _renameFile(ServerFile file) async {
+    final c = TextEditingController(text: file.name);
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) {
-        final c = TextEditingController(text: file.name);
         return AlertDialog(title: const Text('Rename'), content: TextField(controller: c, autofocus: true),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')), ElevatedButton(onPressed: () => Navigator.pop(ctx, c.text), child: const Text('Rename'))]);
       },
     );
+    c.dispose();
     if (name != null && name.isNotEmpty && name != file.name) {
       await _getService()?.renameFile(file.path, '${_currentDir == '/' ? "" : _currentDir}/$name');
       _loadFiles();
@@ -99,10 +103,10 @@ class _FilesTabState extends ConsumerState<FilesTab> {
     try {
       final content = await service.getFileContents(file.path);
       if (!mounted) return;
+      final c = TextEditingController(text: content);
       final result = await showDialog<String>(
         context: context,
         builder: (ctx) {
-          final c = TextEditingController(text: content);
           return AlertDialog(
             title: Text('Edit: ${file.name}'),
             content: SizedBox(width: 500, height: 400, child: TextField(controller: c, maxLines: null, expands: true, style: const TextStyle(fontFamily: 'monospace', fontSize: 12))),
@@ -110,6 +114,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
           );
         },
       );
+      c.dispose();
       if (result != null) {
         await service.writeFile(file.path, result);
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('File saved')));

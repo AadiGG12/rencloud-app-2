@@ -14,12 +14,12 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
+    flutterVersionCode = '1000'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
+    flutterVersionName = '3.0.0'
 }
 
 android {
@@ -28,6 +28,7 @@ android {
     ndkVersion flutter.ndkVersion
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -43,10 +44,11 @@ android {
 
     defaultConfig {
         applicationId "com.rencloud.app"
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 21
         targetSdk 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        multiDexEnabled true
     }
 
     signingConfigs {
@@ -73,4 +75,6 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+}
