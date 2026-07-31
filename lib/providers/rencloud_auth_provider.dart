@@ -38,72 +38,80 @@ class RenCloudAuthNotifier extends StateNotifier<RenCloudAuthState> {
   /// Restore user session on startup
   Future<void> restoreSession() async {
     state = state.copyWith(isLoading: true);
-    final user = await RenCloudAuthService.restoreSession();
-    if (user != null) {
-      state = state.copyWith(
-        user: user,
-        isAuthenticated: true,
-        isLoading: false,
-      );
-    } else {
+    try {
+      final user = await RenCloudAuthService.restoreSession();
+      if (user != null) {
+        state = state.copyWith(
+          user: user,
+          isAuthenticated: true,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+    } catch (_) {
       state = state.copyWith(isLoading: false);
     }
   }
 
-  /// Register
+  /// Register with guaranteed loading reset
   Future<AuthResult> register({
     required String fullName,
     required String email,
     required String password,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
-    final result = await RenCloudAuthService.register(
-      fullName: fullName,
-      email: email,
-      password: password,
-    );
-
-    if (result.success && result.user != null) {
-      state = state.copyWith(
-        user: result.user,
-        isAuthenticated: true,
-        isLoading: false,
+    try {
+      final result = await RenCloudAuthService.register(
+        fullName: fullName,
+        email: email,
+        password: password,
       );
-    } else if (result.success) {
-      // Automatic login if register returned success
-      final loginResult = await RenCloudAuthService.login(email: email, password: password);
-      if (loginResult.success) {
+
+      if (result.success && result.user != null) {
         state = state.copyWith(
-          user: loginResult.user,
+          user: result.user,
           isAuthenticated: true,
           isLoading: false,
         );
       } else {
         state = state.copyWith(isLoading: false, errorMessage: result.message);
       }
-    } else {
-      state = state.copyWith(isLoading: false, errorMessage: result.message);
+      return result;
+    } catch (e) {
+      final errorResult = AuthResult(success: false, message: 'Registration failed: $e');
+      state = state.copyWith(isLoading: false, errorMessage: errorResult.message);
+      return errorResult;
+    } finally {
+      state = state.copyWith(isLoading: false);
     }
-    return result;
   }
 
-  /// Login
+  /// Login with guaranteed loading reset
   Future<AuthResult> login({
     required String email,
     required String password,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
-    final result = await RenCloudAuthService.login(email: email, password: password);
-    if (result.success && result.user != null) {
-      state = state.copyWith(
-        user: result.user,
-        isAuthenticated: true,
-        isLoading: false,
-      );
-    } else {
-      state = state.copyWith(isLoading: false, errorMessage: result.message);
+    try {
+      final result = await RenCloudAuthService.login(email: email, password: password);
+      if (result.success && result.user != null) {
+        state = state.copyWith(
+          user: result.user,
+          isAuthenticated: true,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(isLoading: false, errorMessage: result.message);
+      }
+      return result;
+    } catch (e) {
+      final errorResult = AuthResult(success: false, message: 'Login failed: $e');
+      state = state.copyWith(isLoading: false, errorMessage: errorResult.message);
+      return errorResult;
+    } finally {
+      state = state.copyWith(isLoading: false);
     }
-    return result;
   }
 
   /// Logout
