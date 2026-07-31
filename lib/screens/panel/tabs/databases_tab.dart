@@ -17,7 +17,6 @@ class DatabasesTab extends ConsumerStatefulWidget {
 class _DatabasesTabState extends ConsumerState<DatabasesTab> {
   List<ServerDatabase> _dbs = [];
   bool _isLoading = true;
-  String? _error;
 
   DatabaseService? _getService() {
     final auth = ref.read(pterodactylAuthProvider);
@@ -26,29 +25,24 @@ class _DatabasesTabState extends ConsumerState<DatabasesTab> {
   }
 
   Future<void> _load() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() => _isLoading = true);
     try {
       _dbs = await _getService()?.list() ?? [];
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString());
-    }
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _create() async {
-    final c = TextEditingController();
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) {
+        final c = TextEditingController();
         return AlertDialog(title: const Text('Create Database'), content: TextField(controller: c, decoration: const InputDecoration(labelText: 'Database name')), actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(onPressed: () => Navigator.pop(ctx, c.text), child: const Text('Create')),
         ]);
       },
     );
-    c.dispose();
     if (name != null && name.isNotEmpty) {
       await _getService()?.create(name);
       _load();
@@ -67,11 +61,9 @@ class _DatabasesTabState extends ConsumerState<DatabasesTab> {
       floatingActionButton: FloatingActionButton(onPressed: _create, child: const Icon(Icons.add), heroTag: null),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Text('Error: $_error'))
-              : _dbs.isEmpty
-                  ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.storage, size: 48, color: AppTheme.textSecondary), SizedBox(height: 8), Text('No databases')]))
-                  : RefreshIndicator(
+          : _dbs.isEmpty
+              ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.storage, size: 48, color: AppTheme.textSecondary), SizedBox(height: 8), Text('No databases')]))
+              : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView.builder(
                     itemCount: _dbs.length,

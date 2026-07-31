@@ -320,14 +320,7 @@ class _UpdateDialogContentState extends State<_UpdateDialogContent> {
                 color: _readyToInstall ? const Color(0xFF06B6D4) : const Color(0xFF0F172A),
               ),
             ),
-            if (_readyToInstall) ...[
-              const SizedBox(height: 6),
-              const Text(
-                '💡 Tip: If Android shows "App not installed as package appears to be invalid", please uninstall any older version of RenCloud on your phone first.',
-                style: TextStyle(fontSize: 10, color: Color(0xFF64748B), fontStyle: FontStyle.italic),
-              ),
-            ],
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(

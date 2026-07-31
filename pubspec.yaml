@@ -1,7 +1,7 @@
 name: rencloud_flutter
 description: RenCloud - Enterprise Cloud Hosting Platform
 publish_to: 'none'
-version: 3.0.2+1020
+version: 2.0.0+10000
 
 environment:
   sdk: '>=3.3.0 <4.0.0'

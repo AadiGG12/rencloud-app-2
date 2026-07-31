@@ -17,7 +17,6 @@ class SchedulesTab extends ConsumerStatefulWidget {
 class _SchedulesTabState extends ConsumerState<SchedulesTab> {
   List<ServerSchedule> _schedules = [];
   bool _isLoading = true;
-  String? _error;
 
   ScheduleService? _getService() {
     final auth = ref.read(pterodactylAuthProvider);
@@ -26,15 +25,9 @@ class _SchedulesTabState extends ConsumerState<SchedulesTab> {
   }
 
   Future<void> _load() async {
-    setState(() { _isLoading = true; _error = null; });
-    try { 
-      _schedules = await _getService()?.list() ?? []; 
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString());
-    }
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    setState(() => _isLoading = true);
+    try { _schedules = await _getService()?.list() ?? []; } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _create() async {
@@ -83,11 +76,9 @@ class _SchedulesTabState extends ConsumerState<SchedulesTab> {
       floatingActionButton: FloatingActionButton(onPressed: _create, child: const Icon(Icons.add), heroTag: null),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Text('Error: $_error'))
-              : _schedules.isEmpty
-                  ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.schedule, size: 48, color: AppTheme.textSecondary), SizedBox(height: 8), Text('No schedules')]))
-                  : RefreshIndicator(
+          : _schedules.isEmpty
+              ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.schedule, size: 48, color: AppTheme.textSecondary), SizedBox(height: 8), Text('No schedules')]))
+              : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView.builder(
                     itemCount: _schedules.length,

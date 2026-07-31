@@ -16,7 +16,6 @@ class UsersTab extends ConsumerStatefulWidget {
 class _UsersTabState extends ConsumerState<UsersTab> {
   List<Subuser> _users = [];
   bool _isLoading = true;
-  String? _error;
 
   SubuserService? _getService() {
     final auth = ref.read(pterodactylAuthProvider);
@@ -25,15 +24,9 @@ class _UsersTabState extends ConsumerState<UsersTab> {
   }
 
   Future<void> _load() async {
-    setState(() { _isLoading = true; _error = null; });
-    try { 
-      _users = await _getService()?.list() ?? []; 
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString());
-    }
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    setState(() => _isLoading = true);
+    try { _users = await _getService()?.list() ?? []; } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _add() async {
@@ -65,11 +58,9 @@ class _UsersTabState extends ConsumerState<UsersTab> {
       floatingActionButton: FloatingActionButton(onPressed: _add, child: const Icon(Icons.person_add), heroTag: null),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Text('Error: $_error'))
-              : _users.isEmpty
-                  ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.people, size: 48, color: AppTheme.textSecondary), SizedBox(height: 8), Text('No subusers')]))
-                  : RefreshIndicator(
+          : _users.isEmpty
+              ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.people, size: 48, color: AppTheme.textSecondary), SizedBox(height: 8), Text('No subusers')]))
+              : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView.builder(
                     itemCount: _users.length,

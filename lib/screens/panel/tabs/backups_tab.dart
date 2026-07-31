@@ -17,7 +17,6 @@ class BackupsTab extends ConsumerStatefulWidget {
 class _BackupsTabState extends ConsumerState<BackupsTab> {
   List<ServerBackup> _backups = [];
   bool _isLoading = true;
-  String? _error;
 
   BackupService? _getService() {
     final auth = ref.read(pterodactylAuthProvider);
@@ -26,15 +25,9 @@ class _BackupsTabState extends ConsumerState<BackupsTab> {
   }
 
   Future<void> _load() async {
-    setState(() { _isLoading = true; _error = null; });
-    try { 
-      _backups = await _getService()?.list() ?? []; 
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString());
-    }
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    setState(() => _isLoading = true);
+    try { _backups = await _getService()?.list() ?? []; } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _create() async {
@@ -63,11 +56,9 @@ class _BackupsTabState extends ConsumerState<BackupsTab> {
       floatingActionButton: FloatingActionButton(onPressed: _create, child: const Icon(Icons.backup), heroTag: null),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Text('Error: $_error'))
-              : _backups.isEmpty
-                  ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.backup, size: 48, color: AppTheme.textSecondary), SizedBox(height: 8), Text('No backups')]))
-                  : RefreshIndicator(
+          : _backups.isEmpty
+              ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.backup, size: 48, color: AppTheme.textSecondary), SizedBox(height: 8), Text('No backups')]))
+              : RefreshIndicator(
                   onRefresh: _load,
                   child: ListView.builder(
                     itemCount: _backups.length,

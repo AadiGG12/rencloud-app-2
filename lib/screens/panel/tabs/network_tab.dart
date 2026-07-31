@@ -17,7 +17,6 @@ class NetworkTab extends ConsumerStatefulWidget {
 class _NetworkTabState extends ConsumerState<NetworkTab> {
   List<Allocation> _allocations = [];
   bool _isLoading = true;
-  String? _error;
 
   NetworkService? _getService() {
     final auth = ref.read(pterodactylAuthProvider);
@@ -26,15 +25,9 @@ class _NetworkTabState extends ConsumerState<NetworkTab> {
   }
 
   Future<void> _load() async {
-    setState(() { _isLoading = true; _error = null; });
-    try { 
-      _allocations = await _getService()?.list() ?? []; 
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString());
-    }
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    setState(() => _isLoading = true);
+    try { _allocations = await _getService()?.list() ?? []; } catch (_) {}
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _setPrimary(int id) async {
@@ -49,11 +42,9 @@ class _NetworkTabState extends ConsumerState<NetworkTab> {
   Widget build(BuildContext context) {
     return _isLoading
         ? const Center(child: CircularProgressIndicator())
-        : _error != null
-            ? Center(child: Text('Error: $_error'))
-            : _allocations.isEmpty
-                ? const Center(child: Text('No allocations'))
-                : RefreshIndicator(
+        : _allocations.isEmpty
+            ? const Center(child: Text('No allocations'))
+            : RefreshIndicator(
                 onRefresh: _load,
                 child: ListView.builder(
                   itemCount: _allocations.length,

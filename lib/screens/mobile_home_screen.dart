@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/rencloud_plan.dart';
 import '../providers/catalog_provider.dart';
-import '../providers/rencloud_auth_provider.dart';
 import '../core/constants/app_version.dart';
 import '../core/theme/app_theme.dart';
 import '../services/app_settings_service.dart';
@@ -138,9 +137,6 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
     final themeMode = ref.watch(themeModeProvider);
     final currency = ref.watch(currencyProvider);
     final biometric = ref.watch(biometricProvider);
-    final authState = ref.watch(rencloudAuthProvider);
-    final user = authState.user;
-    final bool isAdminAccount = user != null && user.isAdmin;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -443,33 +439,6 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
-            if (authState.isAuthenticated) ...[
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  HapticFeedback.mediumImpact();
-                  await ref.read(rencloudAuthProvider.notifier).logout();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Logged out of RenCloud account! Redirecting to login...'), backgroundColor: Colors.orange),
-                    );
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RenCloudAuthScreen()),
-                      (route) => false,
-                    );
-                  }
-                },
-                icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                label: const Text('Log Out Account', style: TextStyle(fontWeight: FontWeight.w900)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ],
             const SizedBox(height: 24),
             Center(
               child: Text(
@@ -518,19 +487,18 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
             },
           ),
-          // Admin Control Center Button (Super Admin Only)
-          if (isAdminAccount)
-            IconButton(
-              icon: const Icon(Icons.admin_panel_settings_rounded, color: AppTheme.metallicGold, size: 26),
-              tooltip: 'Admin Control Center',
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AdminControlCenter()),
-                );
-              },
-            ),
+          // Admin Control Center Button
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings_rounded, color: AppTheme.metallicGold, size: 26),
+            tooltip: 'Admin Control Center',
+            onPressed: () {
+              HapticFeedback.selectionClick();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminControlCenter()),
+              );
+            },
+          ),
           // User Account Login & Registration Icon
           IconButton(
             icon: const Icon(Icons.account_circle, color: AppTheme.accentAqua, size: 28),
