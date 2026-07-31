@@ -1,32 +1,9 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 import '../services/auth_session_service.dart';
 import '../services/app_settings_service.dart';
 import 'auth/auth_gateway_screen.dart';
-import '../core/constants/app_version.dart';
-
-class StarfieldPainter extends CustomPainter {
-  final double animationValue;
-  final List<Offset> stars;
-  final List<double> sizes;
-
-  StarfieldPainter(this.animationValue, this.stars, this.sizes);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = AppTheme.accentCyan.withValues(alpha: 0.4);
-    for (int i = 0; i < stars.length; i++) {
-      final y = (stars[i].dy * size.height + animationValue * 100) % size.height;
-      final x = stars[i].dx * size.width;
-      canvas.drawCircle(Offset(x, y), sizes[i], paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(StarfieldPainter oldDelegate) => true;
-}
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -37,161 +14,288 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
   late AnimationController _logoController;
+  late AnimationController _rotationController;
   late AnimationController _pulseController;
-  late AnimationController _bgController;
-  
+
   late Animation<double> _logoScale;
   late Animation<double> _logoOpacity;
-  late Animation<double> _pulseAnimation;
-  late Animation<double> _taglineOpacity;
-  
-  List<Offset> _stars = [];
-  List<double> _starSizes = [];
-
-  String _appName = "RenCloud";
-  String _displayedName = "";
+  late Animation<Offset> _textSlide;
+  late Animation<double> _textOpacity;
 
   @override
   void initState() {
     super.initState();
-    final random = Random();
-    for (int i = 0; i < 50; i++) {
-      _stars.add(Offset(random.nextDouble(), random.nextDouble()));
-      _starSizes.add(random.nextDouble() * 2 + 1);
-    }
 
-    _logoController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
-    _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
-    _bgController = AnimationController(vsync: this, duration: const Duration(seconds: 10))..repeat();
+    // 1. Logo Scale & Fade
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
 
-    _logoScale = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _logoController, curve: Curves.elasticOut));
-    _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _logoController, curve: const Interval(0.0, 0.5)));
-    _taglineOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _logoController, curve: const Interval(0.7, 1.0)));
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
+    _logoScale = Tween<double>(begin: 0.2, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
+    );
+
+    _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: const Interval(0.0, 0.4, curve: Curves.easeIn)),
+    );
+
+    // 2. Rotating Glowing Ring
+    _rotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
+
+    // 3. Pulse Wave
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
+    // Text Animations
+    _textSlide = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+      CurvedAnimation(parent: _logoController, curve: const Interval(0.4, 0.9, curve: Curves.easeOutCubic)),
+    );
+
+    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: const Interval(0.4, 0.9, curve: Curves.easeIn)),
+    );
 
     _logoController.forward();
-    _animateText();
 
-    Future.delayed(const Duration(milliseconds: 2500), () async {
+    // Transition to main screen or saved session screen
+    Future.delayed(const Duration(milliseconds: 3200), () async {
       if (!mounted) return;
+
       await AppSettingsService.restoreSettings(ref);
       await AuthSessionService.restoreSession(ref);
       if (!mounted) return;
 
+      Widget targetScreen = const AuthGatewayScreen();
+
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const AuthGatewayScreen(),
-          transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 600),
+          pageBuilder: (context, animation, secondaryAnimation) => targetScreen,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 700),
         ),
       );
     });
   }
 
-  void _animateText() async {
-    for (int i = 0; i < _appName.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (mounted) setState(() => _displayedName = _appName.substring(0, i + 1));
-    }
-  }
-
   @override
   void dispose() {
     _logoController.dispose();
+    _rotationController.dispose();
     _pulseController.dispose();
-    _bgController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: AppTheme.backgroundDark,
       body: Stack(
-        fit: StackFit.expand,
+        alignment: Alignment.center,
         children: [
+          // Animated Background Ambient Lights
           AnimatedBuilder(
-            animation: _bgController,
-            builder: (context, _) => CustomPaint(
-              painter: StarfieldPainter(_bgController.value, _stars, _starSizes),
-            ),
+            animation: _pulseController,
+            builder: (context, child) {
+              final pulse = _pulseController.value;
+              return Stack(
+                children: [
+                  Positioned(
+                    top: -120 + (pulse * 20),
+                    right: -120 + (pulse * 20),
+                    child: Container(
+                      width: 380,
+                      height: 380,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            AppTheme.accentAqua.withValues(alpha: 0.25),
+                            AppTheme.accentAqua.withValues(alpha: 0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -120 + (pulse * 20),
+                    left: -120 + (pulse * 20),
+                    child: Container(
+                      width: 380,
+                      height: 380,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            AppTheme.primaryPurple.withValues(alpha: 0.25),
+                            AppTheme.primaryPurple.withValues(alpha: 0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
+
+          // Center Logo & Ring
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AnimatedBuilder(
-                animation: Listenable.merge([_logoController, _pulseController]),
-                builder: (context, child) {
-                  return Transform.scale(
-                    scale: _logoScale.value,
-                    child: Opacity(
-                      opacity: _logoOpacity.value,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 120 * _pulseAnimation.value,
-                            height: 120 * _pulseAnimation.value,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.accentCyan.withValues(alpha: 0.5),
-                                  blurRadius: 30,
-                                  spreadRadius: 10,
-                                )
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFF090D16),
-                            ),
-                            child: Image.asset('assets/images/logo.png', width: 60, height: 60),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Rotating Dual-Color Outer Ring
+                  RotationTransition(
+                    turns: _rotationController,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const SweepGradient(
+                          colors: [
+                            AppTheme.primaryPurple,
+                            AppTheme.accentAqua,
+                            Colors.white,
+                            AppTheme.primaryPurple,
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryPurple.withValues(alpha: 0.3),
+                            blurRadius: 24,
+                            spreadRadius: 2,
                           ),
                         ],
                       ),
                     ),
-                  );
-                },
+                  ),
+
+                  // Inner Dark Container Mask
+                  Container(
+                    width: 128,
+                    height: 128,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF090D16),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+
+                  // Animated Center Logo
+                  AnimatedBuilder(
+                    animation: _logoController,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _logoScale.value,
+                        child: Opacity(
+                          opacity: _logoOpacity.value,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 110,
+                      height: 110,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF090D16),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.5), width: 1.5),
+                      ),
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.cloud,
+                          size: 56,
+                          color: AppTheme.primaryPurple,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 30),
-              Text(
-                _displayedName,
-                style: const TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 2,
+              const SizedBox(height: 36),
+
+              // Animated Slide & Fade Text
+              SlideTransition(
+                position: _textSlide,
+                child: FadeTransition(
+                  opacity: _textOpacity,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Text(
+                            'Ren',
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.primaryPurple,
+                              letterSpacing: -1,
+                            ),
+                          ),
+                          Text(
+                            'Cloud',
+                            style: TextStyle(
+                              fontSize: 34,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.textPrimary,
+                              letterSpacing: -1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentAquaLight,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.3)),
+                        ),
+                        child: const Text(
+                          '⚡ ULTRA HIGH PERFORMANCE CLOUD',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.accentAqua,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              FadeTransition(
-                opacity: _taglineOpacity,
-                child: const Text(
-                  'Enterprise Cloud. Mobile Native.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppTheme.accentCyan,
-                    fontWeight: FontWeight.w500,
+              const SizedBox(height: 48),
+
+              // Shimmer Loading Bar
+              SizedBox(
+                width: 140,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    backgroundColor: AppTheme.primaryPurple.withValues(alpha: 0.1),
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentAqua),
+                    minHeight: 4,
                   ),
                 ),
               ),
             ],
-          ),
-          Positioned(
-            bottom: 20,
-            right: 20,
-            child: FadeTransition(
-              opacity: _taglineOpacity,
-              child: Text(
-                'v${AppVersion.version}',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
-              ),
-            ),
           ),
         ],
       ),
