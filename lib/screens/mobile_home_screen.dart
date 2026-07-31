@@ -451,7 +451,12 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   await ref.read(rencloudAuthProvider.notifier).logout();
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Logged out of RenCloud account successfully.'), backgroundColor: Colors.orange),
+                      const SnackBar(content: Text('Logged out of RenCloud account! Redirecting to login...'), backgroundColor: Colors.orange),
+                    );
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RenCloudAuthScreen()),
+                      (route) => false,
                     );
                   }
                 },

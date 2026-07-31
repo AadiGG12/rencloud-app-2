@@ -13,7 +13,7 @@ class AuthResult {
   AuthResult({required this.success, required this.message, this.user});
 }
 
-/// Official 100% Pterodactyl Panel Synchronized Authentication Service
+/// Strict Pterodactyl Panel Synchronized Authentication Service
 class RenCloudAuthService {
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
   static const String panelUrl = 'https://panel.rencloud.online';
@@ -35,8 +35,7 @@ class RenCloudAuthService {
     if (username.length < 3) username = 'user_${DateTime.now().millisecondsSinceEpoch % 10000}';
 
     final bool isAdminAccount = cleanEmail == 'admin@rencloud.online' ||
-        cleanEmail == 'atharvkumar1158@gmail.com' ||
-        cleanEmail.startsWith('admin@');
+        cleanEmail == 'atharvkumar1158@gmail.com';
 
     try {
       debugPrint('[RenCloudAuthService] Creating user directly on Pterodactyl Panel ($panelUrl)...');
@@ -79,7 +78,7 @@ class RenCloudAuthService {
 
         return AuthResult(
           success: true,
-          message: 'Account created & synced with $panelUrl (User ID: #$pteroId)!',
+          message: 'Account registered on $panelUrl! (User ID: #$pteroId)',
           user: user,
         );
       } else {
@@ -87,29 +86,34 @@ class RenCloudAuthService {
         final errors = errData['errors'] as List<dynamic>?;
         if (errors != null && errors.isNotEmpty) {
           final firstErr = errors.first['detail'] ?? errors.first['title'] ?? 'Registration failed on Panel';
-          debugPrint('[RenCloudAuthService] Panel registration error: $firstErr');
+          return AuthResult(success: false, message: 'Panel Registration Error: $firstErr');
         }
       }
     } catch (e) {
       debugPrint('[RenCloudAuthService] Pterodactyl direct register exception: $e');
     }
 
-    // Fallback: Check if account already exists on Pterodactyl Panel or create local synced session
-    return login(email: cleanEmail, password: password);
+    return AuthResult(
+      success: false,
+      message: 'Could not connect to $panelUrl to register. Please check internet connection.',
+    );
   }
 
-  /// Login and synchronize account state with live Pterodactyl Panel (panel.rencloud.online)
+  /// STRICT Login against Pterodactyl Panel (panel.rencloud.online) - NO FAKE FALLBACKS!
   static Future<AuthResult> login({
     required String email,
     required String password,
   }) async {
     final cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail.isEmpty) {
+      return AuthResult(success: false, message: 'Please enter a valid email or username.');
+    }
+
     final bool isStaticAdmin = cleanEmail == 'admin@rencloud.online' ||
-        cleanEmail == 'atharvkumar1158@gmail.com' ||
-        cleanEmail.startsWith('admin@');
+        cleanEmail == 'atharvkumar1158@gmail.com';
 
     try {
-      debugPrint('[RenCloudAuthService] Querying Pterodactyl Panel users for $cleanEmail...');
+      debugPrint('[RenCloudAuthService] Querying Pterodactyl Panel users for strictly matching: $cleanEmail...');
 
       final response = await http.get(
         Uri.parse('$panelUrl/api/application/users'),
@@ -129,7 +133,8 @@ class RenCloudAuthService {
           final pEmail = (attr['email'] ?? '').toString().toLowerCase().trim();
           final pUsername = (attr['username'] ?? '').toString().toLowerCase().trim();
 
-          if (pEmail == cleanEmail || pUsername == cleanEmail || pEmail.split('@').first == cleanEmail) {
+          // STRICT EQUALITY MATCH ONLY - No partial prefixes!
+          if (pEmail == cleanEmail || pUsername == cleanEmail) {
             matchedPanelUser = attr;
             break;
           }
@@ -137,7 +142,7 @@ class RenCloudAuthService {
 
         if (matchedPanelUser != null) {
           final pteroId = matchedPanelUser['id'].toString();
-          final username = matchedPanelUser['username'] ?? cleanEmail.split('@').first;
+          final username = matchedPanelUser['username'] ?? cleanEmail;
           final firstName = matchedPanelUser['first_name'] ?? '';
           final lastName = matchedPanelUser['last_name'] ?? '';
           final fullName = '$firstName $lastName'.trim().isEmpty ? username : '$firstName $lastName'.trim();
@@ -157,9 +162,15 @@ class RenCloudAuthService {
           return AuthResult(
             success: true,
             message: isRootAdmin
-                ? '👑 Logged in as Admin! Synced with panel.rencloud.online (ID: #$pteroId)'
-                : 'Logged in! Synced with panel.rencloud.online (ID: #$pteroId)',
+                ? '👑 Welcome Super Admin! (ID: #$pteroId)'
+                : 'Logged in to RenCloud Panel! (ID: #$pteroId)',
             user: user,
+          );
+        } else {
+          // Account DOES NOT EXIST on Pterodactyl Panel! REJECT LOGIN!
+          return AuthResult(
+            success: false,
+            message: '❌ Invalid credentials: No account found for "$cleanEmail" on panel.rencloud.online. Please register first.',
           );
         }
       }
@@ -167,24 +178,10 @@ class RenCloudAuthService {
       debugPrint('[RenCloudAuthService] Pterodactyl Panel login sync exception: $e');
     }
 
-    // Graceful Synced Session Fallback
-    final user = RenCloudUser(
-      id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-      fullName: isStaticAdmin ? 'RenCloud Super Admin' : cleanEmail.split('@').first,
-      email: cleanEmail,
-      role: isStaticAdmin ? 'admin' : 'client',
-      createdAt: DateTime.now(),
-    );
-
-    await ApiClient.saveAuthToken('synced_token_${DateTime.now().millisecondsSinceEpoch}');
-    await _storage.write(key: 'user_data', value: user.encode());
-
+    // Network / API Connection Error
     return AuthResult(
-      success: true,
-      message: user.isAdmin
-          ? '👑 Logged in as Admin ($cleanEmail)!'
-          : 'Logged in! Synced with RenCloud Panel ($cleanEmail)',
-      user: user,
+      success: false,
+      message: 'Unable to connect to panel.rencloud.online. Please check network connection.',
     );
   }
 

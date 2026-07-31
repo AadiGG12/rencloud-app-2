@@ -70,12 +70,11 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
     if (!_isRegister && !_biometricVerified) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('⚠️ Compulsory Step 1 Required: Please scan your Fingerprint / Biometrics first!'),
+          content: Text('⚠️ Step 1 Required: Please tap "1ST STEP: SCAN FINGERPRINT" above first!'),
           backgroundColor: Colors.orange,
         ),
       );
-      await _handleBiometricVerification();
-      if (!_biometricVerified) return; // Stop if user cancelled biometric scan
+      return;
     }
 
     HapticFeedback.mediumImpact();
@@ -125,10 +124,11 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
     if (mounted) {
       setState(() {
         _biometricVerified = false;
+        _isRegister = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Logged out of RenCloud account successfully.'),
+          content: Text('Logged out of RenCloud account! Redirecting to login...'),
           backgroundColor: Colors.orange,
         ),
       );
