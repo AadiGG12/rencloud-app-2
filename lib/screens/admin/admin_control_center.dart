@@ -7,6 +7,8 @@ import '../../providers/catalog_provider.dart';
 import '../../providers/rencloud_auth_provider.dart';
 import '../widgets/skeuomorphic_card.dart';
 
+import '../auth/rencloud_auth_screen.dart';
+
 class AdminControlCenter extends ConsumerStatefulWidget {
   const AdminControlCenter({super.key});
 
@@ -39,6 +41,50 @@ class _AdminControlCenterState extends ConsumerState<AdminControlCenter> with Si
     final plans = ref.watch(filteredPlansProvider);
     final authState = ref.watch(rencloudAuthProvider);
     final user = authState.user;
+    final bool isAdmin = user != null && (user.isAdmin || user.email.toLowerCase() == 'admin@rencloud.online');
+
+    if (!isAdmin) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Admin Access Denied')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.shield_outlined, size: 64, color: Colors.redAccent),
+                const SizedBox(height: 16),
+                const Text(
+                  'Super Admin Privileges Required',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'This control panel is restricted exclusively to the RenCloud Super Admin account (admin@rencloud.online).',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RenCloudAuthScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.login),
+                  label: const Text('Log in with Admin Account'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryPurple,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

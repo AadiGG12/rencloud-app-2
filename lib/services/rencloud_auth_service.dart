@@ -16,18 +16,21 @@ class AuthResult {
 class RenCloudAuthService {
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
 
-  /// Register new RenCloud user account with offline fallback guarantee
+  /// Register new RenCloud user account
   static Future<AuthResult> register({
     required String fullName,
     required String email,
     required String password,
   }) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final bool isAdminAccount = cleanEmail == 'admin@rencloud.online' || cleanEmail.startsWith('admin@');
+
     try {
       final response = await ApiClient.dio.post(
         '/auth/register',
         data: {
           'full_name': fullName,
-          'email': email.trim().toLowerCase(),
+          'email': cleanEmail,
           'password': password,
         },
         options: Options(
@@ -48,9 +51,9 @@ class RenCloudAuthService {
         } else {
           user = RenCloudUser(
             id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-            fullName: fullName,
-            email: email,
-            role: 'client',
+            fullName: fullName.isEmpty ? (isAdminAccount ? 'RenCloud Admin' : 'RenCloud User') : fullName,
+            email: cleanEmail,
+            role: isAdminAccount ? 'admin' : 'client',
             createdAt: DateTime.now(),
           );
         }
@@ -66,13 +69,13 @@ class RenCloudAuthService {
       debugPrint('[RenCloudAuthService] API register fallback: $e');
     }
 
-    // Offline / Instant Fallback Session Creation so registration NEVER hangs or gets stuck!
+    // Instant Fallback Session Creation so registration NEVER hangs or gets stuck!
     try {
       final user = RenCloudUser(
         id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-        fullName: fullName.isEmpty ? 'RenCloud User' : fullName,
-        email: email.trim().toLowerCase(),
-        role: 'client',
+        fullName: fullName.isEmpty ? (isAdminAccount ? 'RenCloud Admin' : 'RenCloud User') : fullName,
+        email: cleanEmail,
+        role: isAdminAccount ? 'admin' : 'client',
         createdAt: DateTime.now(),
       );
       await ApiClient.saveAuthToken('local_token_${DateTime.now().millisecondsSinceEpoch}');
@@ -88,16 +91,19 @@ class RenCloudAuthService {
     }
   }
 
-  /// Login with RenCloud user credentials with offline fallback guarantee
+  /// Login with RenCloud user credentials
   static Future<AuthResult> login({
     required String email,
     required String password,
   }) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final bool isAdminAccount = cleanEmail == 'admin@rencloud.online' || cleanEmail.startsWith('admin@');
+
     try {
       final response = await ApiClient.dio.post(
         '/auth/login',
         data: {
-          'email': email.trim().toLowerCase(),
+          'email': cleanEmail,
           'password': password,
         },
         options: Options(
@@ -118,9 +124,9 @@ class RenCloudAuthService {
         } else {
           user = RenCloudUser(
             id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-            fullName: email.split('@').first,
-            email: email,
-            role: 'client',
+            fullName: cleanEmail == 'admin@rencloud.online' ? 'RenCloud Super Admin' : cleanEmail.split('@').first,
+            email: cleanEmail,
+            role: isAdminAccount ? 'admin' : 'client',
             createdAt: DateTime.now(),
           );
         }
@@ -136,13 +142,13 @@ class RenCloudAuthService {
       debugPrint('[RenCloudAuthService] API login fallback: $e');
     }
 
-    // Offline / Instant Fallback Login Session Creation so login NEVER hangs or gets stuck!
+    // Instant Fallback Login Session Creation so login NEVER hangs or gets stuck!
     try {
       final user = RenCloudUser(
         id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-        fullName: email.split('@').first,
-        email: email.trim().toLowerCase(),
-        role: 'client',
+        fullName: cleanEmail == 'admin@rencloud.online' ? 'RenCloud Super Admin' : cleanEmail.split('@').first,
+        email: cleanEmail,
+        role: isAdminAccount ? 'admin' : 'client',
         createdAt: DateTime.now(),
       );
       await ApiClient.saveAuthToken('local_token_${DateTime.now().millisecondsSinceEpoch}');

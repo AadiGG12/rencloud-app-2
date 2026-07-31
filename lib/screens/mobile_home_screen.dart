@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/rencloud_plan.dart';
 import '../providers/catalog_provider.dart';
+import '../providers/rencloud_auth_provider.dart';
 import '../core/constants/app_version.dart';
 import '../core/theme/app_theme.dart';
 import '../services/app_settings_service.dart';
@@ -137,6 +138,9 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
     final themeMode = ref.watch(themeModeProvider);
     final currency = ref.watch(currencyProvider);
     final biometric = ref.watch(biometricProvider);
+    final authState = ref.watch(rencloudAuthProvider);
+    final user = authState.user;
+    final bool isAdminAccount = user != null && (user.isAdmin || user.email.toLowerCase() == 'admin@rencloud.online');
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -487,18 +491,19 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                   themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
             },
           ),
-          // Admin Control Center Button
-          IconButton(
-            icon: const Icon(Icons.admin_panel_settings_rounded, color: AppTheme.metallicGold, size: 26),
-            tooltip: 'Admin Control Center',
-            onPressed: () {
-              HapticFeedback.selectionClick();
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AdminControlCenter()),
-              );
-            },
-          ),
+          // Admin Control Center Button (Super Admin Only)
+          if (isAdminAccount)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings_rounded, color: AppTheme.metallicGold, size: 26),
+              tooltip: 'Admin Control Center',
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminControlCenter()),
+                );
+              },
+            ),
           // User Account Login & Registration Icon
           IconButton(
             icon: const Icon(Icons.account_circle, color: AppTheme.accentAqua, size: 28),
