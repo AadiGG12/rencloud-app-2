@@ -443,6 +443,28 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
+            if (authState.isAuthenticated) ...[
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  HapticFeedback.mediumImpact();
+                  await ref.read(rencloudAuthProvider.notifier).logout();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Logged out of RenCloud account successfully.'), backgroundColor: Colors.orange),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                label: const Text('Log Out Account', style: TextStyle(fontWeight: FontWeight.w900)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             Center(
               child: Text(
