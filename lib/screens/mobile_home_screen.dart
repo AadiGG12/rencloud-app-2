@@ -15,6 +15,7 @@ import 'widgets/resource_calculator.dart';
 import 'widgets/biometric_lock_overlay.dart';
 import 'auth/rencloud_auth_screen.dart';
 import 'admin/admin_control_center.dart';
+import 'widgets/animated_glass_nav_bar.dart';
 import 'widgets/vertical_3d_plan_carousel.dart';
 
 class MobileHomeScreen extends ConsumerStatefulWidget {
@@ -563,15 +564,13 @@ class _MobileHomeScreenState extends ConsumerState<MobileHomeScreen> {
       ),
       bottomNavigationBar: isLandscape
           ? null
-          : BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: _onTabChanged,
-              selectedItemColor: AppTheme.accentAqua,
-              unselectedItemColor: AppTheme.textSecondary,
+          : AnimatedGlassNavBar(
+              selectedIndex: _currentIndex,
+              onTabSelected: _onTabChanged,
               items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.cloud), label: 'Catalog'),
-                BottomNavigationBarItem(icon: Icon(Icons.tune_rounded), label: 'Custom Plan'),
-                BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+                AnimatedGlassNavItem(icon: Icons.cloud_outlined, selectedIcon: Icons.cloud_rounded, label: 'Catalog'),
+                AnimatedGlassNavItem(icon: Icons.tune_outlined, selectedIcon: Icons.tune_rounded, label: 'Custom Plan'),
+                AnimatedGlassNavItem(icon: Icons.settings_outlined, selectedIcon: Icons.settings_rounded, label: 'Settings'),
               ],
             ),
       ),

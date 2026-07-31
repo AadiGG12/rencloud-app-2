@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
-import '../providers/pterodactyl_provider.dart';
 import '../services/auth_session_service.dart';
 import '../services/app_settings_service.dart';
-import 'mobile_home_screen.dart';
-import 'home_screen.dart';
-import 'panel/login_screen.dart';
-import 'panel/admin/admin_dashboard_screen.dart';
+import 'auth/auth_gateway_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -72,17 +68,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
       if (!mounted) return;
 
       await AppSettingsService.restoreSettings(ref);
-      final bool restored = await AuthSessionService.restoreSession(ref);
+      await AuthSessionService.restoreSession(ref);
       if (!mounted) return;
 
-      Widget targetScreen;
-      if (restored) {
-        final auth = ref.read(pterodactylAuthProvider);
-        targetScreen = auth.isAdmin ? const AdminDashboardScreen() : const PterodactylServerListScreen();
-      } else {
-        final isPhone = MediaQuery.of(context).size.shortestSide < 600;
-        targetScreen = isPhone ? const MobileHomeScreen() : const HomeScreen();
-      }
+      Widget targetScreen = const AuthGatewayScreen();
 
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
