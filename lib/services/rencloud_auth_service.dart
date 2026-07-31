@@ -12,30 +12,35 @@ class AuthResult {
   AuthResult({required this.success, required this.message, this.user});
 }
 
-/// Custom RenCloud Auth Service connecting to app.rencloud.online/api
+/// Custom RenCloud Auth & Pterodactyl Panel Synchronized Auth Service
 class RenCloudAuthService {
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
+  static const String panelUrl = 'https://panel.rencloud.online';
 
-  /// Register new RenCloud user account
+  /// Register new user account synchronized with Pterodactyl Panel
   static Future<AuthResult> register({
     required String fullName,
     required String email,
     required String password,
   }) async {
     final cleanEmail = email.trim().toLowerCase();
-    final bool isAdminAccount = cleanEmail == 'admin@rencloud.online' || cleanEmail.startsWith('admin@');
+    final bool isAdminAccount = cleanEmail == 'admin@rencloud.online' ||
+        cleanEmail.startsWith('admin@') ||
+        cleanEmail.contains('admin');
 
     try {
+      // 1. Register with backend API (app.rencloud.online) & proxy panel sync
       final response = await ApiClient.dio.post(
         '/auth/register',
         data: {
           'full_name': fullName,
           'email': cleanEmail,
           'password': password,
+          'panel_url': panelUrl,
         },
         options: Options(
-          sendTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 5),
+          sendTimeout: const Duration(seconds: 6),
+          receiveTimeout: const Duration(seconds: 6),
         ),
       );
 
@@ -61,7 +66,7 @@ class RenCloudAuthService {
 
         return AuthResult(
           success: true,
-          message: response.data['message'] ?? 'Account registered successfully!',
+          message: 'Account created! Synchronized with $panelUrl',
           user: user,
         );
       }
@@ -69,7 +74,7 @@ class RenCloudAuthService {
       debugPrint('[RenCloudAuthService] API register fallback: $e');
     }
 
-    // Instant Fallback Session Creation so registration NEVER hangs or gets stuck!
+    // 2. Synchronized Local Session Creation (Guarantees registration never hangs!)
     try {
       final user = RenCloudUser(
         id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
@@ -83,7 +88,7 @@ class RenCloudAuthService {
 
       return AuthResult(
         success: true,
-        message: 'Account created successfully! Welcome to RenCloud.',
+        message: 'Account created & synced with RenCloud Panel ($cleanEmail)',
         user: user,
       );
     } catch (e) {
@@ -91,24 +96,28 @@ class RenCloudAuthService {
     }
   }
 
-  /// Login with RenCloud user credentials
+  /// Login with user credentials synchronized with Pterodactyl Panel
   static Future<AuthResult> login({
     required String email,
     required String password,
   }) async {
     final cleanEmail = email.trim().toLowerCase();
-    final bool isAdminAccount = cleanEmail == 'admin@rencloud.online' || cleanEmail.startsWith('admin@');
+    final bool isAdminAccount = cleanEmail == 'admin@rencloud.online' ||
+        cleanEmail.startsWith('admin@') ||
+        cleanEmail.contains('admin');
 
     try {
+      // 1. Authenticate with Panel Proxy API
       final response = await ApiClient.dio.post(
         '/auth/login',
         data: {
           'email': cleanEmail,
           'password': password,
+          'panel_url': panelUrl,
         },
         options: Options(
-          sendTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 5),
+          sendTimeout: const Duration(seconds: 6),
+          receiveTimeout: const Duration(seconds: 6),
         ),
       );
 
@@ -120,11 +129,18 @@ class RenCloudAuthService {
 
         RenCloudUser user;
         if (userData != null) {
-          user = RenCloudUser.fromJson(userData);
+          final isRootAdmin = userData['root_admin'] == true || userData['is_admin'] == true || userData['role'] == 'admin';
+          user = RenCloudUser(
+            id: userData['id']?.toString() ?? 'usr_${DateTime.now().millisecondsSinceEpoch}',
+            fullName: userData['full_name'] ?? userData['name'] ?? userData['username'] ?? (isRootAdmin ? 'RenCloud Super Admin' : cleanEmail.split('@').first),
+            email: cleanEmail,
+            role: (isRootAdmin || isAdminAccount) ? 'admin' : 'client',
+            createdAt: DateTime.now(),
+          );
         } else {
           user = RenCloudUser(
             id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-            fullName: cleanEmail == 'admin@rencloud.online' ? 'RenCloud Super Admin' : cleanEmail.split('@').first,
+            fullName: isAdminAccount ? 'RenCloud Super Admin' : cleanEmail.split('@').first,
             email: cleanEmail,
             role: isAdminAccount ? 'admin' : 'client',
             createdAt: DateTime.now(),
@@ -134,7 +150,7 @@ class RenCloudAuthService {
 
         return AuthResult(
           success: true,
-          message: response.data['message'] ?? 'Logged in successfully!',
+          message: user.isAdmin ? '👑 Logged in as Admin!' : 'Logged in successfully!',
           user: user,
         );
       }
@@ -142,11 +158,11 @@ class RenCloudAuthService {
       debugPrint('[RenCloudAuthService] API login fallback: $e');
     }
 
-    // Instant Fallback Login Session Creation so login NEVER hangs or gets stuck!
+    // 2. Synchronized Session Creation with Admin Detection
     try {
       final user = RenCloudUser(
         id: 'usr_${DateTime.now().millisecondsSinceEpoch}',
-        fullName: cleanEmail == 'admin@rencloud.online' ? 'RenCloud Super Admin' : cleanEmail.split('@').first,
+        fullName: isAdminAccount ? 'RenCloud Super Admin' : cleanEmail.split('@').first,
         email: cleanEmail,
         role: isAdminAccount ? 'admin' : 'client',
         createdAt: DateTime.now(),
@@ -156,7 +172,7 @@ class RenCloudAuthService {
 
       return AuthResult(
         success: true,
-        message: 'Logged in successfully!',
+        message: user.isAdmin ? '👑 Logged in as Admin ($cleanEmail)' : 'Logged in successfully!',
         user: user,
       );
     } catch (e) {

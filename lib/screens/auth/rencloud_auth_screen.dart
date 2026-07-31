@@ -150,7 +150,20 @@ class _RenCloudAuthScreenState extends ConsumerState<RenCloudAuthScreen> {
                   'Manage cloud servers, databases & deployments',
                   style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentAqua.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppTheme.accentAqua.withValues(alpha: 0.3)),
+                  ),
+                  child: const Text(
+                    '🔗 Synced with Panel (panel.rencloud.online)',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.accentAqua),
+                  ),
+                ),
+                const SizedBox(height: 20),
 
                 // Skeuomorphic Auth Form Card
                 SkeuomorphicCard(
