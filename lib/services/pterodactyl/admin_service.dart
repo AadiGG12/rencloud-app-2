@@ -58,14 +58,21 @@ class AdminServer {
 }
 
 class AdminService {
+  static const String defaultPanelUrl = 'https://panel.rencloud.online';
+  static const String defaultPtlaKey = 'ptla_ZOzmkCLdCNI7zzx69CvOCkVLrdgiZskY2v3bRhxepk0';
+
   final PterodactylClient _client;
 
-  AdminService(String panelUrl, String apiKey)
+  AdminService([String? panelUrl, String? apiKey])
       : _client = PterodactylClient(
-          panelUrl: panelUrl,
-          apiKey: apiKey,
+          panelUrl: panelUrl ?? defaultPanelUrl,
+          apiKey: apiKey ?? defaultPtlaKey,
           apiBase: '/api/application',
         );
+
+  factory AdminService.defaultInstance() {
+    return AdminService(defaultPanelUrl, defaultPtlaKey);
+  }
 
   /// List all users in the panel
   Future<List<PanelUser>> listUsers({int? page}) async {
