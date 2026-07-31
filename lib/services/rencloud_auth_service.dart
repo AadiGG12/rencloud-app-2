@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../core/api_client.dart';
@@ -12,11 +13,76 @@ class AuthResult {
   AuthResult({required this.success, required this.message, this.user});
 }
 
-/// Strict Pterodactyl Panel Synchronized Authentication Service
+/// 100% Real Pterodactyl Panel Synchronized Authentication Service
 class RenCloudAuthService {
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
   static const String panelUrl = 'https://panel.rencloud.online';
   static const String ptlaKey = 'ptla_ZOzmkCLdCNI7zzx69CvOCkVLrdgiZskY2v3bRhxepk0';
+
+  /// Authenticate user password directly against Pterodactyl Panel (/auth/login)
+  static Future<bool> _verifyPasswordOnPanel({
+    required String emailOrUsername,
+    required String password,
+  }) async {
+    try {
+      final getResp = await http.get(
+        Uri.parse('$panelUrl/auth/login'),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Mobile)',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+      ).timeout(const Duration(seconds: 8));
+
+      final rawHtml = getResp.body;
+      final rawCookies = getResp.headers['set-cookie'];
+
+      // Extract CSRF token from HTML meta tag or hidden input
+      final csrfMatch = RegExp(r'name="_token"\s+value="([^"]+)"').firstMatch(rawHtml) ??
+          RegExp(r'"csrf-token"\s+content="([^"]+)"').firstMatch(rawHtml);
+
+      if (csrfMatch == null) {
+        debugPrint('[RenCloudAuthService] Could not extract CSRF token from Panel HTML.');
+        return false;
+      }
+
+      final csrfToken = csrfMatch.group(1)!;
+
+      // Extract cookies for session continuity
+      final cookieHeader = rawCookies != null ? rawCookies.split(';').first : '';
+
+      final postResp = await http.post(
+        Uri.parse('$panelUrl/auth/login'),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Mobile)',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json',
+          if (cookieHeader.isNotEmpty) 'Cookie': cookieHeader,
+        },
+        body: json.encode({
+          'user': emailOrUsername,
+          'password': password,
+        }),
+      ).timeout(const Duration(seconds: 8));
+
+      debugPrint('[RenCloudAuthService] Panel password verification HTTP status: ${postResp.statusCode}');
+
+      if (postResp.statusCode == 200) {
+        final body = postResp.body;
+        if (body.contains('"complete":true') || body.contains('data') || !body.contains('DisplayException')) {
+          return true;
+        }
+      } else {
+        final body = postResp.body;
+        debugPrint('[RenCloudAuthService] Panel password rejected: $body');
+      }
+    } catch (e) {
+      debugPrint('[RenCloudAuthService] Password verification exception: $e');
+    }
+
+    return false;
+  }
 
   static Future<Map<String, dynamic>?> _findPanelUserByEmail(String email) async {
     final filterUrl = '$panelUrl/api/application/users?filter[email]=${Uri.encodeComponent(email)}';
@@ -27,7 +93,7 @@ class RenCloudAuthService {
           'Authorization': 'Bearer $ptlaKey',
           'Accept': 'application/json',
         },
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 8));
 
       if (response.statusCode != 200) return null;
 
@@ -52,7 +118,7 @@ class RenCloudAuthService {
           'Authorization': 'Bearer $ptlaKey',
           'Accept': 'application/json',
         },
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 8));
 
       if (response.statusCode != 200) return null;
 
@@ -91,7 +157,7 @@ class RenCloudAuthService {
       if (existingUser != null) {
         return AuthResult(
           success: false,
-          message: 'An account with email "$cleanEmail" already exists on the panel. Please login instead.',
+          message: 'An account with email "$cleanEmail" already exists on panel.rencloud.online. Please login instead.',
         );
       }
 
@@ -131,7 +197,7 @@ class RenCloudAuthService {
 
         return AuthResult(
           success: true,
-          message: 'Account registered on $panelUrl! (User ID: #$pteroId)',
+          message: 'Account registered on panel.rencloud.online! (User ID: #$pteroId)',
           user: user,
         );
       } else {
@@ -153,7 +219,7 @@ class RenCloudAuthService {
     }
   }
 
-  /// STRICT Login against Pterodactyl Panel
+  /// STRICT Login — verifies password against panel AND checks user record
   static Future<AuthResult> login({
     required String email,
     required String password,
@@ -163,6 +229,24 @@ class RenCloudAuthService {
       return AuthResult(success: false, message: 'Please enter your email or username.');
     }
 
+    if (password.isEmpty) {
+      return AuthResult(success: false, message: 'Please enter your password.');
+    }
+
+    // 1. STEP ONE: VERIFY PASSWORD ON PTERODACTYL PANEL LIVE
+    final bool isPasswordValid = await _verifyPasswordOnPanel(
+      emailOrUsername: cleanEmail,
+      password: password,
+    );
+
+    if (!isPasswordValid) {
+      return AuthResult(
+        success: false,
+        message: '❌ Invalid credentials! The password you entered is incorrect for "$cleanEmail".',
+      );
+    }
+
+    // 2. STEP TWO: FETCH USER DETAILS & ADMIN STATUS FROM PANEL
     try {
       Map<String, dynamic>? panelUser;
       if (cleanEmail.contains('@')) {
@@ -174,7 +258,7 @@ class RenCloudAuthService {
       if (panelUser == null) {
         return AuthResult(
           success: false,
-          message: '❌ No account found for "$cleanEmail" on panel.rencloud.online. Please register first.',
+          message: '❌ Account not found for "$cleanEmail" on panel.rencloud.online. Please register first.',
         );
       }
 
@@ -207,7 +291,7 @@ class RenCloudAuthService {
     } catch (e) {
       return AuthResult(
         success: false,
-        message: 'Unable to connect to panel.rencloud.online. Check your internet connection.',
+        message: 'Unable to retrieve profile from panel.rencloud.online. Check internet connection.',
       );
     }
   }

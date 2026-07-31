@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class AppVersion {
-  static String _installedVersionName = '3.1.0';
-  static int _installedBuildNumber = 10100;
+  static String _installedVersionName = '3.2.0';
+  static int _installedBuildNumber = 10200;
 
   /// Read installed package info directly from native Android PackageManager BEFORE runApp()
   static Future<void> init() async {
