@@ -60,7 +60,7 @@ class UpdateService @Inject constructor() {
 
     private val notesApi: ReleaseNotesBackendApi by lazy {
         Retrofit.Builder()
-            .baseUrl("https://api.rencloud.online/")
+            .baseUrl("https://panel.bihariaayu.indevs.in/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ReleaseNotesBackendApi::class.java)

@@ -55,7 +55,7 @@ fun FaqSection() {
         withContext(Dispatchers.IO) {
             try {
                 val api = Retrofit.Builder()
-                    .baseUrl("https://api.rencloud.online/")
+                    .baseUrl("https://panel.bihariaayu.indevs.in/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                     .create(FaqPublicApi::class.java)
