@@ -75,7 +75,8 @@ class AdminViewModel @Inject constructor(
     }
 
     private fun getToken(): String {
-        return "Bearer " + (sessionManager.getToken() ?: "ptla_kR7Wq7vYQ1S8mU3nZ4xK9pL2oR5vT8wX1zY6aB3cD5e")
+        val rawToken = sessionManager.getToken() ?: "ptla_kR7Wq7vYQ1S8mU3nZ4xK9pL2oR5vT8wX1zY6aB3cD5e"
+        return if (rawToken.startsWith("Bearer ")) rawToken else "Bearer $rawToken"
     }
 
     fun refreshAllData() {
@@ -94,9 +95,10 @@ class AdminViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val resp = api.getAllUsers()
-                if (resp.isSuccessful) {
+                if (resp.isSuccessful && resp.body() != null) {
                     val usersList = resp.body()?.dataList ?: emptyList()
                     val count = if (resp.body()?.count ?: 0 > 0) resp.body()!!.count else usersList.size
+                    Log.d("AdminVM", "Loaded ${usersList.size} users (total count $count)")
                     _uiState.value = _uiState.value.copy(users = usersList, totalUsersCount = count)
                 }
             } catch (e: Exception) { Log.e("AdminVM", "Error loading users: ${e.message}") }
@@ -109,6 +111,11 @@ class AdminViewModel @Inject constructor(
                 val resp = api.getAdminPlans(getToken())
                 if (resp.isSuccessful && resp.body()?.dataList != null) {
                     _uiState.value = _uiState.value.copy(plans = resp.body()!!.dataList!!)
+                } else {
+                    val pubResp = api.getPublicPlans()
+                    if (pubResp.isSuccessful && pubResp.body()?.dataList != null) {
+                        _uiState.value = _uiState.value.copy(plans = pubResp.body()!!.dataList!!)
+                    }
                 }
             } catch (e: Exception) { Log.e("AdminVM", "Error loading plans: ${e.message}") }
         }
@@ -120,6 +127,11 @@ class AdminViewModel @Inject constructor(
                 val resp = api.getAdminFaqs(getToken())
                 if (resp.isSuccessful && resp.body()?.dataList != null) {
                     _uiState.value = _uiState.value.copy(faqs = resp.body()!!.dataList!!)
+                } else {
+                    val pubResp = api.getPublicFaqs()
+                    if (pubResp.isSuccessful && pubResp.body()?.dataList != null) {
+                        _uiState.value = _uiState.value.copy(faqs = pubResp.body()!!.dataList!!)
+                    }
                 }
             } catch (e: Exception) { Log.e("AdminVM", "Error loading FAQs: ${e.message}") }
         }
@@ -154,6 +166,11 @@ class AdminViewModel @Inject constructor(
                 val resp = api.getAdminAnnouncements(getToken())
                 if (resp.isSuccessful && resp.body()?.dataList != null) {
                     _uiState.value = _uiState.value.copy(announcements = resp.body()!!.dataList!!)
+                } else {
+                    val pubResp = api.getActiveAnnouncements()
+                    if (pubResp.isSuccessful && pubResp.body()?.dataList != null) {
+                        _uiState.value = _uiState.value.copy(announcements = pubResp.body()!!.dataList!!)
+                    }
                 }
             } catch (e: Exception) { Log.e("AdminVM", "Error loading announcements: ${e.message}") }
         }
@@ -188,6 +205,11 @@ class AdminViewModel @Inject constructor(
                 val resp = api.getAdminCategories(getToken())
                 if (resp.isSuccessful && resp.body()?.dataList != null) {
                     _uiState.value = _uiState.value.copy(categories = resp.body()!!.dataList!!)
+                } else {
+                    val pubResp = api.getPublicCategories()
+                    if (pubResp.isSuccessful && pubResp.body()?.dataList != null) {
+                        _uiState.value = _uiState.value.copy(categories = pubResp.body()!!.dataList!!)
+                    }
                 }
             } catch (e: Exception) { Log.e("AdminVM", "Error loading categories: ${e.message}") }
         }
