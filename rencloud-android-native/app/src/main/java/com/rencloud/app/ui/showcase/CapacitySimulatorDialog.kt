@@ -25,11 +25,10 @@ import com.rencloud.app.ui.components.glass.GlassDialog
 
 @Composable
 fun CapacitySimulatorDialog(
-    catalogRepository: CatalogRepository = CatalogRepository(),
+    allPlans: List<RenCloudPlan> = emptyList(),
     onDismiss: () -> Unit,
     onDeployPlan: (RenCloudPlan) -> Unit
 ) {
-    val allPlans = remember { catalogRepository.getPlans() }
 
     var playerCount by remember { mutableFloatStateOf(30f) }
     var modCount by remember { mutableFloatStateOf(15f) }

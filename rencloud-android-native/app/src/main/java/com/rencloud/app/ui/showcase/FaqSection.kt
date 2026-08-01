@@ -1,7 +1,6 @@
 package com.rencloud.app.ui.showcase
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -18,27 +17,69 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.gson.annotations.SerializedName
 import com.rencloud.app.ui.components.glass.GlassCard
 import com.rencloud.app.ui.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
 
-data class FaqItem(val question: String, val answer: String)
+data class FaqItem(
+    @SerializedName("id") val id: String = "",
+    @SerializedName("question") val question: String,
+    @SerializedName("answer") val answer: String,
+    @SerializedName("category") val category: String = "Hosting"
+)
 
-val faqs = listOf(
-    FaqItem("How fast is server provisioning?", "Instant setup under 60 seconds"),
-    FaqItem("What DDoS protection is included?", "Terabit-scale anti-DDoS mitigation included free"),
-    FaqItem("Can I upgrade/downgrade plans anytime?", "Yes, upgrade seamlessly without data loss"),
-    FaqItem("Are backups included?", "Automated daily backups included")
+private interface FaqPublicApi {
+    @GET("api/faqs")
+    suspend fun getFaqs(): retrofit2.Response<com.rencloud.app.data.model.GatewayListResponse<FaqItem>>
+}
+
+val defaultFaqs = listOf(
+    FaqItem("faq_1", "Where are RenCloud datacenters located?", "RenCloud servers are hosted in Tier-4 datacenters in Mumbai (India) and Singapore (Asia-Southeast).", "Servers"),
+    FaqItem("faq_2", "What hardware specs do Minecraft servers use?", "Budget tiers use DDR4 ECC memory with Intel Scalable processors, while Premium tiers feature DDR5 memory with AMD EPYC & Ryzen 9 7950X CPUs.", "Hosting"),
+    FaqItem("faq_3", "What payment methods are supported?", "We accept UPI, Credit/Debit Cards, NetBanking, PayPal, and major cryptocurrencies.", "Billing"),
+    FaqItem("faq_4", "Is DDoS protection included with all plans?", "Yes! All RenCloud plans include enterprise-grade 1.2 Tbps+ DDoS protection.", "Servers")
 )
 
 val badges = listOf("99.9% SLA Uptime", "24/7 Live Support", "Instant 60s Deploy", "DDoS Protected")
 
 @Composable
 fun FaqSection() {
+    var faqList by remember { mutableStateOf(defaultFaqs) }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            try {
+                val api = Retrofit.Builder()
+                    .baseUrl("https://api.rencloud.online/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                    .create(FaqPublicApi::class.java)
+
+                val resp = api.getFaqs()
+                if (resp.isSuccessful && resp.body()?.dataList != null) {
+                    val live = resp.body()!!.dataList!!
+                    if (live.isNotEmpty()) {
+                        withContext(Dispatchers.Main) {
+                            faqList = live
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Keep defaultFaqs
+            }
+        }
+    }
+
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Text("Frequently Asked Questions", color = ElectricCyan, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
         
-        faqs.forEach { faq ->
+        faqList.forEach { faq ->
             FaqItemCard(faq)
             Spacer(modifier = Modifier.height(8.dp))
         }

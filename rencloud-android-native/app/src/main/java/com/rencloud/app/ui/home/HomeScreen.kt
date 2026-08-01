@@ -276,10 +276,11 @@ fun HomeScreen(
     }
 
     if (showCompareDialog) {
-        PlanComparisonDialog(onDismiss = { showCompareDialog = false })
+        PlanComparisonDialog(allPlans = catalogState.plans, onDismiss = { showCompareDialog = false })
     }
     if (showSimulatorDialog) {
         CapacitySimulatorDialog(
+            allPlans = catalogState.plans,
             onDismiss = { showSimulatorDialog = false },
             onDeployPlan = { handlePlanAction(it) }
         )

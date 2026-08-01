@@ -32,11 +32,10 @@ import com.rencloud.app.ui.components.glass.GlassDialog
 
 @Composable
 fun PlanComparisonDialog(
-    catalogRepository: CatalogRepository = CatalogRepository(),
+    allPlans: List<RenCloudPlan> = emptyList(),
     onDismiss: () -> Unit
 ) {
     val view = LocalView.current
-    val allPlans = remember { catalogRepository.getPlans() }
 
     var selectedPlan1 by remember { mutableStateOf(allPlans.firstOrNull { it.id == "mc_b_iron" } ?: allPlans[0]) }
     var selectedPlan2 by remember { mutableStateOf(allPlans.firstOrNull { it.id == "mc_p_iron" } ?: allPlans.getOrElse(1) { allPlans[0] }) }

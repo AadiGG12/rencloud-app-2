@@ -1,19 +1,22 @@
 package com.rencloud.app.ui.home
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.rencloud.app.data.model.RenCloudPlan
 import com.rencloud.app.data.repository.CatalogRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class CatalogUiState(
     val plans: List<RenCloudPlan> = emptyList(),
     val selectedCategory: String = "All",
     val searchQuery: String = "",
-    val currency: String = "INR" // "INR" or "USD"
+    val currency: String = "INR",
+    val isLoading: Boolean = false
 )
 
 @HiltViewModel
@@ -25,7 +28,15 @@ class CatalogViewModel @Inject constructor(
     val uiState: StateFlow<CatalogUiState> = _uiState.asStateFlow()
 
     init {
-        _uiState.value = _uiState.value.copy(plans = catalogRepository.getPlans())
+        loadPlans()
+    }
+
+    fun loadPlans(refresh: Boolean = false) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val plans = catalogRepository.fetchPlans(refresh = refresh)
+            _uiState.value = _uiState.value.copy(plans = plans, isLoading = false)
+        }
     }
 
     fun selectCategory(category: String) {
