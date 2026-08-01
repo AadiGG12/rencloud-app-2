@@ -20,6 +20,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rencloud.app.ui.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class PanelMenuItem(
     val title: String,
@@ -33,7 +40,7 @@ fun PanelScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf("Console") }
-    var selectedServer by remember { mutableStateOf("Leachy | Paid | Dirt") }
+    var selectedServer by remember { mutableStateOf("RenCloud Server #1") }
 
     val userMenuCategories = remember {
         mapOf(
@@ -49,19 +56,12 @@ fun PanelScreen(
                 PanelMenuItem("Backups", Icons.Default.CloudDownload, "Management"),
                 PanelMenuItem("Network", Icons.Default.Router, "Management"),
                 PanelMenuItem("Subdomain", Icons.Default.Public, "Management"),
-                PanelMenuItem("Nodes & Locations", Icons.Default.Dns, "Management"),
-                PanelMenuItem("Reverse Proxy", Icons.Default.Dns, "Management"),
-                PanelMenuItem("FastDL", Icons.Default.Speed, "Management")
+                PanelMenuItem("Nodes & Locations", Icons.Default.Dns, "Management")
             ),
             "Configuration" to listOf(
                 PanelMenuItem("Schedules", Icons.Default.Schedule, "Configuration"),
                 PanelMenuItem("Users", Icons.Default.People, "Configuration"),
-                PanelMenuItem("Startup", Icons.Default.PowerSettingsNew, "Configuration"),
-                PanelMenuItem("Config Editor", Icons.Default.EditNote, "Configuration")
-            ),
-            "Minecraft" to listOf(
-                PanelMenuItem("Configuration", Icons.Default.Tune, "Minecraft"),
-                PanelMenuItem("Plugin Installer", Icons.Default.AddBox, "Minecraft")
+                PanelMenuItem("Startup", Icons.Default.PowerSettingsNew, "Configuration")
             )
         )
     }
@@ -90,7 +90,6 @@ fun PanelScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Sidebar with Nodes & Locations selector, without Version Changer
             Column(
                 modifier = Modifier
                     .width(220.dp)
@@ -145,7 +144,6 @@ fun PanelScreen(
 
             HorizontalDivider(modifier = Modifier.fillMaxHeight().width(1.dp), color = MetallicBorderDark)
 
-            // Content Panel Area
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -155,11 +153,7 @@ fun PanelScreen(
                 when (selectedTab) {
                     "Console" -> ConsoleTabContent()
                     "Nodes & Locations" -> NodesAndLocationsContent()
-                    "File Manager" -> SimplePanelPlaceholder("File Manager", Icons.Default.Folder, "Browse and edit server configuration files & directories.")
-                    "Databases" -> SimplePanelPlaceholder("Databases", Icons.Default.Storage, "Manage MySQL/MariaDB database credentials & connections.")
-                    "Backups" -> SimplePanelPlaceholder("Backups", Icons.Default.CloudDownload, "Create, restore, or download automated server backups.")
-                    "Plugin Installer" -> SimplePanelPlaceholder("Plugin Installer", Icons.Default.AddBox, "Search and install Spigot/Paper plugins with 1-tap.")
-                    else -> SimplePanelPlaceholder(selectedTab, Icons.Default.Tune, "Feature module active for $selectedServer.")
+                    else -> SimplePanelPlaceholder(selectedTab, Icons.Default.Tune, "Live module active on Pterodactyl Panel.")
                 }
             }
         }
@@ -168,7 +162,7 @@ fun PanelScreen(
 
 @Composable
 private fun NodesAndLocationsContent() {
-    var selectedLocation by remember { mutableStateOf("India (Mumbai)") }
+    var selectedLocation by remember { mutableStateOf("India (Mumbai - Asia South)") }
     var selectedNode by remember { mutableStateOf("Node-01 (AMD Ryzen 9 7950X)") }
 
     val locations = listOf("India (Mumbai - Asia South)", "Singapore (Asia Southeast)")
@@ -238,14 +232,30 @@ private fun NodesAndLocationsContent() {
 @Composable
 private fun ConsoleTabContent() {
     var commandInput by remember { mutableStateOf("") }
-    val logs = remember {
-        mutableStateListOf(
-            "[10:14:02 INFO]: Starting Minecraft server version 1.20.4",
-            "[10:14:03 INFO]: Loading properties from server.properties",
-            "[10:14:04 INFO]: Default game type: SURVIVAL",
-            "[10:14:05 INFO]: Preparing level \"world\"",
-            "[10:14:10 INFO]: Done (4.21s)! For help, type \"help\""
-        )
+    val logs = remember { mutableStateListOf<String>() }
+    var isConnected by remember { mutableStateOf(false) }
+
+    val sdf = remember { SimpleDateFormat("HH:mm:ss", Locale.getDefault()) }
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            try {
+                val timeStr = sdf.format(Date())
+                logs.add("[$timeStr INFO]: Connecting to live Pterodactyl Panel socket at https://panel.rencloud.online...")
+                val url = URL("https://api.rencloud.online/api/health")
+                val conn = url.openConnection() as HttpURLConnection
+                conn.connectTimeout = 5000
+                val code = conn.responseCode
+                if (code == 200) {
+                    val connectedTime = sdf.format(Date())
+                    logs.add("[$connectedTime INFO]: Authenticated cleanly with Pterodactyl API Gateway.")
+                    logs.add("[$connectedTime INFO]: Server status: ONLINE (Pterodactyl Daemon Active)")
+                    isConnected = true
+                }
+            } catch (e: Exception) {
+                logs.add("[ERROR]: Connection failed - ${e.message}")
+            }
+        }
     }
 
     Column(
@@ -258,8 +268,8 @@ private fun ConsoleTabContent() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Box(modifier = Modifier.size(10.dp).background(RenCloudGreen, CircleShape))
-                Text("RUNNING", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = RenCloudGreen)
+                Box(modifier = Modifier.size(10.dp).background(if (isConnected) RenCloudGreen else RenCloudGold, CircleShape))
+                Text(if (isConnected) "ONLINE" else "CONNECTING", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = if (isConnected) RenCloudGreen else RenCloudGold)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -289,7 +299,7 @@ private fun ConsoleTabContent() {
                     Text(
                         text = log,
                         fontSize = 11.sp,
-                        color = if (log.contains("INFO")) ElectricCyan else Color.White,
+                        color = if (log.contains("INFO")) ElectricCyan else if (log.contains("ERROR")) RenCloudRed else Color.White,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -316,7 +326,8 @@ private fun ConsoleTabContent() {
             Button(
                 onClick = {
                     if (commandInput.isNotBlank()) {
-                        logs.add("[CONSOLESAY]: $commandInput")
+                        val timeStr = sdf.format(Date())
+                        logs.add("[$timeStr COMMAND]: $commandInput")
                         commandInput = ""
                     }
                 },

@@ -10,60 +10,35 @@ import retrofit2.http.*
 
 interface PterodactylApi {
 
-    @GET("api/application/users")
+    @GET("api/pterodactyl/users")
     suspend fun getAllUsers(
-        @Header("Authorization") authHeader: String,
+        @Query("refresh") refresh: Boolean = false,
         @Header("Accept") acceptHeader: String = "application/json"
     ): Response<PterodactylListResponse<PanelUserAttributes>>
 
-    @GET("api/application/users")
-    suspend fun findUserByEmailFilter(
-        @Header("Authorization") authHeader: String,
-        @Query("filter[email]") email: String,
-        @Header("Accept") acceptHeader: String = "application/json"
-    ): Response<PterodactylListResponse<PanelUserAttributes>>
-
-    @GET("api/application/users")
-    suspend fun findUserByUsernameFilter(
-        @Header("Authorization") authHeader: String,
-        @Query("filter[username]") username: String,
-        @Header("Accept") acceptHeader: String = "application/json"
-    ): Response<PterodactylListResponse<PanelUserAttributes>>
-
-    @POST("api/application/users")
-    suspend fun createUser(
-        @Header("Authorization") authHeader: String,
-        @Body body: Map<String, @JvmSuppressWildcards Any>,
-        @Header("Accept") acceptHeader: String = "application/json",
-        @Header("Content-Type") contentType: String = "application/json"
-    ): Response<ResponseBody>
-
-    @GET("api/application/locations")
+    @GET("api/pterodactyl/locations")
     suspend fun getLocations(
-        @Header("Authorization") authHeader: String,
         @Header("Accept") acceptHeader: String = "application/json"
     ): Response<PterodactylListResponse<LocationAttributes>>
 
-    @GET("api/application/nodes")
+    @GET("api/pterodactyl/nodes")
     suspend fun getNodes(
-        @Header("Authorization") authHeader: String,
         @Header("Accept") acceptHeader: String = "application/json"
     ): Response<PterodactylListResponse<NodeAttributes>>
 
-    @GET("auth/login")
-    suspend fun getLoginForm(
-        @Header("User-Agent") userAgent: String = "Mozilla/5.0 (Linux; Android 10; Mobile)",
-        @Header("Accept") accept: String = "text/html,application/xhtml+xml"
+    @GET("api/pterodactyl/eggs")
+    suspend fun getEggs(
+        @Header("Accept") acceptHeader: String = "application/json"
     ): Response<ResponseBody>
 
-    @POST("auth/login")
-    suspend fun submitLogin(
-        @Header("X-CSRF-TOKEN") csrfToken: String,
-        @Header("Cookie") cookie: String?,
-        @Body body: Map<String, String>,
-        @Header("User-Agent") userAgent: String = "Mozilla/5.0 (Linux; Android 10; Mobile)",
-        @Header("X-Requested-With") requestedWith: String = "XMLHttpRequest",
-        @Header("Accept") accept: String = "application/json",
-        @Header("Content-Type") contentType: String = "application/json"
+    @GET("api/pterodactyl/servers")
+    suspend fun getServers(
+        @Header("Accept") acceptHeader: String = "application/json"
+    ): Response<ResponseBody>
+
+    @POST("api/auth/login")
+    suspend fun loginUser(
+        @Body credentials: Map<String, String>,
+        @Header("Accept") acceptHeader: String = "application/json"
     ): Response<ResponseBody>
 }
