@@ -3,8 +3,11 @@ package com.rencloud.app.data.remote
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.core.content.FileProvider
 import com.google.gson.annotations.SerializedName
+import com.rencloud.app.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -47,30 +50,42 @@ class UpdateService @Inject constructor() {
             .create(GitHubUpdateApi::class.java)
     }
 
-    suspend fun checkForUpdates(currentVersion: String): GitHubReleaseResponse? {
+    suspend fun checkForUpdates(currentVersionName: String = BuildConfig.VERSION_NAME): GitHubReleaseResponse? {
         return withContext(Dispatchers.IO) {
             try {
                 val resp = api.getLatestRelease()
                 if (resp.isSuccessful) {
                     val release = resp.body()
-                    if (release != null && isNewerVersion(currentVersion, release.tagName)) {
-                        return@withContext release
+                    if (release != null) {
+                        val currentCode = parseVersionCode(currentVersionName)
+                        val latestCode = parseVersionCode(release.tagName)
+                        if (latestCode > currentCode) {
+                            return@withContext release
+                        }
                     }
                 }
                 null
             } catch (e: Exception) {
+                // Fail silently on network errors
                 null
             }
         }
     }
 
-    private fun isNewerVersion(current: String, latestTag: String): Boolean {
-        val latest = latestTag.removePrefix("v").trim()
-        val curr = current.removePrefix("v").trim()
-        return latest != curr
+    fun parseVersionCode(versionStr: String): Int {
+        val clean = versionStr.removePrefix("v").removePrefix("V").trim()
+        val parts = clean.split(".")
+        val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+        val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+        val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
+        return (major * 10000) + (minor * 100) + patch
     }
 
-    suspend fun downloadAndInstallApk(context: Context, downloadUrl: String, onProgress: (Float) -> Unit): Boolean {
+    suspend fun downloadAndInstallApk(
+        context: Context,
+        downloadUrl: String,
+        onProgress: (Float) -> Unit
+    ): Boolean {
         return withContext(Dispatchers.IO) {
             try {
                 val url = URL(downloadUrl)
@@ -84,7 +99,7 @@ class UpdateService @Inject constructor() {
                 val input = connection.getInputStream()
                 val output = FileOutputStream(apkFile)
 
-                val data = ByteArray(4096)
+                val data = ByteArray(8192)
                 var total: Long = 0
                 var count: Int
 
@@ -100,7 +115,6 @@ class UpdateService @Inject constructor() {
                 output.close()
                 input.close()
 
-                // Install APK
                 withContext(Dispatchers.Main) {
                     installApk(context, apkFile)
                 }
@@ -111,7 +125,18 @@ class UpdateService @Inject constructor() {
         }
     }
 
-    private fun installApk(context: Context, file: File) {
+    fun installApk(context: Context, file: File) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!context.packageManager.canRequestPackageInstalls()) {
+                val settingsIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(settingsIntent)
+                return
+            }
+        }
+
         val apkUri: Uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",

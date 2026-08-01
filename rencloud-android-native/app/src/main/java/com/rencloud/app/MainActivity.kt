@@ -57,7 +57,7 @@ class MainActivity : FragmentActivity() {
                     // Automatic GitHub Release Update check on launch
                     LaunchedEffect(Unit) {
                         launch {
-                            val release = updateService.checkForUpdates("v3.5")
+                            val release = updateService.checkForUpdates(com.rencloud.app.BuildConfig.VERSION_NAME)
                             if (release != null) {
                                 updateRelease = release
                             }
