@@ -11,6 +11,12 @@ import retrofit2.http.*
 interface PterodactylApi {
 
     @GET("api/application/users")
+    suspend fun getAllUsers(
+        @Header("Authorization") authHeader: String,
+        @Header("Accept") acceptHeader: String = "application/json"
+    ): Response<PterodactylListResponse<PanelUserAttributes>>
+
+    @GET("api/application/users")
     suspend fun findUserByEmailFilter(
         @Header("Authorization") authHeader: String,
         @Query("filter[email]") email: String,

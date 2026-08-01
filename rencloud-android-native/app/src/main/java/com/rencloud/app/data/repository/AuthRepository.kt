@@ -23,7 +23,6 @@ class AuthRepository @Inject constructor(
     private val sessionManager: SessionManager,
     private val gson: Gson
 ) {
-    private val panelUrl = "https://panel.rencloud.online"
     private val ptlaKey = "ptla_ZOzmkCLdCNI7zzx69CvOCkVLrdgiZskY2v3bRhxepk0"
     private val authHeader = "Bearer $ptlaKey"
 
@@ -36,46 +35,13 @@ class AuthRepository @Inject constructor(
             return@withContext AuthResult.Error("Please enter your password.")
         }
 
-        // STEP 1: Special Handling for Admin Account (anshkumar19zx@gmail.com / ansh)
-        if (cleanEmail == "anshkumar19zx@gmail.com" || cleanEmail == "ansh") {
-            val isValidAdminPass = passwordInput == "ANSHGAUR123" || passwordInput == "anshgaur"
-            if (!isValidAdminPass) {
-                return@withContext AuthResult.Error("Invalid credentials! The password you entered is incorrect for \"$cleanEmail\".")
-            }
-
-            // Fetch live profile from panel if available, else fallback to root admin model
-            val panelUser = findPanelUserByEmail("anshkumar19zx@gmail.com") ?: findPanelUserByUsername("ansh")
-            val pteroId = panelUser?.id?.toString() ?: "1"
-            val fullName = if (panelUser != null) {
-                "${panelUser.firstName ?: "Ansh"} ${panelUser.lastName ?: "Gaur"}".trim()
-            } else {
-                "Ansh Gaur"
-            }
-
-            val adminUser = RenCloudUser(
-                id = pteroId,
-                fullName = fullName,
-                email = "anshkumar19zx@gmail.com",
-                role = "admin"
-            )
-
-            sessionManager.saveUserSession(adminUser, "ptla_panel_admin_token_$pteroId")
-            return@withContext AuthResult.Success(adminUser, "Welcome Super Admin! (ID: #$pteroId)")
-        }
-
-        // STEP 2: General Client Login
-        val panelUser = if (cleanEmail.contains("@")) {
-            findPanelUserByEmail(cleanEmail)
-        } else {
-            findPanelUserByUsername(cleanEmail)
-        }
-
+        // STEP 1: Search user on panel.rencloud.online
+        val panelUser = findPanelUser(cleanEmail)
         if (panelUser == null) {
-            // Check if account can be fallback verified or prompt to register
             return@withContext AuthResult.Error("Account not found for \"$cleanEmail\" on panel.rencloud.online. Please register first.")
         }
 
-        // Verify password
+        // STEP 2: Password Verification against Panel
         val isPasswordValid = verifyPasswordOnPanel(cleanEmail, passwordInput)
         if (!isPasswordValid) {
             return@withContext AuthResult.Error("Invalid credentials! The password you entered is incorrect for \"$cleanEmail\".")
@@ -96,7 +62,61 @@ class AuthRepository @Inject constructor(
         )
 
         sessionManager.saveUserSession(user, "ptla_panel_token_$pteroId")
-        return@withContext AuthResult.Success(user, "Logged in! Verified on panel.rencloud.online (ID: #$pteroId)")
+        
+        val welcomeMsg = if (isRootAdmin) {
+            "Welcome Super Admin! (ID: #$pteroId)"
+        } else {
+            "Logged in! Verified on panel.rencloud.online (ID: #$pteroId)"
+        }
+
+        return@withContext AuthResult.Success(user, welcomeMsg)
+    }
+
+    private suspend fun findPanelUser(query: String): PanelUserAttributes? {
+        // 1. Search by email filter
+        val byEmail = findPanelUserByEmail(query)
+        if (byEmail != null) return byEmail
+
+        // 2. Search by username filter
+        val byUsername = findPanelUserByUsername(query)
+        if (byUsername != null) return byUsername
+
+        // 3. Search all users list
+        return try {
+            val resp = api.getAllUsers(authHeader)
+            if (resp.isSuccessful) {
+                val data = resp.body()?.dataList ?: emptyList()
+                data.map { it.attributes }.firstOrNull {
+                    it.email.equals(query, ignoreCase = true) || it.username.equals(query, ignoreCase = true)
+                }
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private suspend fun findPanelUserByEmail(email: String): PanelUserAttributes? {
+        return try {
+            val resp = api.findUserByEmailFilter(authHeader, email)
+            if (resp.isSuccessful) {
+                val data = resp.body()?.dataList ?: emptyList()
+                data.map { it.attributes }.firstOrNull { it.email.equals(email, ignoreCase = true) }
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private suspend fun findPanelUserByUsername(username: String): PanelUserAttributes? {
+        return try {
+            val resp = api.findUserByUsernameFilter(authHeader, username)
+            if (resp.isSuccessful) {
+                val data = resp.body()?.dataList ?: emptyList()
+                data.map { it.attributes }.firstOrNull { it.username.equals(username, ignoreCase = true) }
+            } else null
+        } catch (e: Exception) {
+            null
+        }
     }
 
     private suspend fun verifyPasswordOnPanel(user: String, pass: String): Boolean {
@@ -128,34 +148,11 @@ class AuthRepository @Inject constructor(
                 }
             }
             
-            pass.isNotBlank() && pass.length >= 4
+            // If post response contained invalid credentials error
+            false
         } catch (e: Exception) {
             Log.e("AuthRepository", "Password verification exception: ${e.message}")
-            pass.isNotBlank() && pass.length >= 4
-        }
-    }
-
-    private suspend fun findPanelUserByEmail(email: String): PanelUserAttributes? {
-        return try {
-            val resp = api.findUserByEmailFilter(authHeader, email)
-            if (resp.isSuccessful) {
-                val data = resp.body()?.dataList ?: emptyList()
-                data.map { it.attributes }.firstOrNull { it.email.equals(email, ignoreCase = true) }
-            } else null
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private suspend fun findPanelUserByUsername(username: String): PanelUserAttributes? {
-        return try {
-            val resp = api.findUserByUsernameFilter(authHeader, username)
-            if (resp.isSuccessful) {
-                val data = resp.body()?.dataList ?: emptyList()
-                data.map { it.attributes }.firstOrNull { it.username.equals(username, ignoreCase = true) }
-            } else null
-        } catch (e: Exception) {
-            null
+            false
         }
     }
 
@@ -204,38 +201,20 @@ class AuthRepository @Inject constructor(
                 sessionManager.saveUserSession(user, "ptla_user_token_$pteroId")
                 return@withContext AuthResult.Success(user, "Account registered on panel.rencloud.online! (User ID: #$pteroId)")
             } else {
-                // Fallback register locally
-                val user = RenCloudUser(
-                    id = "local_${System.currentTimeMillis() % 10000}",
-                    fullName = "$firstName $lastName".trim(),
-                    email = cleanEmail,
-                    role = "client"
-                )
-                sessionManager.saveUserSession(user, "local_token")
-                return@withContext AuthResult.Success(user, "Account created successfully!")
+                return@withContext AuthResult.Error("Registration failed on panel.rencloud.online.")
             }
         } catch (e: Exception) {
-            val user = RenCloudUser(
-                id = "local_${System.currentTimeMillis() % 10000}",
-                fullName = "$firstName $lastName".trim(),
-                email = cleanEmail,
-                role = "client"
-            )
-            sessionManager.saveUserSession(user, "local_token")
-            return@withContext AuthResult.Success(user, "Account created successfully!")
+            return@withContext AuthResult.Error("Could not connect to panel.rencloud.online. Check internet connection.")
         }
     }
 
     suspend fun restoreSession(): RenCloudUser? = withContext(Dispatchers.IO) {
         val cachedUser = sessionManager.getUser() ?: return@withContext null
-        if (cachedUser.email.equals("anshkumar19zx@gmail.com", ignoreCase = true)) {
-            return@withContext cachedUser
-        }
-        val panelUser = findPanelUserByEmail(cachedUser.email)
+        val panelUser = findPanelUser(cachedUser.email)
         if (panelUser != null) {
             return@withContext cachedUser
         } else {
-            return@withContext cachedUser // keep local session
+            return@withContext cachedUser
         }
     }
 
