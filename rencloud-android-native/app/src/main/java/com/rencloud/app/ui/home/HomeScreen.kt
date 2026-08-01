@@ -36,6 +36,14 @@ import com.rencloud.app.ui.theme.*
 import com.rencloud.app.util.SoundEffects
 import kotlin.math.absoluteValue
 
+fun isPlanDeployable(categoryName: String): Boolean {
+    val cat = categoryName.lowercase()
+    if (cat.contains("vps") || cat.contains("web") || cat.contains("vip") || cat.contains("setup")) {
+        return false
+    }
+    return true
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -65,6 +73,15 @@ fun HomeScreen(
         snackbarMessage?.let { msg ->
             snackbarHostState.showSnackbar(msg)
             snackbarMessage = null
+        }
+    }
+
+    val handlePlanAction: (RenCloudPlan) -> Unit = { plan ->
+        SoundEffects.playClickSound(view)
+        if (isPlanDeployable(plan.categoryName)) {
+            selectedPlanForDeploy = plan
+        } else {
+            snackbarMessage = "${plan.categoryName} is managed via Support / Billing Portal. Contact Support to order!"
         }
     }
 
@@ -185,7 +202,6 @@ fun HomeScreen(
             )
         },
         bottomBar = {
-            // Navigation Bar remains visible in both Portrait & Landscape mode
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = ElectricCyan,
@@ -251,10 +267,7 @@ fun HomeScreen(
                 currency = catalogState.currency,
                 selectedCategory = catalogState.selectedCategory,
                 searchQuery = catalogState.searchQuery,
-                onPlanDeploy = {
-                    SoundEffects.playClickSound(view)
-                    selectedPlanForDeploy = it
-                },
+                onPlanDeploy = handlePlanAction,
                 modifier = Modifier.fillMaxSize()
             )
 
@@ -268,9 +281,9 @@ fun HomeScreen(
                         "ping" -> showPingDialog = true
                         "discord" -> showDiscordDialog = true
                         "deploy" -> {
-                            val topPlan = catalogViewModel.getFilteredPlans().firstOrNull { it.isFeatured }
-                                ?: catalogViewModel.getFilteredPlans().firstOrNull()
-                            topPlan?.let { selectedPlanForDeploy = it }
+                            val topPlan = catalogViewModel.getFilteredPlans().firstOrNull { isPlanDeployable(it.categoryName) && it.isFeatured }
+                                ?: catalogViewModel.getFilteredPlans().firstOrNull { isPlanDeployable(it.categoryName) }
+                            topPlan?.let { handlePlanAction(it) }
                         }
                     }
                 },
@@ -287,7 +300,7 @@ fun HomeScreen(
     if (showSimulatorDialog) {
         CapacitySimulatorDialog(
             onDismiss = { showSimulatorDialog = false },
-            onDeployPlan = { selectedPlanForDeploy = it }
+            onDeployPlan = { handlePlanAction(it) }
         )
     }
     if (showPingDialog) {
@@ -421,6 +434,7 @@ private fun Animated3DVerticalCarousel(
         ) {
             items(plans.size) { index ->
                 val plan = plans[index]
+                val deployable = isPlanDeployable(plan.categoryName)
                 val itemInfo = remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } } }
 
                 val animationFraction = remember {
@@ -493,11 +507,11 @@ private fun Animated3DVerticalCarousel(
                                     SoundEffects.playClickSound(view)
                                     onDeploy(plan)
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
+                                colors = ButtonDefaults.buttonColors(containerColor = if (deployable) ElectricCyan else TextMutedDark),
                                 shape = RoundedCornerShape(8.dp),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                             ) {
-                                Text("DEPLOY", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                                Text(if (deployable) "DEPLOY" else "SUPPORT ORDER", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                             }
                         }
                     }
@@ -516,6 +530,7 @@ private fun SquarePlanCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val deployable = isPlanDeployable(plan.categoryName)
     val categoryColor = when {
         plan.categoryName.contains("Minecraft", ignoreCase = true) -> MinecraftColor
         plan.categoryName.contains("VPS", ignoreCase = true) -> VpsColor
@@ -555,13 +570,13 @@ private fun SquarePlanCard(
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
-                    if (plan.isFeatured) {
+                    if (!deployable) {
                         Surface(
                             color = RenCloudGold.copy(alpha = 0.2f),
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Text(
-                                "POPULAR",
+                                "MANUAL ORDER",
                                 fontSize = 8.sp,
                                 fontWeight = FontWeight.Black,
                                 color = RenCloudGold,
