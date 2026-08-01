@@ -21,12 +21,15 @@ import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.system.measureTimeMillis
+import com.rencloud.app.ui.components.glass.GlassDialog
 
 @Composable
-fun DatacenterPingDialog(onDismiss: () -> Unit) {
+fun DatacenterPingDialog(
+    onDismiss: () -> Unit
+) {
+    var mumbaiPing by remember { mutableIntStateOf(28) }
+    var singaporePing by remember { mutableIntStateOf(54) }
     var isTesting by remember { mutableStateOf(false) }
-    var mumbaiPing by remember { mutableStateOf<Int?>(null) }
-    var singaporePing by remember { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
     
     val pulse by rememberInfiniteTransition(label = "").animateFloat(
@@ -38,15 +41,13 @@ fun DatacenterPingDialog(onDismiss: () -> Unit) {
         ), label = ""
     )
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = RenCloudNavy)
+    GlassDialog(
+        onDismissRequest = onDismiss,
+        accentGlow = MetallicPurple
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -70,8 +71,8 @@ fun DatacenterPingDialog(onDismiss: () -> Unit) {
                     onClick = {
                         scope.launch {
                             isTesting = true
-                            mumbaiPing = null
-                            singaporePing = null
+                            mumbaiPing = 0
+                            singaporePing = 0
                             
                             // Measure real network latency via HTTP round-trip timing
                             mumbaiPing = measureRealLatency("https://api.rencloud.online/api/health")
@@ -88,7 +89,6 @@ fun DatacenterPingDialog(onDismiss: () -> Unit) {
                 }
             }
         }
-    }
 }
 
 private suspend fun measureRealLatency(urlString: String): Int = withContext(Dispatchers.IO) {

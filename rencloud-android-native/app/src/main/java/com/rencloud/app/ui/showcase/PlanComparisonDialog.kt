@@ -28,6 +28,8 @@ import com.rencloud.app.data.repository.CatalogRepository
 import com.rencloud.app.ui.theme.*
 import com.rencloud.app.util.SoundEffects
 
+import com.rencloud.app.ui.components.glass.GlassDialog
+
 @Composable
 fun PlanComparisonDialog(
     catalogRepository: CatalogRepository = CatalogRepository(),
@@ -40,20 +42,16 @@ fun PlanComparisonDialog(
     var selectedPlan2 by remember { mutableStateOf(allPlans.firstOrNull { it.id == "mc_p_iron" } ?: allPlans.getOrElse(1) { allPlans[0] }) }
     var selectedPlan3 by remember { mutableStateOf(allPlans.firstOrNull { it.id == "vps_ryzen_16" } ?: allPlans.getOrElse(2) { allPlans[0] }) }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
+    GlassDialog(
+        onDismissRequest = onDismiss,
+        accentGlow = MetallicPurple
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.88f),
-            color = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(24.dp),
-            border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan)))
+                .fillMaxHeight(0.88f)
+                .padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
                 // Title header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -102,7 +100,6 @@ fun PlanComparisonDialog(
                 }
             }
         }
-    }
 }
 
 @Composable

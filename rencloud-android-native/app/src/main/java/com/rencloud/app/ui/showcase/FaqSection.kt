@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rencloud.app.ui.components.glass.GlassCard
 import com.rencloud.app.ui.theme.*
 
 data class FaqItem(val question: String, val answer: String)
@@ -34,7 +35,7 @@ val badges = listOf("99.9% SLA Uptime", "24/7 Live Support", "Instant 60s Deploy
 @Composable
 fun FaqSection() {
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text("Frequently Asked Questions", color = RenCloudCyan, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text("Frequently Asked Questions", color = ElectricCyan, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
         
         faqs.forEach { faq ->
@@ -59,10 +60,11 @@ fun FaqSection() {
 fun FaqItemCard(faq: FaqItem) {
     var expanded by remember { mutableStateOf(false) }
     
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
-        colors = CardDefaults.cardColors(containerColor = RenCloudCardDark),
-        shape = RoundedCornerShape(8.dp)
+    GlassCard(
+        onClick = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth(),
+        accentGlow = ElectricCyan,
+        alpha = 0.8f
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -70,11 +72,11 @@ fun FaqItemCard(faq: FaqItem) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(faq.question, color = TextPrimaryDark, fontWeight = FontWeight.Medium)
+                Text(faq.question, color = Color.White, fontWeight = FontWeight.Medium)
                 Icon(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = RenCloudCyan
+                    tint = ElectricCyan
                 )
             }
             AnimatedVisibility(visible = expanded) {
@@ -89,10 +91,10 @@ fun FaqItemCard(faq: FaqItem) {
 
 @Composable
 fun BadgeChip(text: String) {
-    Surface(
-        color = RenCloudNavy,
+    GlassCard(
         shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, RenCloudCardBorder)
+        accentGlow = RenCloudGreen,
+        alpha = 0.85f
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -100,7 +102,7 @@ fun BadgeChip(text: String) {
         ) {
             Icon(Icons.Default.CheckCircle, contentDescription = null, tint = RenCloudGreen, modifier = Modifier.size(14.dp))
             Spacer(modifier = Modifier.width(6.dp))
-            Text(text, color = TextPrimaryDark, fontSize = 12.sp)
+            Text(text, color = Color.White, fontSize = 12.sp)
         }
     }
 }

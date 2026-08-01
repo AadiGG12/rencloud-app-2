@@ -31,6 +31,7 @@ import com.rencloud.app.data.model.RenCloudPlan
 import com.rencloud.app.ui.auth.AuthViewModel
 import com.rencloud.app.ui.components.BoomMenu
 import com.rencloud.app.ui.components.BoomMenuItem
+import com.rencloud.app.ui.components.glass.*
 import com.rencloud.app.ui.showcase.*
 import com.rencloud.app.ui.theme.*
 import com.rencloud.app.util.SoundEffects
@@ -47,7 +48,6 @@ fun HomeScreen(
 ) {
     val catalogState by catalogViewModel.uiState.collectAsState()
     val authState by authViewModel.uiState.collectAsState()
-    val context = LocalContext.current
     val view = LocalView.current
 
     val themeIsDark = LocalThemeIsDark.current
@@ -96,180 +96,182 @@ fun HomeScreen(
         )
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.rencloud_logo),
-                            contentDescription = "RenCloud Logo",
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                "RenCloud",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onBackground
+    LiquidGlassBackground {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.rencloud_logo),
+                                contentDescription = "RenCloud Logo",
+                                modifier = Modifier.size(32.dp)
                             )
-                            Text(
-                                "v3.5 Enterprise Showcase",
-                                fontSize = 8.sp,
-                                color = ElectricCyan,
-                                letterSpacing = 1.sp
-                            )
+                            Spacer(Modifier.width(8.dp))
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    "RenCloud",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color.White
+                                )
+                                Text(
+                                    "v3.5 Enterprise Showcase",
+                                    fontSize = 8.sp,
+                                    color = ElectricCyan,
+                                    letterSpacing = 1.sp
+                                )
+                            }
                         }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        SoundEffects.playThemeToggleSound()
-                        themeIsDark.value = !themeIsDark.value
-                    }) {
-                        Icon(
-                            imageVector = if (themeIsDark.value) Icons.Default.WbSunny else Icons.Default.NightsStay,
-                            contentDescription = "Switch Theme",
-                            tint = RenCloudGold
-                        )
-                    }
-
-                    Surface(
-                        onClick = {
-                            SoundEffects.playClickSound(view)
-                            catalogViewModel.toggleCurrency()
-                        },
-                        color = RenCloudGold.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, RenCloudGold.copy(alpha = 0.4f))
-                    ) {
-                        Text(
-                            text = if (catalogState.currency == "INR") "₹ INR" else "$ USD",
-                            color = RenCloudGold,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                        )
-                    }
-
-                    if (authState.user?.isAdmin == true) {
+                    },
+                    actions = {
                         IconButton(onClick = {
-                            SoundEffects.playClickSound(view)
-                            onNavigateAdmin()
+                            SoundEffects.playThemeToggleSound()
+                            themeIsDark.value = !themeIsDark.value
                         }) {
                             Icon(
-                                imageVector = Icons.Default.ManageAccounts,
-                                contentDescription = "Admin",
+                                imageVector = if (themeIsDark.value) Icons.Default.WbSunny else Icons.Default.NightsStay,
+                                contentDescription = "Switch Theme",
                                 tint = RenCloudGold
                             )
                         }
-                    }
 
-                    IconButton(onClick = {
-                        SoundEffects.playClickSound(view)
-                        onNavigateAuth()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Account",
-                            tint = ElectricCyan
+                        Surface(
+                            onClick = {
+                                SoundEffects.playClickSound(view)
+                                catalogViewModel.toggleCurrency()
+                            },
+                            color = RenCloudGold.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(20.dp),
+                            border = BorderStroke(1.dp, RenCloudGold.copy(alpha = 0.4f))
+                        ) {
+                            Text(
+                                text = if (catalogState.currency == "INR") "₹ INR" else "$ USD",
+                                color = RenCloudGold,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            )
+                        }
+
+                        if (authState.user?.isAdmin == true) {
+                            IconButton(onClick = {
+                                SoundEffects.playClickSound(view)
+                                onNavigateAdmin()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.ManageAccounts,
+                                    contentDescription = "Admin",
+                                    tint = RenCloudGold
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = {
+                            SoundEffects.playClickSound(view)
+                            onNavigateAuth()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Account",
+                                tint = ElectricCyan
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent
+                    )
+                )
+            },
+            bottomBar = {
+                NavigationBar(
+                    containerColor = MetallicCardDark.copy(alpha = 0.85f),
+                    contentColor = ElectricCyan,
+                    tonalElevation = 0.dp
+                ) {
+                    NavigationBarItem(
+                        selected = activeBottomTab == 0,
+                        onClick = {
+                            activeBottomTab = 0
+                            SoundEffects.playClickSound(view)
+                        },
+                        icon = { Icon(Icons.Default.Cloud, contentDescription = "Plans") },
+                        label = { Text("Plans", fontSize = 10.sp) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = ElectricCyan,
+                            selectedTextColor = ElectricCyan,
+                            unselectedIconColor = TextSecondaryDark
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = ElectricCyan,
-                tonalElevation = 0.dp
+                    )
+                    NavigationBarItem(
+                        selected = activeBottomTab == 1,
+                        onClick = {
+                            activeBottomTab = 1
+                            SoundEffects.playClickSound(view)
+                            onNavigateCalculator()
+                        },
+                        icon = { Icon(Icons.Default.Calculate, contentDescription = "Calculator") },
+                        label = { Text("Calculator", fontSize = 10.sp) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = ElectricCyan,
+                            selectedTextColor = ElectricCyan,
+                            unselectedIconColor = TextSecondaryDark
+                        )
+                    )
+                    NavigationBarItem(
+                        selected = activeBottomTab == 2,
+                        onClick = {
+                            activeBottomTab = 2
+                            SoundEffects.playClickSound(view)
+                            onNavigateAuth()
+                        },
+                        icon = { Icon(Icons.Default.Person, contentDescription = "Account") },
+                        label = { Text("Account", fontSize = 10.sp) },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = ElectricCyan,
+                            selectedTextColor = ElectricCyan,
+                            unselectedIconColor = TextSecondaryDark
+                        )
+                    )
+                }
+            },
+            containerColor = Color.Transparent
+        ) { innerPadding ->
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
             ) {
-                NavigationBarItem(
-                    selected = activeBottomTab == 0,
-                    onClick = {
-                        activeBottomTab = 0
-                        SoundEffects.playClickSound(view)
-                    },
-                    icon = { Icon(Icons.Default.Cloud, contentDescription = "Plans") },
-                    label = { Text("Plans", fontSize = 10.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = ElectricCyan,
-                        selectedTextColor = ElectricCyan,
-                        unselectedIconColor = TextSecondaryDark
-                    )
+                HomeContent(
+                    catalogViewModel = catalogViewModel,
+                    categories = categories,
+                    currency = catalogState.currency,
+                    selectedCategory = catalogState.selectedCategory,
+                    searchQuery = catalogState.searchQuery,
+                    onPlanDeploy = handlePlanAction,
+                    modifier = Modifier.fillMaxSize()
                 )
-                NavigationBarItem(
-                    selected = activeBottomTab == 1,
-                    onClick = {
-                        activeBottomTab = 1
+
+                BoomMenu(
+                    items = boomMenuItems,
+                    onItemClick = { item ->
                         SoundEffects.playClickSound(view)
-                        onNavigateCalculator()
+                        when (item.id) {
+                            "compare" -> showCompareDialog = true
+                            "simulator" -> showSimulatorDialog = true
+                            "ping" -> showPingDialog = true
+                        }
                     },
-                    icon = { Icon(Icons.Default.Calculate, contentDescription = "Calculator") },
-                    label = { Text("Calculator", fontSize = 10.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = ElectricCyan,
-                        selectedTextColor = ElectricCyan,
-                        unselectedIconColor = TextSecondaryDark
-                    )
-                )
-                NavigationBarItem(
-                    selected = activeBottomTab == 2,
-                    onClick = {
-                        activeBottomTab = 2
-                        SoundEffects.playClickSound(view)
-                        onNavigateAuth()
-                    },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Account") },
-                    label = { Text("Account", fontSize = 10.sp) },
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = ElectricCyan,
-                        selectedTextColor = ElectricCyan,
-                        unselectedIconColor = TextSecondaryDark
-                    )
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
                 )
             }
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            HomeContent(
-                catalogViewModel = catalogViewModel,
-                categories = categories,
-                currency = catalogState.currency,
-                selectedCategory = catalogState.selectedCategory,
-                searchQuery = catalogState.searchQuery,
-                onPlanDeploy = handlePlanAction,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            BoomMenu(
-                items = boomMenuItems,
-                onItemClick = { item ->
-                    SoundEffects.playClickSound(view)
-                    when (item.id) {
-                        "compare" -> showCompareDialog = true
-                        "simulator" -> showSimulatorDialog = true
-                        "ping" -> showPingDialog = true
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-            )
         }
     }
 
@@ -417,7 +419,7 @@ private fun Animated3DVerticalCarousel(
                 val alpha = 1f - (animationFraction.value.absoluteValue * 0.35f)
                 val rotationX = animationFraction.value * 15f
 
-                Card(
+                GlassCard(
                     onClick = {
                         SoundEffects.playClickSound(view)
                         onDeploy(plan)
@@ -432,9 +434,8 @@ private fun Animated3DVerticalCarousel(
                             this.rotationX = rotationX
                             cameraDistance = 16 * density
                         },
-                    colors = CardDefaults.cardColors(containerColor = MetallicCardDark),
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan)))
+                    accentGlow = MetallicPurple,
+                    alpha = 0.85f
                 ) {
                     Row(
                         modifier = Modifier
@@ -469,14 +470,13 @@ private fun Animated3DVerticalCarousel(
                                 color = ElectricCyan
                             )
                             Spacer(Modifier.height(6.dp))
-                            Button(
+                            GlassButton(
                                 onClick = {
                                     SoundEffects.playClickSound(view)
                                     onDeploy(plan)
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                containerColor = ElectricCyan,
+                                modifier = Modifier.wrapContentSize()
                             ) {
                                 Text("VIEW SPECS", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                             }
@@ -488,7 +488,6 @@ private fun Animated3DVerticalCarousel(
     }
 }
 
-// Sleek Square Shape Modern Plan Cards
 @Composable
 private fun SquarePlanCard(
     plan: RenCloudPlan,
@@ -507,12 +506,11 @@ private fun SquarePlanCard(
         else -> RenCloudGold
     }
 
-    Surface(
+    GlassCard(
         onClick = onDeployClick,
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, categoryColor.copy(alpha = 0.35f)),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
+        accentGlow = categoryColor,
+        alpha = 0.8f
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -564,7 +562,7 @@ private fun SquarePlanCard(
                 text = plan.name,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = Color.White
             )
 
             Text(
@@ -621,7 +619,7 @@ private fun SpecPill(text: String, color: Color) {
         Text(
             text = text,
             fontSize = 9.sp,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = Color.White,
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
         )
     }
@@ -629,30 +627,19 @@ private fun SpecPill(text: String, color: Color) {
 
 @Composable
 private fun AnimatedHeroBanner() {
-    Box(
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        MetallicNavy,
-                        MetallicCardDark,
-                        MetallicPurple.copy(alpha = 0.3f)
-                    )
-                )
-            )
-            .border(
-                BorderStroke(1.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan))),
-                RoundedCornerShape(16.dp)
-            )
-            .padding(18.dp)
+            .padding(16.dp),
+        accentGlow = MetallicPurple,
+        alpha = 0.85f
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp)
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Surface(
@@ -703,7 +690,7 @@ private fun SectionHeader(title: String, icon: ImageVector) {
             text = title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = Color.White
         )
     }
 }
@@ -730,10 +717,10 @@ private fun RenCloudSearchBar(
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = ElectricCyan,
             unfocusedBorderColor = MetallicBorderDark,
-            focusedContainerColor = MaterialTheme.colorScheme.surface,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+            focusedContainerColor = MetallicCardDark.copy(alpha = 0.6f),
+            unfocusedContainerColor = MetallicCardDark.copy(alpha = 0.6f),
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White
         ),
         shape = RoundedCornerShape(12.dp),
         modifier = modifier.fillMaxWidth()
@@ -748,7 +735,7 @@ private fun CategoryChip(
 ) {
     Surface(
         onClick = onClick,
-        color = if (isSelected) ElectricCyan else MaterialTheme.colorScheme.surface,
+        color = if (isSelected) ElectricCyan else MetallicCardDark.copy(alpha = 0.6f),
         shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, if (isSelected) ElectricCyan else MetallicBorderDark)
     ) {
@@ -756,7 +743,7 @@ private fun CategoryChip(
             text = category,
             fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface,
+            color = if (isSelected) Color.Black else Color.White,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
         )
     }
@@ -770,7 +757,7 @@ private fun EmptyState(query: String) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Icon(Icons.Default.SearchOff, contentDescription = null, tint = TextMutedDark, modifier = Modifier.size(48.dp))
-        Text("No plans match '$query'", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text("No plans match '$query'", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
         Text("Try searching for 'Minecraft', 'VPS', 'DDR5', or 'Ryzen'", color = TextSecondaryDark, fontSize = 12.sp)
     }
 }

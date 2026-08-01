@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rencloud.app.R
+import com.rencloud.app.ui.components.glass.GlassCircularProgress
+import com.rencloud.app.ui.components.glass.LiquidGlassBackground
 import com.rencloud.app.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -27,15 +29,18 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
     var logoVisible by remember { mutableStateOf(false) }
     var textVisible by remember { mutableStateOf(false) }
     var taglineVisible by remember { mutableStateOf(false) }
+    var statusText by remember { mutableStateOf("Connecting to RenCloud Gateway...") }
 
     LaunchedEffect(Unit) {
         delay(150)
         logoVisible = true
-        delay(700)
+        delay(600)
         textVisible = true
+        statusText = "Syncing Real Pterodactyl Panel Data..."
         delay(400)
         taglineVisible = true
-        delay(1200)
+        statusText = "Catalog & Services Ready"
+        delay(800)
         onSplashComplete()
     }
 
@@ -50,163 +55,129 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
         animationSpec = infiniteRepeatable(tween(1500, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "pulse"
     )
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f, targetValue = 0.7f,
-        animationSpec = infiniteRepeatable(tween(1500, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-        label = "glow"
-    )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(Color(0xFF0F1527), Color(0xFF090D16))
-                )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        // Purple orb top-left
+    LiquidGlassBackground {
         Box(
-            modifier = Modifier
-                .size(350.dp)
-                .offset(x = (-100).dp, y = (-120).dp)
-                .blur(80.dp)
-                .background(
-                    Brush.radialGradient(
-                        listOf(RenCloudPurple.copy(alpha = 0.35f * glowAlpha), Color.Transparent)
-                    ),
-                    CircleShape
-                )
-                .align(Alignment.TopStart)
-        )
-        // Cyan orb bottom-right
-        Box(
-            modifier = Modifier
-                .size(280.dp)
-                .offset(x = 80.dp, y = 80.dp)
-                .blur(60.dp)
-                .background(
-                    Brush.radialGradient(
-                        listOf(RenCloudCyan.copy(alpha = 0.2f * glowAlpha), Color.Transparent)
-                    ),
-                    CircleShape
-                )
-                .align(Alignment.BottomEnd)
-        )
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            // Logo with elastic scale-in animation
-            AnimatedVisibility(
-                visible = logoVisible,
-                enter = scaleIn(
-                    initialScale = 0.2f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeIn(tween(600))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(180.dp)) {
-                    // Rotating gradient ring
-                    Box(
-                        modifier = Modifier
-                            .size(180.dp)
-                            .rotate(rotateAnim)
-                            .background(Color.Transparent, CircleShape)
-                            .border(
-                                2.dp,
-                                Brush.sweepGradient(
-                                    listOf(
-                                        RenCloudCyan.copy(alpha = 0.9f),
-                                        RenCloudPurple.copy(alpha = 0.8f),
-                                        Color.Transparent,
-                                        RenCloudCyan.copy(alpha = 0.9f)
-                                    )
-                                ),
-                                CircleShape
-                            )
-                    )
-                    // Pulsing glow backdrop
-                    Box(
-                        modifier = Modifier
-                            .size(140.dp)
-                            .scale(pulseAnim)
-                            .blur(25.dp)
-                            .background(
-                                Brush.radialGradient(
-                                    listOf(RenCloudPurple.copy(alpha = 0.5f), Color.Transparent)
-                                ),
-                                CircleShape
-                            )
-                    )
-                    // Real RenCloud logo PNG
-                    Image(
-                        painter = painterResource(id = R.drawable.rencloud_logo),
-                        contentDescription = "RenCloud Logo",
-                        modifier = Modifier.size(120.dp),
-                        contentScale = ContentScale.Fit
-                    )
+                // Logo with glass halo glow ring
+                AnimatedVisibility(
+                    visible = logoVisible,
+                    enter = scaleIn(
+                        initialScale = 0.2f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ) + fadeIn(tween(600))
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(180.dp)) {
+                        // Rotating gradient ring
+                        Box(
+                            modifier = Modifier
+                                .size(180.dp)
+                                .rotate(rotateAnim)
+                                .background(Color.Transparent, CircleShape)
+                                .border(
+                                    2.dp,
+                                    Brush.sweepGradient(
+                                        listOf(
+                                            ElectricCyan.copy(alpha = 0.9f),
+                                            MetallicPurple.copy(alpha = 0.8f),
+                                            Color.Transparent,
+                                            ElectricCyan.copy(alpha = 0.9f)
+                                        )
+                                    ),
+                                    CircleShape
+                                )
+                        )
+                        // Pulsing glow backdrop
+                        Box(
+                            modifier = Modifier
+                                .size(140.dp)
+                                .scale(pulseAnim)
+                                .blur(25.dp)
+                                .background(
+                                    Brush.radialGradient(
+                                        listOf(MetallicPurple.copy(alpha = 0.5f), Color.Transparent)
+                                    ),
+                                    CircleShape
+                                )
+                        )
+                        // Real RenCloud logo PNG
+                        Image(
+                            painter = painterResource(id = R.drawable.rencloud_logo),
+                            contentDescription = "RenCloud Logo",
+                            modifier = Modifier.size(120.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(36.dp))
+
+                // Brand name
+                AnimatedVisibility(
+                    visible = textVisible,
+                    enter = slideInVertically(tween(500)) { it / 2 } + fadeIn(tween(500))
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "RenCloud",
+                            fontSize = 42.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "ENTERPRISE SHOWCASE PLATFORM",
+                            fontSize = 10.sp,
+                            color = ElectricCyan,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 3.sp
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                // Tagline & Progress Status
+                AnimatedVisibility(
+                    visible = taglineVisible,
+                    enter = fadeIn(tween(700))
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        GlassCircularProgress(size = 40.dp)
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = statusText,
+                            fontSize = 12.sp,
+                            color = TextSecondaryDark,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
 
-            Spacer(Modifier.height(40.dp))
-
-            // Brand name
-            AnimatedVisibility(
-                visible = textVisible,
-                enter = slideInVertically(tween(500)) { it / 2 } + fadeIn(tween(500))
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "RenCloud",
-                        fontSize = 42.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White,
-                        letterSpacing = 1.sp
-                    )
-                    Text(
-                        text = "ENTERPRISE CLOUD PLATFORM",
-                        fontSize = 11.sp,
-                        color = RenCloudCyan,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 4.sp
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // Tagline
+            // Version number at bottom
             AnimatedVisibility(
                 visible = taglineVisible,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 36.dp),
                 enter = fadeIn(tween(700))
             ) {
                 Text(
-                    text = "Deploy. Scale. Dominate.",
-                    fontSize = 15.sp,
-                    color = TextSecondaryDark,
-                    fontWeight = FontWeight.Medium
+                    text = "v3.5 — Native Android Glass Showcase",
+                    fontSize = 11.sp,
+                    color = TextMutedDark
                 )
             }
-        }
-
-        // Version number at bottom
-        AnimatedVisibility(
-            visible = taglineVisible,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 36.dp),
-            enter = fadeIn(tween(700))
-        ) {
-            Text(
-                text = "v3.4 — Native Android",
-                fontSize = 11.sp,
-                color = TextMutedDark
-            )
         }
     }
 }

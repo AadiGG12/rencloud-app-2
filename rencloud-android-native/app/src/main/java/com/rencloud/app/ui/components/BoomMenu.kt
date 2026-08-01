@@ -29,9 +29,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rencloud.app.R
+import com.rencloud.app.ui.components.glass.GlassSurface
 import com.rencloud.app.ui.theme.*
-import kotlin.math.cos
-import kotlin.math.sin
 
 data class BoomMenuItem(
     val id: String,
@@ -68,12 +67,11 @@ fun BoomMenu(
         modifier = modifier,
         contentAlignment = Alignment.BottomEnd
     ) {
-        // Scrim background overlay when expanded
         if (expanded) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.65f))
+                    .background(Color.Black.copy(alpha = 0.55f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -81,7 +79,6 @@ fun BoomMenu(
             )
         }
 
-        // Expanded Boom items (Radial / Vertical explosion)
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -119,12 +116,11 @@ fun BoomMenu(
                             onItemClick(item)
                         }
                     ) {
-                        // Title Pill
-                        Surface(
-                            color = RenCloudCardDark.copy(alpha = 0.95f),
+                        GlassSurface(
                             shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, item.color.copy(alpha = 0.5f)),
-                            shadowElevation = 6.dp
+                            borderColor = item.color,
+                            accentGlow = item.color,
+                            alpha = 0.88f
                         ) {
                             Column(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -145,7 +141,6 @@ fun BoomMenu(
                             }
                         }
 
-                        // Circular Icon Button
                         Box(
                             modifier = Modifier
                                 .size(50.dp)
@@ -173,7 +168,6 @@ fun BoomMenu(
             }
         }
 
-        // Main Trigger Boom Floating Action Button
         Box(
             modifier = Modifier
                 .scale(scaleAnim)
@@ -182,10 +176,10 @@ fun BoomMenu(
                 .background(
                     Brush.sweepGradient(
                         listOf(
-                            RenCloudCyan,
-                            RenCloudPurple,
+                            ElectricCyan,
+                            MetallicPurple,
                             RenCloudGold,
-                            RenCloudCyan
+                            ElectricCyan
                         )
                     )
                 )
@@ -193,15 +187,13 @@ fun BoomMenu(
                 .border(2.dp, Color.White.copy(alpha = 0.8f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            // Pulse glow background
             Box(
                 modifier = Modifier
                     .size(64.dp)
                     .blur(16.dp)
-                    .background(RenCloudCyan.copy(alpha = 0.4f), CircleShape)
+                    .background(ElectricCyan.copy(alpha = 0.4f), CircleShape)
             )
 
-            // Inner icon (Plus / Close transition)
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Boom Menu",

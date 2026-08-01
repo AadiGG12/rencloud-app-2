@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rencloud.app.ui.components.glass.*
 import com.rencloud.app.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -37,7 +38,6 @@ fun ResourceCalculatorScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // Calculate price
     val baseRam = ramGb * 30f
     val baseCpu = cpuCores * 15f
     val baseStorage = storageGb * 0.5f
@@ -53,165 +53,163 @@ fun ResourceCalculatorScreen(
 
     val priceText = if (currency == "INR") "₹${rawInr.toInt()}/mo" else "$${(rawInr * 0.012f).toInt()}/mo"
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Resource Estimator",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                actions = {
-                    TextButton(onClick = { currency = if (currency == "INR") "USD" else "INR" }) {
+    LiquidGlassBackground {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                TopAppBar(
+                    title = {
                         Text(
-                            text = if (currency == "INR") "₹ INR" else "$ USD",
-                            color = RenCloudGold,
+                            "Resource Estimator",
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
+                            color = Color.White
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    actions = {
+                        TextButton(onClick = { currency = if (currency == "INR") "USD" else "INR" }) {
+                            Text(
+                                text = if (currency == "INR") "₹ INR" else "$ USD",
+                                color = RenCloudGold,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                )
+            },
+            containerColor = Color.Transparent
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Price estimation glass card
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    accentGlow = ElectricCyan,
+                    alpha = 0.85f
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("ESTIMATED MONTHLY COST", fontSize = 10.sp, color = ElectricCyan, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                        Text(
+                            text = priceText,
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
+                        )
+                        Text(
+                            text = "$serviceType • ${ramGb.toInt()}GB RAM • ${cpuCores.toInt()} vCores • ${storageGb.toInt()}GB NVMe",
+                            fontSize = 11.sp,
+                            color = TextSecondaryDark
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = RenCloudNavy)
-            )
-        },
-        containerColor = RenCloudNavy
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Price estimation card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = RenCloudCardDark),
-                shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, RenCloudCyan.copy(alpha = 0.4f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text("ESTIMATED MONTHLY COST", fontSize = 10.sp, color = RenCloudCyan, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
-                    Text(
-                        text = priceText,
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "$serviceType • ${ramGb.toInt()}GB RAM • ${cpuCores.toInt()} vCores • ${storageGb.toInt()}GB NVMe",
-                        fontSize = 11.sp,
-                        color = TextSecondaryDark
-                    )
                 }
-            }
 
-            // Service Type Filter Chips
-            Text("SERVICE TYPE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Minecraft", "VPS", "Other").forEach { type ->
-                    FilterChip(
-                        selected = serviceType == type,
-                        onClick = { serviceType = type },
-                        label = { Text(type, color = if (serviceType == type) Color.Black else Color.White) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = RenCloudCyan,
-                            containerColor = RenCloudSurfaceDark
+                // Service Type Filter Chips
+                Text("SERVICE TYPE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Minecraft", "VPS", "Other").forEach { type ->
+                        FilterChip(
+                            selected = serviceType == type,
+                            onClick = { serviceType = type },
+                            label = { Text(type, color = if (serviceType == type) Color.Black else Color.White) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = ElectricCyan,
+                                containerColor = MetallicCardDark.copy(alpha = 0.6f)
+                            )
                         )
-                    )
+                    }
                 }
-            }
 
-            // Sliders
-            Card(
-                colors = CardDefaults.cardColors(containerColor = RenCloudCardDark),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("RAM Allocation: ${ramGb.toInt()} GB", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Slider(
-                        value = ramGb,
-                        onValueChange = { ramGb = it },
-                        valueRange = 1f..64f,
-                        colors = SliderDefaults.colors(thumbColor = RenCloudCyan, activeTrackColor = RenCloudCyan)
-                    )
+                // Sliders Glass Card
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    alpha = 0.8f
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("RAM Allocation: ${ramGb.toInt()} GB", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Slider(
+                            value = ramGb,
+                            onValueChange = { ramGb = it },
+                            valueRange = 1f..64f,
+                            colors = SliderDefaults.colors(thumbColor = ElectricCyan, activeTrackColor = ElectricCyan)
+                        )
 
-                    Text("CPU Cores: ${cpuCores.toInt()} vCores", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Slider(
-                        value = cpuCores,
-                        onValueChange = { cpuCores = it },
-                        valueRange = 1f..16f,
-                        colors = SliderDefaults.colors(thumbColor = RenCloudPurple, activeTrackColor = RenCloudPurple)
-                    )
+                        Text("CPU Cores: ${cpuCores.toInt()} vCores", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Slider(
+                            value = cpuCores,
+                            onValueChange = { cpuCores = it },
+                            valueRange = 1f..16f,
+                            colors = SliderDefaults.colors(thumbColor = MetallicPurple, activeTrackColor = MetallicPurple)
+                        )
 
-                    Text("NVMe Storage: ${storageGb.toInt()} GB", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                    Slider(
-                        value = storageGb,
-                        onValueChange = { storageGb = it },
-                        valueRange = 10f..500f,
-                        colors = SliderDefaults.colors(thumbColor = RenCloudGold, activeTrackColor = RenCloudGold)
-                    )
+                        Text("NVMe Storage: ${storageGb.toInt()} GB", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Slider(
+                            value = storageGb,
+                            onValueChange = { storageGb = it },
+                            valueRange = 10f..500f,
+                            colors = SliderDefaults.colors(thumbColor = RenCloudGold, activeTrackColor = RenCloudGold)
+                        )
+                    }
                 }
-            }
 
-            // Addons
-            Card(
-                colors = CardDefaults.cardColors(containerColor = RenCloudCardDark),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
+                // Addons Glass Card
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    alpha = 0.8f
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Dedicated IPv4 Address", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text("+₹150/mo dedicated IP allocation", color = TextSecondaryDark, fontSize = 10.sp)
+                        }
+                        Switch(
+                            checked = dedicatedIp,
+                            onCheckedChange = { dedicatedIp = it },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.Black, checkedTrackColor = ElectricCyan)
+                        )
+                    }
+                }
+
+                // Action button
+                GlassButton(
+                    onClick = {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Custom $serviceType server estimate: $priceText")
+                        }
+                    },
+                    containerColor = ElectricCyan,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .height(50.dp)
                 ) {
-                    Column {
-                        Text("Dedicated IPv4 Address", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        Text("+₹150/mo dedicated IP allocation", color = TextSecondaryDark, fontSize = 10.sp)
-                    }
-                    Switch(
-                        checked = dedicatedIp,
-                        onCheckedChange = { dedicatedIp = it },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.Black, checkedTrackColor = RenCloudCyan)
-                    )
+                    Text("SAVE ESTIMATE", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
-            }
-
-            // Action button
-            Button(
-                onClick = {
-                    scope.launch {
-                        snackbarHostState.showSnackbar("Custom $serviceType server estimate: $priceText")
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = RenCloudCyan),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-            ) {
-                Text("SAVE ESTIMATE", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
             }
         }
     }

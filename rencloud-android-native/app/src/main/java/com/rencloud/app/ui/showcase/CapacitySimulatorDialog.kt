@@ -16,17 +16,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.rencloud.app.data.model.RenCloudPlan
 import com.rencloud.app.data.repository.CatalogRepository
 import com.rencloud.app.ui.theme.*
 import kotlin.math.abs
 
+import com.rencloud.app.ui.components.glass.GlassDialog
+
 @Composable
 fun CapacitySimulatorDialog(
     catalogRepository: CatalogRepository = CatalogRepository(),
     onDismiss: () -> Unit,
-    onDeployPlan: (RenCloudPlan) -> Unit = {}
+    onDeployPlan: (RenCloudPlan) -> Unit
 ) {
     val allPlans = remember { catalogRepository.getPlans() }
 
@@ -47,17 +48,16 @@ fun CapacitySimulatorDialog(
         } ?: allPlans.first()
     }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = RenCloudCardDark,
-            shape = RoundedCornerShape(24.dp),
-            border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan)))
+    GlassDialog(
+        onDismissRequest = onDismiss,
+        accentGlow = ElectricCyan
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -136,5 +136,4 @@ fun CapacitySimulatorDialog(
                 }
             }
         }
-    }
 }

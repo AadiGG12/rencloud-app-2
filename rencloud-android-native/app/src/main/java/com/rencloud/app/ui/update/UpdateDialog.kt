@@ -24,6 +24,8 @@ import com.rencloud.app.data.remote.UpdateService
 import com.rencloud.app.ui.theme.*
 import kotlinx.coroutines.launch
 
+import com.rencloud.app.ui.components.glass.GlassDialog
+
 @Composable
 fun UpdateDialog(
     release: GitHubReleaseResponse,
@@ -37,21 +39,17 @@ fun UpdateDialog(
 
     val apkAsset = release.assets?.firstOrNull { it.name.endsWith(".apk") }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = RenCloudCardDark,
-            shape = RoundedCornerShape(24.dp),
-            border = androidx.compose.foundation.BorderStroke(
-                1.5.dp,
-                Brush.linearGradient(listOf(MetallicPurple, ElectricCyan))
-            )
+    GlassDialog(
+        onDismissRequest = onDismiss,
+        accentGlow = ElectricCyan
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
                 // Header Icon
                 Box(
                     modifier = Modifier
@@ -144,5 +142,4 @@ fun UpdateDialog(
                 }
             }
         }
-    }
 }
