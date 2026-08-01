@@ -5,7 +5,6 @@ import android.content.Intent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -18,10 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -44,7 +41,6 @@ fun HomeScreen(
     authViewModel: AuthViewModel,
     onNavigateAdmin: () -> Unit,
     onNavigateCalculator: () -> Unit = {},
-    onNavigatePanel: () -> Unit = {},
     onNavigateAuth: () -> Unit
 ) {
     val catalogState by catalogViewModel.uiState.collectAsState()
@@ -152,15 +148,6 @@ fun HomeScreen(
                         )
                     }
 
-                    // Pterodactyl Panel Link
-                    IconButton(onClick = onNavigatePanel) {
-                        Icon(
-                            imageVector = Icons.Default.Terminal,
-                            contentDescription = "Panel",
-                            tint = ElectricCyan
-                        )
-                    }
-
                     // Admin panel
                     if (authState.user?.isAdmin == true) {
                         IconButton(onClick = onNavigateAdmin) {
@@ -201,15 +188,6 @@ fun HomeScreen(
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = ElectricCyan,
                             selectedTextColor = ElectricCyan,
-                            unselectedIconColor = TextSecondaryDark
-                        )
-                    )
-                    NavigationBarItem(
-                        selected = false,
-                        onClick = onNavigatePanel,
-                        icon = { Icon(Icons.Default.Terminal, contentDescription = "Panel") },
-                        label = { Text("Panel", fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
                             unselectedIconColor = TextSecondaryDark
                         )
                     )
@@ -523,7 +501,6 @@ private fun CategoryChip(
     }
 }
 
-// Fixed Non-Overlapping Sleek Featured Carousel
 @Composable
 private fun FixedFeaturedCarousel(
     plans: List<RenCloudPlan>,

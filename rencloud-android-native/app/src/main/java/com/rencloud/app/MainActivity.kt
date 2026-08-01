@@ -113,14 +113,7 @@ class MainActivity : FragmentActivity() {
                                     authViewModel = authViewModel,
                                     onNavigateAdmin = { navController.navigate("admin") },
                                     onNavigateCalculator = { navController.navigate("calculator") },
-                                    onNavigatePanel = { navController.navigate("panel") },
                                     onNavigateAuth = { navController.navigate("auth") }
-                                )
-                            }
-
-                            composable("panel") {
-                                PanelScreen(
-                                    onNavigateBack = { navController.popBackStack() }
                                 )
                             }
 
