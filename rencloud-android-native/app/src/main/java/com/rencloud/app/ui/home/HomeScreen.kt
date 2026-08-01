@@ -120,7 +120,7 @@ fun HomeScreen(
                                     color = Color.White
                                 )
                                 Text(
-                                    "v4.1 Enterprise Showcase",
+                                    "v4.2 Enterprise Showcase",
                                     fontSize = 8.sp,
                                     color = ElectricCyan,
                                     letterSpacing = 1.sp

@@ -13,8 +13,8 @@ android {
         applicationId = "com.rencloud.app"
         minSdk = 24
         targetSdk = 34
-        versionCode = 41000
-        versionName = "4.1"
+        versionCode = 42000
+        versionName = "4.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
