@@ -25,32 +25,38 @@ fun DeployDialog(
     onDismiss: () -> Unit,
     onConfirmLaunch: (String) -> Unit
 ) {
-    val isMinecraft = plan.categoryName.contains("Minecraft", ignoreCase = true)
-
-    val locations = listOf("India (Mumbai - Asia South)", "Singapore (Asia Southeast)")
-    val nodes = listOf("Node-01 (AMD Ryzen 9 7950X)", "Node-02 (AMD EPYC Milan)", "Node-03 (Intel Platinum)")
-    val softwareList = if (isMinecraft) {
-        listOf("Paper 1.20.4", "Spigot 1.20.4", "Purpur 1.20.4", "Forge 1.20.1", "Fabric 1.20.4", "BungeeCord Proxy")
-    } else {
-        listOf("Ubuntu 22.04 LTS", "Debian 12 Bookworm", "AlmaLinux 9", "Docker Engine (Alpine)")
+    val locations = remember { listOf("India (Mumbai - Asia South)", "Singapore (Asia Southeast)") }
+    val nodes = remember { listOf("Node-01 (AMD Ryzen 9 7950X)", "Node-02 (AMD EPYC Milan)", "Node-03 (Intel Platinum)") }
+    val eggsList = remember {
+        listOf(
+            "Paper (Minecraft Vanilla + Plugins)",
+            "Purpur (High Performance Minecraft)",
+            "Spigot (Minecraft)",
+            "Forge (Modded Minecraft)",
+            "Fabric (Lightweight Modded)",
+            "BungeeCord Proxy",
+            "Ubuntu 22.04 LTS (Cloud VPS)",
+            "Debian 12 Bookworm (Cloud VPS)",
+            "Docker Engine (Alpine)"
+        )
     }
 
     var selectedLocation by remember { mutableStateOf(locations[0]) }
     var selectedNode by remember { mutableStateOf(nodes[0]) }
-    var selectedSoftware by remember { mutableStateOf(softwareList[0]) }
+    var selectedEgg by remember { mutableStateOf(eggsList[0]) }
     var serverName by remember { mutableStateOf("${plan.name}-Server") }
 
     var expandedLocation by remember { mutableStateOf(false) }
     var expandedNode by remember { mutableStateOf(false) }
-    var expandedSoftware by remember { mutableStateOf(false) }
+    var expandedEgg by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            color = RenCloudCardDark,
-            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp),
             border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan)))
         ) {
             Column(
@@ -69,8 +75,8 @@ fun DeployDialog(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.Launch, contentDescription = null, tint = ElectricCyan)
-                        Text("Deploy ${plan.name}", fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.White)
+                        Icon(Icons.Default.RocketLaunch, contentDescription = null, tint = ElectricCyan)
+                        Text("Deploy ${plan.name}", fontSize = 18.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
                     }
                     IconButton(onClick = onDismiss) {
                         Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondaryDark)
@@ -86,14 +92,14 @@ fun DeployDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = ElectricCyan,
                         unfocusedBorderColor = MetallicBorderDark,
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Location Dropdown
-                Text("Select Location", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
+                // Datacenter Location Selector
+                Text("Datacenter Location", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
                 ClickableDropdown(
                     selectedText = selectedLocation,
                     expanded = expandedLocation,
@@ -102,8 +108,8 @@ fun DeployDialog(
                     onSelect = { selectedLocation = it; expandedLocation = false }
                 )
 
-                // Node Dropdown
-                Text("Select Compute Node", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
+                // Compute Node Selector
+                Text("Compute Node", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
                 ClickableDropdown(
                     selectedText = selectedNode,
                     expanded = expandedNode,
@@ -112,14 +118,14 @@ fun DeployDialog(
                     onSelect = { selectedNode = it; expandedNode = false }
                 )
 
-                // Software Dropdown
-                Text(if (isMinecraft) "Minecraft Version / Software" else "OS Image / Engine", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
+                // Pterodactyl Egg Selector (Replaced Minecraft Version)
+                Text("Pterodactyl Egg / Software Image", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
                 ClickableDropdown(
-                    selectedText = selectedSoftware,
-                    expanded = expandedSoftware,
-                    onExpandedChange = { expandedSoftware = it },
-                    options = softwareList,
-                    onSelect = { selectedSoftware = it; expandedSoftware = false }
+                    selectedText = selectedEgg,
+                    expanded = expandedEgg,
+                    onExpandedChange = { expandedEgg = it },
+                    options = eggsList,
+                    onSelect = { selectedEgg = it; expandedEgg = false }
                 )
 
                 Spacer(Modifier.height(4.dp))
@@ -127,10 +133,10 @@ fun DeployDialog(
                 // Launch Button
                 Button(
                     onClick = {
-                        onConfirmLaunch("Deployment triggered for '$serverName' on $selectedLocation!")
+                        onConfirmLaunch("Deployment triggered for '$serverName' on $selectedNode ($selectedLocation)!")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
@@ -160,7 +166,7 @@ private fun ClickableDropdown(
         Surface(
             onClick = { onExpandedChange(!expanded) },
             color = MetallicNavy,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(10.dp),
             border = BorderStroke(1.dp, if (expanded) ElectricCyan else MetallicBorderDark),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -171,7 +177,7 @@ private fun ClickableDropdown(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(selectedText, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                Text(selectedText, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium)
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
@@ -189,7 +195,7 @@ private fun ClickableDropdown(
         ) {
             options.forEach { item ->
                 DropdownMenuItem(
-                    text = { Text(item, color = Color.White, fontSize = 13.sp) },
+                    text = { Text(item, color = Color.White, fontSize = 12.sp) },
                     onClick = { onSelect(item) }
                 )
             }

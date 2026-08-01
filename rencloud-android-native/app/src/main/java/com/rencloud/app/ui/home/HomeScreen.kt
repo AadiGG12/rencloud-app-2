@@ -19,12 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,12 +47,11 @@ fun HomeScreen(
 ) {
     val catalogState by catalogViewModel.uiState.collectAsState()
     val authState by authViewModel.uiState.collectAsState()
-    val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val view = LocalView.current
-    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     val themeIsDark = LocalThemeIsDark.current
+    var activeBottomTab by remember { mutableIntStateOf(0) }
 
     var selectedPlanForDeploy by remember { mutableStateOf<RenCloudPlan?>(null) }
     var showDiscordDialog by remember { mutableStateOf(false) }
@@ -102,7 +99,6 @@ fun HomeScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
-                    // Centered RenCloud Title & Logo
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
@@ -130,7 +126,6 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    // Theme Switcher Button with Audio Feedback
                     IconButton(onClick = {
                         SoundEffects.playThemeToggleSound()
                         themeIsDark.value = !themeIsDark.value
@@ -142,7 +137,6 @@ fun HomeScreen(
                         )
                     }
 
-                    // Currency toggle
                     Surface(
                         onClick = {
                             SoundEffects.playClickSound(view)
@@ -161,7 +155,6 @@ fun HomeScreen(
                         )
                     }
 
-                    // Admin panel
                     if (authState.user?.isAdmin == true) {
                         IconButton(onClick = {
                             SoundEffects.playClickSound(view)
@@ -175,7 +168,6 @@ fun HomeScreen(
                         }
                     }
 
-                    // Account Tab (Fixed Navigation Callback)
                     IconButton(onClick = {
                         SoundEffects.playClickSound(view)
                         onNavigateAuth()
@@ -193,48 +185,56 @@ fun HomeScreen(
             )
         },
         bottomBar = {
-            if (!isLandscape) {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = ElectricCyan,
-                    tonalElevation = 0.dp
-                ) {
-                    NavigationBarItem(
-                        selected = true,
-                        onClick = { SoundEffects.playClickSound(view) },
-                        icon = { Icon(Icons.Default.Cloud, contentDescription = "Plans") },
-                        label = { Text("Plans", fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = ElectricCyan,
-                            selectedTextColor = ElectricCyan,
-                            unselectedIconColor = TextSecondaryDark
-                        )
+            // Navigation Bar remains visible in both Portrait & Landscape mode
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = ElectricCyan,
+                tonalElevation = 0.dp
+            ) {
+                NavigationBarItem(
+                    selected = activeBottomTab == 0,
+                    onClick = {
+                        activeBottomTab = 0
+                        SoundEffects.playClickSound(view)
+                    },
+                    icon = { Icon(Icons.Default.Cloud, contentDescription = "Plans") },
+                    label = { Text("Plans", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = ElectricCyan,
+                        selectedTextColor = ElectricCyan,
+                        unselectedIconColor = TextSecondaryDark
                     )
-                    NavigationBarItem(
-                        selected = false,
-                        onClick = {
-                            SoundEffects.playClickSound(view)
-                            onNavigateCalculator()
-                        },
-                        icon = { Icon(Icons.Default.Calculate, contentDescription = "Calculator") },
-                        label = { Text("Calculator", fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            unselectedIconColor = TextSecondaryDark
-                        )
+                )
+                NavigationBarItem(
+                    selected = activeBottomTab == 1,
+                    onClick = {
+                        activeBottomTab = 1
+                        SoundEffects.playClickSound(view)
+                        onNavigateCalculator()
+                    },
+                    icon = { Icon(Icons.Default.Calculate, contentDescription = "Calculator") },
+                    label = { Text("Calculator", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = ElectricCyan,
+                        selectedTextColor = ElectricCyan,
+                        unselectedIconColor = TextSecondaryDark
                     )
-                    NavigationBarItem(
-                        selected = false,
-                        onClick = {
-                            SoundEffects.playClickSound(view)
-                            onNavigateAuth()
-                        },
-                        icon = { Icon(Icons.Default.Person, contentDescription = "Account") },
-                        label = { Text("Account", fontSize = 10.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            unselectedIconColor = TextSecondaryDark
-                        )
+                )
+                NavigationBarItem(
+                    selected = activeBottomTab == 2,
+                    onClick = {
+                        activeBottomTab = 2
+                        SoundEffects.playClickSound(view)
+                        onNavigateAuth()
+                    },
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Account") },
+                    label = { Text("Account", fontSize = 10.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = ElectricCyan,
+                        selectedTextColor = ElectricCyan,
+                        unselectedIconColor = TextSecondaryDark
                     )
-                }
+                )
             }
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -258,7 +258,6 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // BoomMenu FAB
             BoomMenu(
                 items = boomMenuItems,
                 onItemClick = { item ->
@@ -383,7 +382,7 @@ private fun HomeContent(
             item { EmptyState(query = searchQuery) }
         } else {
             items(allPlans.size) { index ->
-                EnhancedPlanCard(
+                SquarePlanCard(
                     plan = allPlans[index],
                     currency = currency,
                     onDeployClick = { onPlanDeploy(allPlans[index]) },
@@ -399,7 +398,6 @@ private fun HomeContent(
     }
 }
 
-// ── 3D Animated Vertical Scroll Carousel ──────────────────────────────────────
 @Composable
 private fun Animated3DVerticalCarousel(
     plans: List<RenCloudPlan>,
@@ -454,7 +452,7 @@ private fun Animated3DVerticalCarousel(
                             cameraDistance = 16 * density
                         },
                     colors = CardDefaults.cardColors(containerColor = MetallicCardDark),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(14.dp),
                     border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan)))
                 ) {
                     Row(
@@ -467,7 +465,7 @@ private fun Animated3DVerticalCarousel(
                         Column(modifier = Modifier.weight(1f)) {
                             Surface(
                                 color = MetallicPurple.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(6.dp)
                             ) {
                                 Text(
                                     plan.categoryName.uppercase(),
@@ -496,7 +494,7 @@ private fun Animated3DVerticalCarousel(
                                     onDeploy(plan)
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(8.dp),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                             ) {
                                 Text("DEPLOY", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
@@ -509,13 +507,154 @@ private fun Animated3DVerticalCarousel(
     }
 }
 
+// Sleek Square Shape Modern Plan Cards
+@Composable
+private fun SquarePlanCard(
+    plan: RenCloudPlan,
+    currency: String,
+    onDeployClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val categoryColor = when {
+        plan.categoryName.contains("Minecraft", ignoreCase = true) -> MinecraftColor
+        plan.categoryName.contains("VPS", ignoreCase = true) -> VpsColor
+        plan.categoryName.contains("Hytale", ignoreCase = true) -> GameColor
+        plan.categoryName.contains("ARK", ignoreCase = true) -> GameColor
+        plan.categoryName.contains("Web", ignoreCase = true) -> ElectricCyan
+        plan.categoryName.contains("Bot", ignoreCase = true) -> MetallicPurple
+        else -> RenCloudGold
+    }
+
+    Surface(
+        onClick = onDeployClick,
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, categoryColor.copy(alpha = 0.35f)),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Surface(
+                        color = categoryColor.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            plan.categoryName.uppercase(),
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = categoryColor,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                    if (plan.isFeatured) {
+                        Surface(
+                            color = RenCloudGold.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(4.dp)
+                        ) {
+                            Text(
+                                "POPULAR",
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.Black,
+                                color = RenCloudGold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+
+                Text(
+                    text = if (currency == "INR") "₹${plan.monthlyPriceInr}/mo" else "$${plan.monthlyPriceUsd}/mo",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Black,
+                    color = ElectricCyan
+                )
+            }
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = plan.name,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Text(
+                text = plan.tagline,
+                fontSize = 11.sp,
+                color = TextSecondaryDark,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SpecPill(plan.ram, categoryColor)
+                    SpecPill(plan.cpu, categoryColor)
+                    SpecPill(plan.nvmeStorage, categoryColor)
+                }
+                IconButton(
+                    onClick = {
+                        val price = if (currency == "INR") "₹${plan.monthlyPriceInr}/mo" else "$${plan.monthlyPriceUsd}/mo"
+                        val shareText = "Check out this RenCloud plan: ${plan.name} (${plan.ram}, ${plan.cpu}) for just $price!"
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                            type = "text/plain"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, "Share Quote")
+                        context.startActivity(shareIntent)
+                    },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = "Share Quote", tint = TextSecondaryDark, modifier = Modifier.size(15.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpecPill(text: String, color: Color) {
+    Surface(
+        color = color.copy(alpha = 0.08f),
+        shape = RoundedCornerShape(6.dp),
+        border = BorderStroke(0.5.dp, color.copy(alpha = 0.25f))
+    ) {
+        Text(
+            text = text,
+            fontSize = 9.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+        )
+    }
+}
+
 @Composable
 private fun AnimatedHeroBanner() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .clip(RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(
                 Brush.linearGradient(
                     colors = listOf(
@@ -527,9 +666,9 @@ private fun AnimatedHeroBanner() {
             )
             .border(
                 BorderStroke(1.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan))),
-                RoundedCornerShape(24.dp)
+                RoundedCornerShape(16.dp)
             )
-            .padding(20.dp)
+            .padding(18.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -539,7 +678,7 @@ private fun AnimatedHeroBanner() {
             Column(modifier = Modifier.weight(1f)) {
                 Surface(
                     color = ElectricCyan.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
                         "55 HIGH PERFORMANCE PLANS",
@@ -567,7 +706,7 @@ private fun AnimatedHeroBanner() {
             Image(
                 painter = painterResource(id = R.drawable.rencloud_logo),
                 contentDescription = "RenCloud Logo",
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(58.dp)
             )
         }
     }
@@ -617,7 +756,7 @@ private fun RenCloudSearchBar(
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface
         ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         modifier = modifier.fillMaxWidth()
     )
 }
@@ -631,7 +770,7 @@ private fun CategoryChip(
     Surface(
         onClick = onClick,
         color = if (isSelected) ElectricCyan else MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, if (isSelected) ElectricCyan else MetallicBorderDark)
     ) {
         Text(
@@ -640,146 +779,6 @@ private fun CategoryChip(
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
             color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-        )
-    }
-}
-
-@Composable
-private fun EnhancedPlanCard(
-    plan: RenCloudPlan,
-    currency: String,
-    onDeployClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val context = LocalContext.current
-    val categoryColor = when {
-        plan.categoryName.contains("Minecraft", ignoreCase = true) -> MinecraftColor
-        plan.categoryName.contains("VPS", ignoreCase = true) -> VpsColor
-        plan.categoryName.contains("Hytale", ignoreCase = true) -> GameColor
-        plan.categoryName.contains("ARK", ignoreCase = true) -> GameColor
-        plan.categoryName.contains("Web", ignoreCase = true) -> ElectricCyan
-        plan.categoryName.contains("Bot", ignoreCase = true) -> MetallicPurple
-        else -> RenCloudGold
-    }
-
-    Surface(
-        onClick = onDeployClick,
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(18.dp),
-        border = BorderStroke(1.dp, categoryColor.copy(alpha = 0.3f)),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Surface(
-                        color = categoryColor.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(6.dp)
-                    ) {
-                        Text(
-                            plan.categoryName.uppercase(),
-                            fontSize = 8.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = categoryColor,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                    if (plan.isFeatured) {
-                        Surface(
-                            color = RenCloudGold.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text(
-                                "POPULAR",
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.Black,
-                                color = RenCloudGold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                }
-
-                Text(
-                    text = if (currency == "INR") "₹${plan.monthlyPriceInr}/mo" else "$${plan.monthlyPriceUsd}/mo",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Black,
-                    color = ElectricCyan
-                )
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = plan.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = plan.tagline,
-                fontSize = 11.sp,
-                color = TextSecondaryDark,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SpecPill(plan.ram, categoryColor)
-                    SpecPill(plan.cpu, categoryColor)
-                    SpecPill(plan.nvmeStorage, categoryColor)
-                }
-                IconButton(
-                    onClick = {
-                        val price = if (currency == "INR") "₹${plan.monthlyPriceInr}/mo" else "$${plan.monthlyPriceUsd}/mo"
-                        val shareText = "Check out this RenCloud plan: ${plan.name} (${plan.ram}, ${plan.cpu}) for just $price!"
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, shareText)
-                            type = "text/plain"
-                        }
-                        val shareIntent = Intent.createChooser(sendIntent, "Share Quote")
-                        context.startActivity(shareIntent)
-                    },
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(Icons.Default.Share, contentDescription = "Share Quote", tint = TextSecondaryDark, modifier = Modifier.size(16.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SpecPill(text: String, color: Color) {
-    Surface(
-        color = color.copy(alpha = 0.08f),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(0.5.dp, color.copy(alpha = 0.25f))
-    ) {
-        Text(
-            text = text,
-            fontSize = 10.sp,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
     }
 }
