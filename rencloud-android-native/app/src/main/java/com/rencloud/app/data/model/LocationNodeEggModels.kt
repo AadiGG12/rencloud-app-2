@@ -2,6 +2,12 @@ package com.rencloud.app.data.model
 
 import com.google.gson.annotations.SerializedName
 
+data class GatewayListResponse<T>(
+    @SerializedName("success") val success: Boolean = false,
+    @SerializedName("count") val count: Int = 0,
+    @SerializedName("data") val dataList: List<T>? = emptyList()
+)
+
 data class PterodactylListResponse<T>(
     @SerializedName("data") val dataList: List<PterodactylItem<T>>? = emptyList()
 )

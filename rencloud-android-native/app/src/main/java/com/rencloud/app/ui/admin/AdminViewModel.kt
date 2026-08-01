@@ -1,5 +1,6 @@
 package com.rencloud.app.ui.admin
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rencloud.app.data.model.PanelUserAttributes
@@ -50,22 +51,31 @@ class AdminViewModel @Inject constructor(
             try {
                 val resp = api.getAllUsers(refresh = refresh)
                 if (resp.isSuccessful) {
-                    val usersList = resp.body()?.dataList?.map { it.attributes } ?: emptyList()
+                    val body = resp.body()
+                    val usersList = body?.dataList ?: emptyList()
+                    val count = if (body?.count ?: 0 > 0) body!!.count else usersList.size
+                    
+                    Log.d("AdminViewModel", "Successfully loaded ${usersList.size} users (total count: $count)")
+                    
                     _uiState.value = _uiState.value.copy(
                         users = usersList,
-                        totalUsersCount = usersList.size,
-                        isLoading = false
+                        totalUsersCount = count,
+                        isLoading = false,
+                        errorMessage = if (usersList.isEmpty()) "No users found on panel.rencloud.online" else null
                     )
                 } else {
+                    val errStr = "HTTP ${resp.code()}: ${resp.message()}"
+                    Log.e("AdminViewModel", "API Error fetching users: $errStr")
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = "Could not fetch users list from RenCloud Gateway."
+                        errorMessage = errStr
                     )
                 }
             } catch (e: Exception) {
+                Log.e("AdminViewModel", "Network exception fetching users: ${e.message}", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = e.message ?: "Network error connecting to gateway"
+                    errorMessage = e.message ?: "Network error connecting to RenCloud Gateway"
                 )
             }
         }
