@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+
+    <!-- Outer glow background circle (converted from circle to path) -->
+    <path
+        android:fillColor="#1A00D4FF"
+        android:pathData="M32,2 A30,30 0 1,0 32,62 A30,30 0 1,0 32,2 Z"/>
+
+    <!-- Cloud base shape (purple) -->
+    <path
+        android:fillColor="#7C3AED"
+        android:pathData="M48,38 C52.418,38 56,34.418 56,30 C56,25.582 52.418,22 48,22 C47.472,22 46.958,22.054 46.46,22.154 C45.248,17.498 41.06,14 36,14 C31.8,14 28.144,16.36 26.292,19.78 C25.54,19.28 24.622,19 23.636,19 C21.162,19 19.118,20.78 18.74,23.148 C15.494,23.642 13,26.518 13,30 C13,33.866 16.134,37 20,37 Z"/>
+
+    <!-- Cloud highlight (cyan) -->
+    <path
+        android:fillColor="#00D4FF"
+        android:pathData="M44,34 C47.314,34 50,31.314 50,28 C50,24.686 47.314,22 44,22 C43.598,22 43.208,22.042 42.83,22.118 C41.874,18.498 38.542,15.8 34.6,15.8 C31.386,15.8 28.542,17.608 26.968,20.288 C26.402,19.914 25.718,19.68 24.98,19.68 C23.08,19.68 21.502,21.064 21.224,22.882 C18.736,23.268 16.8,25.414 16.8,28 C16.8,30.872 19.128,33.2 22,33.2 Z"/>
+
+    <!-- Lightning bolt accent (gold) -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M35,22 L27,35 L32.5,35 L28,50 L43,32 L37,32 L41,22 Z"/>
+
+    <!-- Small dot 1 (cyan) — converted circle r=2 at (18,46) to path -->
+    <path
+        android:fillColor="#00D4FF"
+        android:pathData="M18,44 A2,2 0 1,0 18,48 A2,2 0 1,0 18,44 Z"/>
+
+    <!-- Small dot 2 (purple) — circle r=1.5 at (47,45) -->
+    <path
+        android:fillColor="#7C3AED"
+        android:pathData="M47,43.5 A1.5,1.5 0 1,0 47,46.5 A1.5,1.5 0 1,0 47,43.5 Z"/>
+
+    <!-- Small dot 3 (gold) — circle r=1.5 at (25,50) -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M25,48.5 A1.5,1.5 0 1,0 25,51.5 A1.5,1.5 0 1,0 25,48.5 Z"/>
+
+</vector>
