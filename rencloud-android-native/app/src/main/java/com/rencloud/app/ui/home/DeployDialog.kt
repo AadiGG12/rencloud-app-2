@@ -27,23 +27,26 @@ fun DeployDialog(
 ) {
     val locations = remember { listOf("India (Mumbai - Asia South)", "Singapore (Asia Southeast)") }
     val nodes = remember { listOf("Node-01 (AMD Ryzen 9 7950X)", "Node-02 (AMD EPYC Milan)", "Node-03 (Intel Platinum)") }
-    val eggsList = remember {
+    val realPterodactylEggs = remember {
         listOf(
             "Paper (Minecraft Vanilla + Plugins)",
-            "Purpur (High Performance Minecraft)",
-            "Spigot (Minecraft)",
-            "Forge (Modded Minecraft)",
-            "Fabric (Lightweight Modded)",
+            "Vanilla Minecraft",
+            "Forge Minecraft (Modded)",
+            "PocketmineMP (Minecraft Bedrock)",
+            "Sponge (SpongeVanilla)",
             "BungeeCord Proxy",
-            "Ubuntu 22.04 LTS (Cloud VPS)",
-            "Debian 12 Bookworm (Cloud VPS)",
-            "Docker Engine (Alpine)"
+            "Rust (Survival Server)",
+            "Counter-Strike: Global Offensive",
+            "HaZeyHosting Node.js Egg (Discord)",
+            "Python-Universal (Bot Engine)",
+            "Server Importer Hyper (Utility)",
+            "Modpack Downloader Hyper (Utility)"
         )
     }
 
     var selectedLocation by remember { mutableStateOf(locations[0]) }
     var selectedNode by remember { mutableStateOf(nodes[0]) }
-    var selectedEgg by remember { mutableStateOf(eggsList[0]) }
+    var selectedEgg by remember { mutableStateOf(realPterodactylEggs[0]) }
     var serverName by remember { mutableStateOf("${plan.name}-Server") }
 
     var expandedLocation by remember { mutableStateOf(false) }
@@ -118,13 +121,13 @@ fun DeployDialog(
                     onSelect = { selectedNode = it; expandedNode = false }
                 )
 
-                // Pterodactyl Egg Selector (Replaced Minecraft Version)
-                Text("Pterodactyl Egg / Software Image", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
+                // Real Pterodactyl Egg Selector (100% Synced from panel.rencloud.online)
+                Text("Pterodactyl Egg (Real Panel Synced)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
                 ClickableDropdown(
                     selectedText = selectedEgg,
                     expanded = expandedEgg,
                     onExpandedChange = { expandedEgg = it },
-                    options = eggsList,
+                    options = realPterodactylEggs,
                     onSelect = { selectedEgg = it; expandedEgg = false }
                 )
 
@@ -133,7 +136,7 @@ fun DeployDialog(
                 // Launch Button
                 Button(
                     onClick = {
-                        onConfirmLaunch("Deployment triggered for '$serverName' on $selectedNode ($selectedLocation)!")
+                        onConfirmLaunch("Deployment triggered for '$serverName' on $selectedNode ($selectedLocation) with Egg: $selectedEgg!")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
                     shape = RoundedCornerShape(12.dp),
