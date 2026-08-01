@@ -6,12 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.unit.dp
@@ -40,15 +38,19 @@ fun GlassSurface(
         SolidColor(borderColor)
     }
 
-    Surface(
-        modifier = modifier
-            .clip(shape)
-            .blur(16.dp),
-        color = surfaceColor,
-        shape = shape,
-        border = BorderStroke(1.dp, rimBrush),
-        shadowElevation = if (accentGlow != null) 8.dp else 2.dp
+    Box(
+        modifier = modifier.clip(shape)
     ) {
+        // LAYER 1: Translucent Frosted Glass Background (rim border & glass wash)
+        Surface(
+            modifier = Modifier.matchParentSize(),
+            color = surfaceColor,
+            shape = shape,
+            border = BorderStroke(1.dp, rimBrush),
+            shadowElevation = if (accentGlow != null) 6.dp else 2.dp
+        ) {}
+
+        // LAYER 2: Foreground Content (100% Crisp & Sharp, zero blur on text/icons)
         content()
     }
 }

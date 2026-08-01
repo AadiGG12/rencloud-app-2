@@ -45,10 +45,6 @@ fun AuthScreen(
     var fullName by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    LaunchedEffect(state.isAuthenticated) {
-        if (state.isAuthenticated) onNavigateHome()
-    }
-
     val infiniteTransition = rememberInfiniteTransition(label = "auth_bg")
     val logoGlow by infiniteTransition.animateFloat(
         initialValue = 0.6f, targetValue = 1f,
@@ -69,13 +65,33 @@ fun AuthScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(30.dp))
 
-            // Logo Section with Glass Halo
+            // Header Top Bar with Back Button when authenticated
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateHome) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+                Text(
+                    text = if (state.isAuthenticated) "Account Profile" else "RenCloud Auth",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(Modifier.width(48.dp))
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Logo Section
             Box(contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
-                        .size(120.dp)
+                        .size(110.dp)
                         .rotate(logoRotate)
                         .border(
                             1.dp,
@@ -91,7 +107,7 @@ fun AuthScreen(
                 )
                 Box(
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(90.dp)
                         .blur(20.dp)
                         .background(
                             Brush.radialGradient(
@@ -105,7 +121,7 @@ fun AuthScreen(
                 )
                 Box(
                     modifier = Modifier
-                        .size(90.dp)
+                        .size(80.dp)
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
@@ -120,136 +136,239 @@ fun AuthScreen(
                     Image(
                         painter = painterResource(id = R.drawable.rencloud_logo),
                         contentDescription = "RenCloud",
-                        modifier = Modifier.size(66.dp)
+                        modifier = Modifier.size(56.dp)
                     )
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
 
             Text(
                 text = "RenCloud",
-                fontSize = 32.sp,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Black,
                 color = Color.White,
                 letterSpacing = 1.sp
             )
             Text(
                 text = "ENTERPRISE SHOWCASE PLATFORM",
-                fontSize = 10.sp,
+                fontSize = 9.sp,
                 fontWeight = FontWeight.Medium,
                 color = ElectricCyan,
-                letterSpacing = 3.sp
+                letterSpacing = 2.5.sp
             )
 
-            Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(24.dp))
 
-            // STEP 1: Biometric Verification Glass Moment
-            AnimatedVisibility(
-                visible = !state.isBiometricAuthenticated,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                BiometricGlassSection(
-                    onBiometricClick = { onBiometricClick() },
-                    isLoading = state.isLoading
-                )
-            }
-
-            if (state.user?.isAdmin == true) {
-                Spacer(Modifier.height(12.dp))
-                Surface(
-                    color = RenCloudGold.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, RenCloudGold.copy(alpha = 0.4f))
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Security,
-                            contentDescription = null,
-                            tint = RenCloudGold,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            "Super Admin Account",
-                            color = RenCloudGold,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            if (state.isBiometricAuthenticated) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = MetallicBorderDark)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = RenCloudGreen,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            "Identity Verified",
-                            fontSize = 10.sp,
-                            color = RenCloudGreen,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = 1.sp
-                        )
-                    }
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = MetallicBorderDark)
-                }
-                Spacer(Modifier.height(20.dp))
-            }
-
-            // STEP 2: Glass Card Login / Register Form
-            AnimatedVisibility(
-                visible = state.isBiometricAuthenticated,
-                enter = fadeIn(tween(400)) + slideInVertically(tween(400)) { it / 4 },
-                exit = fadeOut()
-            ) {
+            if (state.isAuthenticated && state.user != null) {
+                // ── LOGGED IN ACCOUNT PROFILE VIEW ─────────────────────────
+                val user = state.user!!
                 GlassCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    accentGlow = ElectricCyan,
-                    alpha = 0.85f
+                    accentGlow = if (user.isAdmin) RenCloudGold else ElectricCyan,
+                    alpha = 0.88f
                 ) {
                     Column(
                         modifier = Modifier.padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
+                        Surface(
+                            color = if (user.isAdmin) RenCloudGold.copy(alpha = 0.15f) else ElectricCyan.copy(alpha = 0.15f),
+                            shape = CircleShape,
+                            border = BorderStroke(1.dp, if (user.isAdmin) RenCloudGold else ElectricCyan)
+                        ) {
+                            Icon(
+                                imageVector = if (user.isAdmin) Icons.Default.Security else Icons.Default.Person,
+                                contentDescription = null,
+                                tint = if (user.isAdmin) RenCloudGold else ElectricCyan,
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .size(36.dp)
+                            )
+                        }
+
                         Text(
-                            text = if (state.isRegisterMode) "Create Real Panel Account" else "Sign in to RenCloud",
-                            fontSize = 18.sp,
+                            text = user.fullName,
+                            fontSize = 22.sp,
                             fontWeight = FontWeight.Black,
                             color = Color.White
                         )
                         Text(
-                            text = if (state.isRegisterMode) "Directly synced to panel.rencloud.online" else "Sign in with your Pterodactyl Panel credentials",
-                            fontSize = 11.sp,
-                            color = TextSecondaryDark,
-                            textAlign = TextAlign.Center
+                            text = user.email,
+                            fontSize = 13.sp,
+                            color = TextSecondaryDark
                         )
 
-                        if (state.isRegisterMode) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                color = if (user.isAdmin) RenCloudGold.copy(alpha = 0.15f) else MetallicPurple.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = if (user.isAdmin) "SUPER ADMIN" else "CLIENT ACCOUNT",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = if (user.isAdmin) RenCloudGold else MetallicPurple,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                            Surface(
+                                color = ElectricCyan.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "ID: #${user.id}",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ElectricCyan,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(color = MetallicBorderDark, modifier = Modifier.padding(vertical = 4.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = RenCloudGreen,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = "Synced Live with panel.rencloud.online",
+                                fontSize = 11.sp,
+                                color = RenCloudGreen,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+
+                        GlassButton(
+                            onClick = onNavigateHome,
+                            containerColor = ElectricCyan,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("RETURN TO CATALOG", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = { viewModel.logout() },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = RenCloudRed),
+                            border = BorderStroke(1.dp, RenCloudRed.copy(alpha = 0.5f)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("SIGN OUT / LOG OUT", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+                }
+            } else {
+                // ── LOGGED OUT AUTH FORM ───────────────────────────────────
+                AnimatedVisibility(
+                    visible = !state.isBiometricAuthenticated,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    BiometricGlassSection(
+                        onBiometricClick = { onBiometricClick() },
+                        isLoading = state.isLoading
+                    )
+                }
+
+                if (state.isBiometricAuthenticated) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MetallicBorderDark)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = RenCloudGreen,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                "Identity Verified",
+                                fontSize = 10.sp,
+                                color = RenCloudGreen,
+                                fontWeight = FontWeight.SemiBold,
+                                letterSpacing = 1.sp
+                            )
+                        }
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MetallicBorderDark)
+                    }
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                AnimatedVisibility(
+                    visible = state.isBiometricAuthenticated,
+                    enter = fadeIn(tween(400)) + slideInVertically(tween(400)) { it / 4 },
+                    exit = fadeOut()
+                ) {
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(24.dp),
+                        accentGlow = ElectricCyan,
+                        alpha = 0.85f
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Text(
+                                text = if (state.isRegisterMode) "Create Real Panel Account" else "Sign in to RenCloud",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White
+                            )
+                            Text(
+                                text = if (state.isRegisterMode) "Directly synced to panel.rencloud.online" else "Sign in with your Pterodactyl Panel credentials",
+                                fontSize = 11.sp,
+                                color = TextSecondaryDark,
+                                textAlign = TextAlign.Center
+                            )
+
+                            if (state.isRegisterMode) {
+                                OutlinedTextField(
+                                    value = fullName,
+                                    onValueChange = { fullName = it },
+                                    label = { Text("Full Name") },
+                                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = ElectricCyan) },
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = ElectricCyan,
+                                        unfocusedBorderColor = MetallicBorderDark,
+                                        focusedTextColor = Color.White,
+                                        unfocusedTextColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
                             OutlinedTextField(
-                                value = fullName,
-                                onValueChange = { fullName = it },
-                                label = { Text("Full Name") },
-                                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = ElectricCyan) },
+                                value = email,
+                                onValueChange = { email = it },
+                                label = { Text("Email Address or Username") },
+                                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = ElectricCyan) },
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = ElectricCyan,
@@ -260,85 +379,69 @@ fun AuthScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.fillMaxWidth()
                             )
-                        }
 
-                        OutlinedTextField(
-                            value = email,
-                            onValueChange = { email = it },
-                            label = { Text("Email Address or Username") },
-                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = ElectricCyan) },
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ElectricCyan,
-                                unfocusedBorderColor = MetallicBorderDark,
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                            OutlinedTextField(
+                                value = password,
+                                onValueChange = { password = it },
+                                label = { Text("Password") },
+                                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = ElectricCyan) },
+                                trailingIcon = {
+                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                        Icon(
+                                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                            contentDescription = null,
+                                            tint = TextSecondaryDark
+                                        )
+                                    }
+                                },
+                                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = ElectricCyan,
+                                    unfocusedBorderColor = MetallicBorderDark,
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            )
 
-                        OutlinedTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = { Text("Password") },
-                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = ElectricCyan) },
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = null,
-                                        tint = TextSecondaryDark
+                            state.errorMessage?.let { err ->
+                                Text(err, color = RenCloudRed, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            }
+
+                            GlassButton(
+                                onClick = {
+                                    if (state.isRegisterMode) {
+                                        viewModel.register(fullName, email, password)
+                                    } else {
+                                        viewModel.login(email, password)
+                                    }
+                                },
+                                enabled = !state.isLoading,
+                                containerColor = ElectricCyan,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                if (state.isLoading) {
+                                    GlassCircularProgress(size = 24.dp)
+                                } else {
+                                    Text(
+                                        if (state.isRegisterMode) "CREATE ACCOUNT" else "SIGN IN",
+                                        color = Color.Black,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp
                                     )
                                 }
-                            },
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ElectricCyan,
-                                unfocusedBorderColor = MetallicBorderDark,
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                            }
 
-                        state.errorMessage?.let { err ->
-                            Text(err, color = RenCloudRed, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                        }
-
-                        GlassButton(
-                            onClick = {
-                                if (state.isRegisterMode) {
-                                    viewModel.register(fullName, email, password)
-                                } else {
-                                    viewModel.login(email, password)
-                                }
-                            },
-                            enabled = !state.isLoading,
-                            containerColor = ElectricCyan,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            if (state.isLoading) {
-                                GlassCircularProgress(size = 24.dp)
-                            } else {
+                            TextButton(onClick = { viewModel.toggleMode() }) {
                                 Text(
-                                    if (state.isRegisterMode) "CREATE ACCOUNT" else "SIGN IN",
-                                    color = Color.Black,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
+                                    if (state.isRegisterMode) "Already have an account? Sign In" else "Don't have an account? Register on Panel",
+                                    color = RenCloudGold,
+                                    fontSize = 12.sp
                                 )
                             }
-                        }
-
-                        TextButton(onClick = { viewModel.toggleMode() }) {
-                            Text(
-                                if (state.isRegisterMode) "Already have an account? Sign In" else "Don't have an account? Register on Panel",
-                                color = RenCloudGold,
-                                fontSize = 12.sp
-                            )
                         }
                     }
                 }
