@@ -42,6 +42,7 @@ fun UpdateDialog(
 
     val apkAsset = release.assets?.firstOrNull { it.name.endsWith(".apk") }
     val isMandatory = remember(release) {
+        release.isMandatoryFromBackend ||
         release.name.contains("[MANDATORY]", ignoreCase = true) ||
         release.body.contains("[MANDATORY]", ignoreCase = true)
     }
@@ -111,7 +112,8 @@ fun UpdateDialog(
                 }
             }
 
-            if (release.body.isNotEmpty()) {
+            val changelogText = release.customChangelogFromBackend ?: release.body
+            if (changelogText.isNotEmpty()) {
                 Surface(
                     color = MetallicCardDark.copy(alpha = 0.5f),
                     shape = RoundedCornerShape(12.dp),
@@ -119,7 +121,7 @@ fun UpdateDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = release.body.take(220) + if (release.body.length > 220) "..." else "",
+                        text = changelogText.take(250) + if (changelogText.length > 250) "..." else "",
                         fontSize = 11.sp,
                         color = TextSecondaryDark,
                         lineHeight = 15.sp,

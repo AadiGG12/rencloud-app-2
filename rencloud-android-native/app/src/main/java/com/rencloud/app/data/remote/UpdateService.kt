@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import androidx.core.content.FileProvider
 import com.google.gson.annotations.SerializedName
 import com.rencloud.app.BuildConfig
@@ -25,7 +26,9 @@ data class GitHubReleaseResponse(
     @SerializedName("name") val name: String,
     @SerializedName("body") val body: String,
     @SerializedName("html_url") val htmlUrl: String,
-    @SerializedName("assets") val assets: List<GitHubAsset>?
+    @SerializedName("assets") val assets: List<GitHubAsset>?,
+    var isMandatoryFromBackend: Boolean = false,
+    var customChangelogFromBackend: String? = null
 )
 
 data class GitHubAsset(
@@ -39,6 +42,11 @@ interface GitHubUpdateApi {
     suspend fun getLatestRelease(): Response<GitHubReleaseResponse>
 }
 
+interface ReleaseNotesBackendApi {
+    @GET("api/release-notes/latest")
+    suspend fun getLatestBackendReleaseNotes(): Response<Map<String, Any>>
+}
+
 @Singleton
 class UpdateService @Inject constructor() {
 
@@ -50,6 +58,14 @@ class UpdateService @Inject constructor() {
             .create(GitHubUpdateApi::class.java)
     }
 
+    private val notesApi: ReleaseNotesBackendApi by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://api.rencloud.online/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ReleaseNotesBackendApi::class.java)
+    }
+
     suspend fun checkForUpdates(currentVersionName: String = BuildConfig.VERSION_NAME): GitHubReleaseResponse? {
         return withContext(Dispatchers.IO) {
             try {
@@ -59,14 +75,31 @@ class UpdateService @Inject constructor() {
                     if (release != null) {
                         val currentCode = parseVersionCode(currentVersionName)
                         val latestCode = parseVersionCode(release.tagName)
+                        Log.d("UpdateService", "Comparing current $currentCode (${currentVersionName}) vs latest $latestCode (${release.tagName})")
+                        
                         if (latestCode > currentCode) {
+                            // Check backend release notes for custom changelog & mandatory flag
+                            try {
+                                val notesResp = notesApi.getLatestBackendReleaseNotes()
+                                if (notesResp.isSuccessful && notesResp.body()?.get("data") != null) {
+                                    @Suppress("UNCHECKED_CAST")
+                                    val data = notesResp.body()!!["data"] as? Map<String, Any>
+                                    if (data != null) {
+                                        release.isMandatoryFromBackend = data["is_mandatory"] as? Boolean ?: false
+                                        release.customChangelogFromBackend = data["changelog"] as? String
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e("UpdateService", "Backend release notes fetch error: ${e.message}")
+                            }
+
                             return@withContext release
                         }
                     }
                 }
                 null
             } catch (e: Exception) {
-                // Fail silently on network errors
+                Log.e("UpdateService", "Update check failed: ${e.message}")
                 null
             }
         }
