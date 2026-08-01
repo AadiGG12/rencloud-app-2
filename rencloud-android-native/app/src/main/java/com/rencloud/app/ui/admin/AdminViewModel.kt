@@ -7,6 +7,7 @@ import com.rencloud.app.data.local.SessionManager
 import com.rencloud.app.data.model.PanelUserAttributes
 import com.rencloud.app.data.model.RenCloudPlan
 import com.rencloud.app.data.remote.*
+import com.rencloud.app.data.repository.CatalogRepository
 import com.rencloud.app.ui.components.AnnouncementItem
 import com.rencloud.app.ui.showcase.FaqItem
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -56,6 +57,7 @@ data class AdminUiState(
 @HiltViewModel
 class AdminViewModel @Inject constructor(
     private val api: PterodactylApi,
+    private val catalogRepository: CatalogRepository,
     private val sessionManager: SessionManager
 ) : ViewModel() {
 
@@ -117,6 +119,7 @@ class AdminViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(plans = pubResp.body()!!.dataList!!)
                     }
                 }
+                catalogRepository.fetchPlans(refresh = true)
             } catch (e: Exception) { Log.e("AdminVM", "Error loading plans: ${e.message}") }
         }
     }

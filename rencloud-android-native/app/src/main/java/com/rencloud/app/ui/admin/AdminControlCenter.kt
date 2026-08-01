@@ -62,7 +62,7 @@ fun AdminControlCenter(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Default.AdminPanelSettings, contentDescription = null, tint = RenCloudGold)
-                            Text("Admin Control Center v3.9", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("Admin Control Center v4.0", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     },
                     navigationIcon = {
@@ -176,13 +176,58 @@ fun AdminControlCenter(
         }
     }
 
-    // Modal Form Dialogs
+    // Modal Form & Action Dialogs
     if (isAddPlanOpen || editingPlan != null) {
-        PlanFormDialog(initialPlan = editingPlan, onDismiss = { isAddPlanOpen = false; editingPlan = null }, onSave = { plan -> adminViewModel.savePlan(plan, editingPlan != null); isAddPlanOpen = false; editingPlan = null })
+        PlanFormDialog(
+            initialPlan = editingPlan,
+            onDismiss = { isAddPlanOpen = false; editingPlan = null },
+            onSave = { plan ->
+                adminViewModel.savePlan(plan, editingPlan != null)
+                isAddPlanOpen = false
+                editingPlan = null
+            }
+        )
+    }
+
+    planToDelete?.let { plan ->
+        GlassConfirmDialog(
+            title = "Delete Catalog Plan",
+            message = "Are you sure you want to deactivate/delete plan '${plan.name}'? Users will no longer see this plan in the catalog.",
+            onConfirm = {
+                adminViewModel.deletePlan(plan.id)
+                planToDelete = null
+            },
+            onDismiss = { planToDelete = null },
+            confirmText = "DELETE PLAN",
+            confirmColor = RenCloudRed
+        )
+    }
+
+    userToToggleAdmin?.let { user ->
+        val newAdminState = !user.rootAdmin
+        GlassConfirmDialog(
+            title = if (newAdminState) "Grant Root Admin" else "Revoke Root Admin",
+            message = "Are you sure you want to ${if (newAdminState) "promote" else "demote"} @${user.username} ${if (newAdminState) "to Root Admin" else "from Root Admin"}?",
+            onConfirm = {
+                adminViewModel.toggleUserRootAdmin(user.id, user.rootAdmin)
+                userToToggleAdmin = null
+            },
+            onDismiss = { userToToggleAdmin = null },
+            confirmText = if (newAdminState) "GRANT ADMIN" else "REVOKE ADMIN",
+            confirmColor = if (newAdminState) RenCloudGold else RenCloudRed
+        )
     }
 
     if (isAddFaqOpen || editingFaq != null) {
-        FaqFormDialog(initialFaq = editingFaq, onDismiss = { isAddFaqOpen = false; editingFaq = null }, onSave = { faq -> adminViewModel.saveFaq(faq, editingFaq != null); isAddFaqOpen = false; editingFaq = null })
+        FaqFormDialog(
+            initialFaq = editingFaq,
+            onDismiss = { isAddFaqOpen = false; editingFaq = null },
+            onSave = { faq ->
+                adminViewModel.saveFaq(faq, editingFaq != null)
+                isAddFaqOpen = false
+                editingFaq = null
+            }
+        )
     }
 
     if (isAddAnnOpen) {
@@ -221,11 +266,11 @@ private fun OverviewDashboardTab(state: AdminUiState) {
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             AdminMetricCard("Users", state.totalUsersCount.toString(), Icons.Default.Group, ElectricCyan, Modifier.weight(1f))
-            AdminMetricCard("Plans", state.plans.size.toString(), Icons.Default.ViewList, MetallicPurple, Modifier.weight(1f))
+            AdminMetricCard("Plans", state.plans.size.toString(), Icons.Default.List, MetallicPurple, Modifier.weight(1f))
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            AdminMetricCard("FAQs", state.faqs.size.toString(), Icons.Default.Help, RenCloudGreen, Modifier.weight(1f))
+            AdminMetricCard("FAQs", state.faqs.size.toString(), Icons.Default.HelpOutline, RenCloudGreen, Modifier.weight(1f))
             AdminMetricCard("Banners", state.announcements.size.toString(), Icons.Default.Campaign, RenCloudGold, Modifier.weight(1f))
         }
     }
@@ -259,8 +304,16 @@ private fun AdminInfraTelemetrySection(telemetry: InfraTelemetryData?) {
     GlassCard(modifier = modifier.fillMaxWidth(), accentGlow = if (plan.isActive) ElectricCyan else null) {
         Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(plan.name, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Text("₹${plan.monthlyPriceInr}/mo • ${plan.ram}", fontSize = 11.sp, color = TextSecondaryDark)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(plan.name, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    if (plan.isFeatured) {
+                        Surface(color = RenCloudGold.copy(0.2f), shape = RoundedCornerShape(4.dp)) {
+                            Text("FEATURED", color = RenCloudGold, fontSize = 8.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                        }
+                    }
+                }
+                Text("${plan.categoryName} • ₹${plan.monthlyPriceInr}/mo ($${plan.monthlyPriceUsd})", fontSize = 11.sp, color = ElectricCyan, fontWeight = FontWeight.SemiBold)
+                Text("${plan.ram} • ${plan.cpu} • ${plan.nvmeStorage}", fontSize = 10.sp, color = TextSecondaryDark)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = plan.isActive, onCheckedChange = { onToggleActive() })
@@ -288,7 +341,10 @@ private fun AdminInfraTelemetrySection(telemetry: InfraTelemetryData?) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(faq.question, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = null, tint = RenCloudRed, modifier = Modifier.size(18.dp)) }
+                Row {
+                    IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = null, tint = ElectricCyan, modifier = Modifier.size(18.dp)) }
+                    IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = null, tint = RenCloudRed, modifier = Modifier.size(18.dp)) }
+                }
             }
             Text(faq.answer, color = TextSecondaryDark, fontSize = 11.sp)
         }
@@ -361,15 +417,83 @@ private fun AdminInfraTelemetrySection(telemetry: InfraTelemetryData?) {
     var priceUsd by remember { mutableStateOf(initialPlan?.monthlyPriceUsd?.toString() ?: "1.25") }
     var ram by remember { mutableStateOf(initialPlan?.ram ?: "4 GB DDR4") }
     var cpu by remember { mutableStateOf(initialPlan?.cpu ?: "2 Cores") }
+    var storage by remember { mutableStateOf(initialPlan?.nvmeStorage ?: "20 GB NVMe") }
+    var bandwidth by remember { mutableStateOf(initialPlan?.bandwidth ?: "Unmetered") }
+    var slots by remember { mutableStateOf(initialPlan?.slots ?: "Unlimited") }
+    var tagline by remember { mutableStateOf(initialPlan?.tagline ?: "RenCloud Plan") }
+    var location by remember { mutableStateOf(initialPlan?.location ?: "India") }
+    var isFeatured by remember { mutableStateOf(initialPlan?.isFeatured ?: false) }
+    var isActive by remember { mutableStateOf(initialPlan?.isActive ?: true) }
 
     GlassDialog(onDismissRequest = onDismiss, accentGlow = ElectricCyan) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(if (initialPlan != null) "Edit Plan" else "Create Plan", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Category") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = priceInr, onValueChange = { priceInr = it }, label = { Text("Price INR") }, modifier = Modifier.fillMaxWidth())
-            OutlinedTextField(value = ram, onValueChange = { ram = it }, label = { Text("RAM") }, modifier = Modifier.fillMaxWidth())
-            GlassButton(onClick = { onSave(RenCloudPlan(id = initialPlan?.id ?: "plan_${System.currentTimeMillis()}", name = name, categoryName = category, monthlyPriceInr = priceInr.toIntOrNull() ?: 100, monthlyPriceUsd = priceUsd.toDoubleOrNull() ?: 1.25, ram = ram, cpu = cpu, nvmeStorage = "20 GB", isActive = true)) }, containerColor = ElectricCyan, modifier = Modifier.fillMaxWidth()) { Text("SAVE PLAN", color = Color.Black, fontWeight = FontWeight.Bold) }
+        Column(
+            modifier = Modifier
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(if (initialPlan != null) "Edit Catalog Plan" else "Create Catalog Plan", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            
+            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Plan Name") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Category (e.g. Minecraft Budget)") }, modifier = Modifier.fillMaxWidth())
+            
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = priceInr, onValueChange = { priceInr = it }, label = { Text("Price (INR ₹)") }, modifier = Modifier.weight(1f))
+                OutlinedTextField(value = priceUsd, onValueChange = { priceUsd = it }, label = { Text("Price (USD $)") }, modifier = Modifier.weight(1f))
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = ram, onValueChange = { ram = it }, label = { Text("RAM (e.g. 4 GB DDR4)") }, modifier = Modifier.weight(1f))
+                OutlinedTextField(value = cpu, onValueChange = { cpu = it }, label = { Text("CPU (e.g. 2 vCores)") }, modifier = Modifier.weight(1f))
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = storage, onValueChange = { storage = it }, label = { Text("Storage (NVMe)") }, modifier = Modifier.weight(1f))
+                OutlinedTextField(value = bandwidth, onValueChange = { bandwidth = it }, label = { Text("Bandwidth") }, modifier = Modifier.weight(1f))
+            }
+
+            OutlinedTextField(value = slots, onValueChange = { slots = it }, label = { Text("Databases / Tier Specs") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = tagline, onValueChange = { tagline = it }, label = { Text("Tagline / Subtitle") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Datacenter Location") }, modifier = Modifier.fillMaxWidth())
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Featured Plan Overlay", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Switch(checked = isFeatured, onCheckedChange = { isFeatured = it })
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Active / Published in Catalog", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Switch(checked = isActive, onCheckedChange = { isActive = it })
+            }
+
+            Spacer(Modifier.height(6.dp))
+
+            GlassButton(
+                onClick = {
+                    val savedPlan = RenCloudPlan(
+                        id = initialPlan?.id ?: "plan_${System.currentTimeMillis()}",
+                        name = name.ifBlank { "RenCloud Custom Plan" },
+                        categoryName = category.ifBlank { "Minecraft Budget" },
+                        monthlyPriceInr = priceInr.toIntOrNull() ?: 100,
+                        monthlyPriceUsd = priceUsd.toDoubleOrNull() ?: 1.25,
+                        ram = ram.ifBlank { "4 GB DDR4" },
+                        cpu = cpu.ifBlank { "2 Cores" },
+                        nvmeStorage = storage.ifBlank { "20 GB NVMe" },
+                        bandwidth = bandwidth.ifBlank { "Unmetered" },
+                        slots = slots.ifBlank { "Unlimited" },
+                        isFeatured = isFeatured,
+                        tagline = tagline.ifBlank { "RenCloud Showcase Plan" },
+                        location = location.ifBlank { "India" },
+                        displayOrder = initialPlan?.displayOrder ?: 0,
+                        isActive = isActive
+                    )
+                    onSave(savedPlan)
+                },
+                containerColor = ElectricCyan,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(if (initialPlan != null) "UPDATE PLAN" else "CREATE PLAN", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -377,13 +501,15 @@ private fun AdminInfraTelemetrySection(telemetry: InfraTelemetryData?) {
 @Composable private fun FaqFormDialog(initialFaq: FaqItem?, onDismiss: () -> Unit, onSave: (FaqItem) -> Unit) {
     var question by remember { mutableStateOf(initialFaq?.question ?: "") }
     var answer by remember { mutableStateOf(initialFaq?.answer ?: "") }
+    var category by remember { mutableStateOf(initialFaq?.category ?: "Hosting") }
 
     GlassDialog(onDismissRequest = onDismiss, accentGlow = ElectricCyan) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Create / Edit FAQ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(if (initialFaq != null) "Edit FAQ" else "Create FAQ", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
             OutlinedTextField(value = question, onValueChange = { question = it }, label = { Text("Question") }, modifier = Modifier.fillMaxWidth())
             OutlinedTextField(value = answer, onValueChange = { answer = it }, label = { Text("Answer") }, modifier = Modifier.fillMaxWidth())
-            GlassButton(onClick = { onSave(FaqItem(id = initialFaq?.id ?: "faq_${System.currentTimeMillis()}", question = question, answer = answer)) }, containerColor = ElectricCyan, modifier = Modifier.fillMaxWidth()) { Text("SAVE FAQ", color = Color.Black, fontWeight = FontWeight.Bold) }
+            OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Category (Hosting/Billing/Servers)") }, modifier = Modifier.fillMaxWidth())
+            GlassButton(onClick = { onSave(FaqItem(id = initialFaq?.id ?: "faq_${System.currentTimeMillis()}", question = question, answer = answer, category = category)) }, containerColor = ElectricCyan, modifier = Modifier.fillMaxWidth()) { Text("SAVE FAQ", color = Color.Black, fontWeight = FontWeight.Bold) }
         }
     }
 }
@@ -400,14 +526,14 @@ private fun AdminInfraTelemetrySection(telemetry: InfraTelemetryData?) {
 }
 
 @Composable private fun ReleaseNoteFormDialog(onDismiss: () -> Unit, onSave: (ReleaseNoteItem) -> Unit) {
-    var verName by remember { mutableStateOf("3.5") }
+    var verName by remember { mutableStateOf("4.0") }
     var changelog by remember { mutableStateOf("") }
     GlassDialog(onDismissRequest = onDismiss, accentGlow = ElectricCyan) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Publish Release Notes", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            OutlinedTextField(value = verName, onValueChange = { verName = it }, label = { Text("Version Name (e.g. 3.5)") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(value = verName, onValueChange = { verName = it }, label = { Text("Version Name (e.g. 4.0)") }, modifier = Modifier.fillMaxWidth())
             OutlinedTextField(value = changelog, onValueChange = { changelog = it }, label = { Text("Changelog Notes") }, modifier = Modifier.fillMaxWidth())
-            GlassButton(onClick = { onSave(ReleaseNoteItem(id = "rel_${System.currentTimeMillis()}", version_code = 35000, version_name = verName, changelog = changelog)) }, containerColor = ElectricCyan, modifier = Modifier.fillMaxWidth()) { Text("PUBLISH NOTES", color = Color.Black, fontWeight = FontWeight.Bold) }
+            GlassButton(onClick = { onSave(ReleaseNoteItem(id = "rel_${System.currentTimeMillis()}", version_code = 40000, version_name = verName, changelog = changelog)) }, containerColor = ElectricCyan, modifier = Modifier.fillMaxWidth()) { Text("PUBLISH NOTES", color = Color.Black, fontWeight = FontWeight.Bold) }
         }
     }
 }
@@ -433,3 +559,4 @@ private fun AdminInfraTelemetrySection(telemetry: InfraTelemetryData?) {
         }
     }
 }
+
