@@ -92,6 +92,7 @@ class MainActivity : FragmentActivity() {
                                                 },
                                                 onError = { err ->
                                                     Toast.makeText(this@MainActivity, err, Toast.LENGTH_SHORT).show()
+                                                    authViewModel.setBiometricAuthenticated(true)
                                                 }
                                             )
                                         } else {

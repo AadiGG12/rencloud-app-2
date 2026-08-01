@@ -283,6 +283,7 @@ fun AuthScreen(
                 ) {
                     BiometricGlassSection(
                         onBiometricClick = { onBiometricClick() },
+                        onBypassBiometrics = { viewModel.setBiometricAuthenticated(true) },
                         isLoading = state.isLoading
                     )
                 }
@@ -453,6 +454,7 @@ fun AuthScreen(
 @Composable
 private fun BiometricGlassSection(
     onBiometricClick: () -> Unit,
+    onBypassBiometrics: () -> Unit,
     isLoading: Boolean
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "fingerprint")
@@ -463,15 +465,14 @@ private fun BiometricGlassSection(
     )
 
     GlassCard(
-        onClick = onBiometricClick,
         modifier = Modifier.fillMaxWidth(),
         accentGlow = MetallicPurple,
-        alpha = 0.8f
+        alpha = 0.88f
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -479,6 +480,7 @@ private fun BiometricGlassSection(
                     .size(70.dp)
                     .scale(pulseScale)
                     .clip(CircleShape)
+                    .clickable { onBiometricClick() }
                     .background(MetallicPurple.copy(alpha = 0.2f))
                     .border(1.dp, MetallicPurple, CircleShape)
             ) {
@@ -489,8 +491,24 @@ private fun BiometricGlassSection(
                     modifier = Modifier.size(38.dp)
                 )
             }
-            Text("Step 1: Biometric Verification", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Text("Tap to scan fingerprint or face ID to unlock panel session", color = TextSecondaryDark, fontSize = 11.sp, textAlign = TextAlign.Center)
+            Text("Step 1: Biometric Verification", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text("Tap icon to scan fingerprint or face ID to unlock panel session", color = TextSecondaryDark, fontSize = 11.sp, textAlign = TextAlign.Center)
+            
+            Spacer(Modifier.height(4.dp))
+
+            GlassButton(
+                onClick = onBypassBiometrics,
+                containerColor = ElectricCyan,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(Icons.Default.Email, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                    Text("CONTINUE WITH EMAIL & PASSWORD", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            }
         }
     }
 }
