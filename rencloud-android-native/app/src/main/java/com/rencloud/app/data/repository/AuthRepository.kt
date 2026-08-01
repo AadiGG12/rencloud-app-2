@@ -26,7 +26,7 @@ class AuthRepository @Inject constructor(
     private val gson: Gson
 ) {
     // Connection Flow: Frontend (Android) -> Custom Backend Gateway -> Pterodactyl Panel
-    private val backendUrl = "http://127.0.0.1:3000"
+    private val backendUrl = "https://api.rencloud.online"
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
