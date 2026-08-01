@@ -22,7 +22,6 @@ import com.rencloud.app.ui.auth.AuthViewModel
 import com.rencloud.app.ui.calculator.ResourceCalculatorScreen
 import com.rencloud.app.ui.home.CatalogViewModel
 import com.rencloud.app.ui.home.HomeScreen
-import com.rencloud.app.ui.panel.PanelScreen
 import com.rencloud.app.ui.splash.SplashScreen
 import com.rencloud.app.ui.theme.RenCloudTheme
 import com.rencloud.app.ui.update.UpdateDialog

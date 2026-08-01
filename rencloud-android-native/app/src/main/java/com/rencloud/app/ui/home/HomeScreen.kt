@@ -36,14 +36,6 @@ import com.rencloud.app.ui.theme.*
 import com.rencloud.app.util.SoundEffects
 import kotlin.math.absoluteValue
 
-fun isPlanDeployable(categoryName: String): Boolean {
-    val cat = categoryName.lowercase()
-    if (cat.contains("vps") || cat.contains("web") || cat.contains("vip") || cat.contains("setup")) {
-        return false
-    }
-    return true
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -61,8 +53,6 @@ fun HomeScreen(
     val themeIsDark = LocalThemeIsDark.current
     var activeBottomTab by remember { mutableIntStateOf(0) }
 
-    var selectedPlanForDeploy by remember { mutableStateOf<RenCloudPlan?>(null) }
-    var showDiscordDialog by remember { mutableStateOf(false) }
     var showCompareDialog by remember { mutableStateOf(false) }
     var showSimulatorDialog by remember { mutableStateOf(false) }
     var showPingDialog by remember { mutableStateOf(false) }
@@ -78,11 +68,8 @@ fun HomeScreen(
 
     val handlePlanAction: (RenCloudPlan) -> Unit = { plan ->
         SoundEffects.playClickSound(view)
-        if (isPlanDeployable(plan.categoryName)) {
-            selectedPlanForDeploy = plan
-        } else {
-            snackbarMessage = "${plan.categoryName} is managed via Support / Billing Portal. Contact Support to order!"
-        }
+        val price = if (catalogState.currency == "INR") "₹${plan.monthlyPriceInr}/mo" else "$${plan.monthlyPriceUsd}/mo"
+        snackbarMessage = "${plan.name} ($price) — Order & provision via RenCloud Web Portal or Discord."
     }
 
     val categories = listOf(
@@ -105,9 +92,7 @@ fun HomeScreen(
         listOf(
             BoomMenuItem("compare", "Compare Plans", "Side-by-side specs", Icons.Default.Compare, RenCloudGold),
             BoomMenuItem("simulator", "Capacity Simulator", "Estimate resources", Icons.Default.Storage, ElectricCyan),
-            BoomMenuItem("ping", "Datacenter Ping", "Check latency", Icons.Default.NetworkCheck, MetallicPurple),
-            BoomMenuItem("discord", "Discord Community", "24/7 Live Support", Icons.Default.Forum, MetallicPurple),
-            BoomMenuItem("deploy", "Quick Deploy", "Deploy Top Server", Icons.Default.RocketLaunch, RenCloudGreen)
+            BoomMenuItem("ping", "Datacenter Ping", "Check latency", Icons.Default.NetworkCheck, MetallicPurple)
         )
     }
 
@@ -134,7 +119,7 @@ fun HomeScreen(
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                "v3.4 Enterprise",
+                                "v3.4 Enterprise Showcase",
                                 fontSize = 8.sp,
                                 color = ElectricCyan,
                                 letterSpacing = 1.sp
@@ -279,12 +264,6 @@ fun HomeScreen(
                         "compare" -> showCompareDialog = true
                         "simulator" -> showSimulatorDialog = true
                         "ping" -> showPingDialog = true
-                        "discord" -> showDiscordDialog = true
-                        "deploy" -> {
-                            val topPlan = catalogViewModel.getFilteredPlans().firstOrNull { isPlanDeployable(it.categoryName) && it.isFeatured }
-                                ?: catalogViewModel.getFilteredPlans().firstOrNull { isPlanDeployable(it.categoryName) }
-                            topPlan?.let { handlePlanAction(it) }
-                        }
                     }
                 },
                 modifier = Modifier
@@ -305,17 +284,6 @@ fun HomeScreen(
     }
     if (showPingDialog) {
         DatacenterPingDialog(onDismiss = { showPingDialog = false })
-    }
-
-    selectedPlanForDeploy?.let { plan ->
-        DeployDialog(
-            plan = plan,
-            onDismiss = { selectedPlanForDeploy = null },
-            onConfirmLaunch = { msg ->
-                selectedPlanForDeploy = null
-                snackbarMessage = msg
-            }
-        )
     }
 }
 
@@ -434,7 +402,6 @@ private fun Animated3DVerticalCarousel(
         ) {
             items(plans.size) { index ->
                 val plan = plans[index]
-                val deployable = isPlanDeployable(plan.categoryName)
                 val itemInfo = remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } } }
 
                 val animationFraction = remember {
@@ -507,11 +474,11 @@ private fun Animated3DVerticalCarousel(
                                     SoundEffects.playClickSound(view)
                                     onDeploy(plan)
                                 },
-                                colors = ButtonDefaults.buttonColors(containerColor = if (deployable) ElectricCyan else TextMutedDark),
+                                colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
                                 shape = RoundedCornerShape(8.dp),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                             ) {
-                                Text(if (deployable) "DEPLOY" else "SUPPORT ORDER", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                                Text("VIEW SPECS", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
                             }
                         }
                     }
@@ -530,7 +497,6 @@ private fun SquarePlanCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val deployable = isPlanDeployable(plan.categoryName)
     val categoryColor = when {
         plan.categoryName.contains("Minecraft", ignoreCase = true) -> MinecraftColor
         plan.categoryName.contains("VPS", ignoreCase = true) -> VpsColor
@@ -570,19 +536,17 @@ private fun SquarePlanCard(
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
-                    if (!deployable) {
-                        Surface(
-                            color = RenCloudGold.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(4.dp)
-                        ) {
-                            Text(
-                                "MANUAL ORDER",
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.Black,
-                                color = RenCloudGold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
+                    Surface(
+                        color = ElectricCyan.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            "ENTERPRISE PLAN",
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Black,
+                            color = ElectricCyan,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
                     }
                 }
 
@@ -706,7 +670,7 @@ private fun AnimatedHeroBanner() {
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Deploy Anything.",
+                    "Enterprise Catalog",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.White
