@@ -119,7 +119,7 @@ fun HomeScreen(
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                "v3.4 Enterprise Showcase",
+                                "v3.5 Enterprise Showcase",
                                 fontSize = 8.sp,
                                 color = ElectricCyan,
                                 letterSpacing = 1.sp
