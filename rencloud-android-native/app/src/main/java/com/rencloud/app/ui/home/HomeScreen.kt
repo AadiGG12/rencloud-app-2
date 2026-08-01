@@ -130,7 +130,7 @@ fun HomeScreen(
                                 color = Color.White
                             )
                             Text(
-                                "v3.3.0 Enterprise",
+                                "v3.4 Enterprise",
                                 fontSize = 9.sp,
                                 color = RenCloudCyan,
                                 letterSpacing = 1.sp

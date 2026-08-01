@@ -203,7 +203,7 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
             enter = fadeIn(tween(700))
         ) {
             Text(
-                text = "v3.3.0 — Native Android",
+                text = "v3.4 — Native Android",
                 fontSize = 11.sp,
                 color = TextMutedDark
             )
