@@ -1,86 +1,96 @@
 package com.rencloud.app.ui.showcase
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Compare
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import com.rencloud.app.data.model.RenCloudPlan
+import com.rencloud.app.data.repository.CatalogRepository
 import com.rencloud.app.ui.theme.*
 
-data class Plan(
-    val name: String,
-    val ram: String,
-    val cpu: String,
-    val storage: String,
-    val price: String,
-    val datacenter: String,
-    val ddos: String
-)
-
-val samplePlans = listOf(
-    Plan("Starter", "2 GB", "1 Core", "20 GB NVMe", "$5/mo", "US/EU/Asia", "Standard"),
-    Plan("Pro", "8 GB", "4 Cores", "80 GB NVMe", "$20/mo", "Global", "Terabit"),
-    Plan("Ultra", "32 GB", "16 Cores", "320 GB NVMe", "$80/mo", "Global", "Terabit+")
-)
-
 @Composable
-fun PlanComparisonDialog(onDismiss: () -> Unit) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Card(
+fun PlanComparisonDialog(
+    catalogRepository: CatalogRepository = CatalogRepository(),
+    onDismiss: () -> Unit
+) {
+    val allPlans = remember { catalogRepository.getPlans() }
+    
+    // Default 3 plans to compare from actual catalog
+    var selectedPlan1 by remember { mutableStateOf(allPlans.firstOrNull { it.id == "mc_b_iron" } ?: allPlans[0]) }
+    var selectedPlan2 by remember { mutableStateOf(allPlans.firstOrNull { it.id == "mc_p_iron" } ?: allPlans.getOrElse(1) { allPlans[0] }) }
+    var selectedPlan3 by remember { mutableStateOf(allPlans.firstOrNull { it.id == "vps_ryzen_16" } ?: allPlans.getOrElse(2) { allPlans[0] }) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
             modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.8f)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = RenCloudNavy)
+                .fillMaxWidth()
+                .fillMaxHeight(0.85f),
+            color = RenCloudCardDark,
+            shape = RoundedCornerShape(24.dp),
+            border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan)))
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(18.dp)
             ) {
+                // Title header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Compare Plans",
-                        color = RenCloudCyan,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Compare,
+                            contentDescription = null,
+                            tint = ElectricCyan,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "Compare RenCloud Plans",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
+                        )
+                    }
+
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextPrimaryDark)
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondaryDark)
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+
+                Spacer(Modifier.height(12.dp))
+
+                // Side-by-side comparison cards
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(samplePlans) { plan ->
-                        PlanColumn(plan)
-                    }
+                    CompareColumn(selectedPlan1, allPlans) { selectedPlan1 = it }
+                    CompareColumn(selectedPlan2, allPlans) { selectedPlan2 = it }
+                    CompareColumn(selectedPlan3, allPlans) { selectedPlan3 = it }
                 }
             }
         }
@@ -88,47 +98,121 @@ fun PlanComparisonDialog(onDismiss: () -> Unit) {
 }
 
 @Composable
-fun PlanColumn(plan: Plan) {
-    Column(
+private fun CompareColumn(
+    currentPlan: RenCloudPlan,
+    allPlans: List<RenCloudPlan>,
+    onPlanSelected: (RenCloudPlan) -> Unit
+) {
+    var expandedDropdown by remember { mutableStateOf(false) }
+
+    Surface(
         modifier = Modifier
             .width(180.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(RenCloudCardDark)
-            .border(1.dp, RenCloudCardBorder, RoundedCornerShape(12.dp))
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxHeight(),
+        color = MetallicNavy,
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MetallicBorderDark)
     ) {
-        Text(text = plan.name, color = RenCloudGold, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        Text(text = plan.price, color = TextPrimaryDark, fontSize = 16.sp, modifier = Modifier.padding(bottom = 12.dp))
-        
-        Divider(color = RenCloudCardBorder)
-        
-        ComparisonRow("RAM", plan.ram)
-        ComparisonRow("CPU", plan.cpu)
-        ComparisonRow("Storage", plan.storage)
-        ComparisonRow("Region", plan.datacenter)
-        ComparisonRow("DDoS", plan.ddos)
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { /* Select */ },
-            colors = ButtonDefaults.buttonColors(containerColor = RenCloudCyan),
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Select", color = RenCloudNavy, fontWeight = FontWeight.Bold)
+            // Plan Selector Dropdown Trigger
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Surface(
+                    onClick = { expandedDropdown = true },
+                    color = MetallicCardDark,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, ElectricCyan.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = currentPlan.name,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = RenCloudGold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = expandedDropdown,
+                    onDismissRequest = { expandedDropdown = false },
+                    modifier = Modifier
+                        .height(280.dp)
+                        .background(MetallicCardDark)
+                ) {
+                    allPlans.forEach { plan ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "${plan.name} (${plan.categoryName})",
+                                    fontSize = 12.sp,
+                                    color = Color.White
+                                )
+                            },
+                            onClick = {
+                                onPlanSelected(plan)
+                                expandedDropdown = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = "₹${currentPlan.monthlyPriceInr}/mo",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Black,
+                color = ElectricCyan,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Divider(color = MetallicBorderDark)
+
+            // Specs Matrix
+            SpecRow("CATEGORY", currentPlan.categoryName)
+            SpecRow("RAM", currentPlan.ram)
+            SpecRow("CPU CORES", currentPlan.cpu)
+            SpecRow("STORAGE", currentPlan.nvmeStorage)
+            SpecRow("BANDWIDTH", currentPlan.bandwidth)
+            SpecRow("LOCATION", currentPlan.location)
+
+            Spacer(Modifier.weight(1f))
+
+            Surface(
+                color = MetallicPurple.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(6.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = MetallicPurple, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Terabit DDoS", fontSize = 10.sp, color = MetallicPurple, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }
 
 @Composable
-fun ComparisonRow(label: String, value: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = label, color = TextSecondaryDark, fontSize = 12.sp)
-        Text(text = value, color = TextPrimaryDark, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+private fun SpecRow(label: String, value: String) {
+    Column {
+        Text(label, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = TextMutedDark)
+        Text(value, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

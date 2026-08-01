@@ -1,105 +1,138 @@
 package com.rencloud.app.ui.showcase
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.rencloud.app.data.model.RenCloudPlan
+import com.rencloud.app.data.repository.CatalogRepository
 import com.rencloud.app.ui.theme.*
-import kotlin.math.roundToInt
+import kotlin.math.abs
 
 @Composable
-fun CapacitySimulatorDialog(onDismiss: () -> Unit) {
-    var players by remember { mutableStateOf(10f) }
-    var plugins by remember { mutableStateOf(5f) }
-    
-    val requiredRam = (players * 0.05 + plugins * 0.1 + 2).coerceAtLeast(2.0).roundToInt()
-    val requiredCpu = ((players + plugins) / 25.0 + 1).coerceAtLeast(1.0).roundToInt()
-    
-    val recommendedPlan = when {
-        requiredRam <= 4 -> "Starter Plan"
-        requiredRam <= 8 -> "Pro Plan"
-        else -> "Ultra Plan"
+fun CapacitySimulatorDialog(
+    catalogRepository: CatalogRepository = CatalogRepository(),
+    onDismiss: () -> Unit,
+    onDeployPlan: (RenCloudPlan) -> Unit = {}
+) {
+    val allPlans = remember { catalogRepository.getPlans() }
+
+    var playerCount by remember { mutableFloatStateOf(30f) }
+    var modCount by remember { mutableFloatStateOf(15f) }
+
+    val requiredRamGb = (playerCount * 0.15f + modCount * 0.25f + 1.5f).toInt().coerceIn(2, 128)
+    val requiredCpuCores = (playerCount * 0.05f + modCount * 0.08f + 1f).toInt().coerceIn(1, 16)
+
+    val recommendedPlan = remember(requiredRamGb, requiredCpuCores) {
+        val suitable = allPlans.filter { plan ->
+            val planRamGb = plan.ram.split(" ").firstOrNull()?.toIntOrNull() ?: 4
+            planRamGb >= requiredRamGb
+        }
+        suitable.minByOrNull { plan ->
+            val planRamGb = plan.ram.split(" ").firstOrNull()?.toIntOrNull() ?: 4
+            abs(planRamGb - requiredRamGb)
+        } ?: allPlans.first()
     }
 
     Dialog(onDismissRequest = onDismiss) {
-        Card(
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = RenCloudNavy)
+            color = RenCloudCardDark,
+            shape = RoundedCornerShape(24.dp),
+            border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan)))
         ) {
             Column(
-                modifier = Modifier.padding(24.dp)
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Capacity Simulator", color = RenCloudCyan, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("Capacity Simulator", fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color.White)
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextPrimaryDark)
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondaryDark)
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text("Estimated Online Players: ${players.roundToInt()}", color = TextPrimaryDark)
-                Slider(
-                    value = players,
-                    onValueChange = { players = it },
-                    valueRange = 1f..200f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = RenCloudPurple,
-                        activeTrackColor = RenCloudPurpleLight
+
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Estimated Online Players: ${playerCount.toInt()}", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Slider(
+                        value = playerCount,
+                        onValueChange = { playerCount = it },
+                        valueRange = 1f..200f,
+                        colors = SliderDefaults.colors(thumbColor = MetallicPurple, activeTrackColor = MetallicPurple)
                     )
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text("Active Mods / Plugins: ${plugins.roundToInt()}", color = TextPrimaryDark)
-                Slider(
-                    value = plugins,
-                    onValueChange = { plugins = it },
-                    valueRange = 0f..100f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = RenCloudGold,
-                        activeTrackColor = RenCloudGoldDim
+
+                    Text("Active Mods / Plugins: ${modCount.toInt()}", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Slider(
+                        value = modCount,
+                        onValueChange = { modCount = it },
+                        valueRange = 0f..100f,
+                        colors = SliderDefaults.colors(thumbColor = RenCloudGold, activeTrackColor = RenCloudGold)
                     )
-                )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = RenCloudCardDark),
+                }
+
+                Surface(
+                    color = MetallicNavy,
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MetallicBorderDark),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Requirements", color = TextSecondaryDark, fontSize = 14.sp)
-                        Text("$requiredRam GB RAM  •  $requiredCpu Cores", color = TextPrimaryDark, fontWeight = FontWeight.Medium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Recommended:", color = TextSecondaryDark, fontSize = 14.sp)
-                        Text(recommendedPlan, color = RenCloudGreen, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("CALCULATED REQUIREMENTS", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = TextMutedDark, letterSpacing = 1.sp)
+                        Text("$requiredRamGb GB RAM • $requiredCpuCores vCores", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.White)
+
+                        Divider(color = MetallicBorderDark)
+
+                        Text("RECOMMENDED RENCLOUD PLAN", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = TextMutedDark, letterSpacing = 1.sp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(recommendedPlan.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = ElectricCyan)
+                                Text("${recommendedPlan.categoryName} • ${recommendedPlan.ram}", fontSize = 11.sp, color = TextSecondaryDark)
+                            }
+                            Text("₹${recommendedPlan.monthlyPriceInr}/mo", fontSize = 18.sp, fontWeight = FontWeight.Black, color = RenCloudGold)
+                        }
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = RenCloudCyan),
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = {
+                        onDismiss()
+                        onDeployPlan(recommendedPlan)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
-                    Text("Deploy Plan", color = RenCloudNavy, fontWeight = FontWeight.Bold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.RocketLaunch, contentDescription = null, tint = Color.Black)
+                        Text("DEPLOY ${recommendedPlan.name.uppercase()}", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
                 }
             }
         }

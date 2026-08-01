@@ -1,51 +1,53 @@
 package com.rencloud.app.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 
-private val DarkColorScheme = darkColorScheme(
-    primary = RenCloudPurple,
-    secondary = RenCloudCyan,
-    tertiary = RenCloudGold,
-    background = RenCloudNavy,
-    surface = RenCloudSurfaceDark,
-    onPrimary = TextPrimaryDark,
-    onSecondary = RenCloudNavy,
-    onBackground = TextPrimaryDark,
-    onSurface = TextPrimaryDark
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = RenCloudPurple,
-    secondary = RenCloudCyan,
-    tertiary = RenCloudGold,
-    background = RenCloudLightBg,
-    surface = RenCloudLightSurface,
-    onPrimary = TextPrimaryDark,
-    onSecondary = RenCloudNavy,
-    onBackground = TextPrimaryLight,
-    onSurface = TextPrimaryLight
-)
-
 @Composable
 fun RenCloudTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = LocalThemeIsDark.current.value,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    val view = LocalView.current
+    val animatedBg by animateColorAsState(
+        targetValue = if (darkTheme) MetallicNavy else MetallicLightBg,
+        animationSpec = tween(400),
+        label = "theme_bg"
+    )
+    val animatedSurface by animateColorAsState(
+        targetValue = if (darkTheme) MetallicCardDark else MetallicLightSurface,
+        animationSpec = tween(400),
+        label = "theme_surface"
+    )
 
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = MetallicPurple,
+            secondary = ElectricCyan,
+            background = animatedBg,
+            surface = animatedSurface,
+            onBackground = PureWhite,
+            onSurface = PureWhite
+        )
+    } else {
+        lightColorScheme(
+            primary = MetallicPurple,
+            secondary = MetallicBlue,
+            background = animatedBg,
+            surface = animatedSurface,
+            onBackground = MetallicLightText,
+            onSurface = MetallicLightText
+        )
+    }
+
+    val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
+            (view.context as? Activity)?.window?.statusBarColor = colorScheme.background.toArgb()
         }
     }
 

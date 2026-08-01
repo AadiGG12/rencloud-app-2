@@ -1,51 +1,47 @@
 package com.rencloud.app.ui.theme
 
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 
-// ─── Core Brand Colors ───────────────────────────────────────────────────────
-val RenCloudNavy       = Color(0xFF090D16)
-val RenCloudDeepBlue   = Color(0xFF0A0F1E)
-val RenCloudSurfaceDark= Color(0xFF111827)
-val RenCloudCardDark   = Color(0xFF1A2035)
-val RenCloudCardBorder = Color(0xFF263050)
+// Metallic Palette
+val MetallicBlack = Color(0xFF080A10)
+val MetallicNavy = Color(0xFF0E1320)
+val MetallicCardDark = Color(0xFF141B2D)
+val MetallicBorderDark = Color(0xFF222C42)
 
-// ─── Accent Colors ───────────────────────────────────────────────────────────
-val RenCloudCyan       = Color(0xFF00D4FF)
-val RenCloudCyanDim    = Color(0xFF0099CC)
-val RenCloudPurple     = Color(0xFF7C3AED)
-val RenCloudPurpleLight= Color(0xFF9D5FF5)
-val RenCloudGold       = Color(0xFFFFD700)
-val RenCloudGoldDim    = Color(0xFFCC9900)
-val RenCloudGreen      = Color(0xFF10B981)
-val RenCloudRed        = Color(0xFFEF4444)
-val RenCloudPink       = Color(0xFFEC4899)
+val MetallicPurple = Color(0xFF7C3AED)
+val MetallicPurpleGlow = Color(0xFFA855F7)
+val MetallicBlue = Color(0xFF2563EB)
+val ElectricCyan = Color(0xFF00D4FF)
+val PureWhite = Color(0xFFFFFFFF)
 
-// ─── Gradient Stops ──────────────────────────────────────────────────────────
-val GradientStart      = Color(0xFF090D16)
-val GradientMid        = Color(0xFF0F1B2D)
-val GradientEnd        = Color(0xFF0D1527)
+// Light Theme Palette
+val MetallicLightBg = Color(0xFFF1F5F9)
+val MetallicLightSurface = Color(0xFFFFFFFF)
+val MetallicLightBorder = Color(0xFFCBD5E1)
+val MetallicLightText = Color(0xFF0F172A)
+val MetallicLightSecondaryText = Color(0xFF475569)
 
-val CardGradientStart  = Color(0xFF1A2035)
-val CardGradientEnd    = Color(0xFF0F172A)
+val MinecraftColor = Color(0xFF10B981)
+val VpsColor = Color(0xFF00D4FF)
+val DediColor = Color(0xFF7C3AED)
+val GameColor = Color(0xFFF59E0B)
 
-val CyanGlow           = Color(0x2200D4FF)
-val PurpleGlow         = Color(0x227C3AED)
-val GoldGlow           = Color(0x22FFD700)
+val TextPrimaryDark = PureWhite
+val TextPrimaryLight = MetallicLightText
+val TextSecondaryDark = Color(0xFF94A3B8)
+val TextMutedDark = Color(0xFF64748B)
 
-// ─── Text Colors ─────────────────────────────────────────────────────────────
-val TextPrimaryDark    = Color(0xFFF9FAFB)
-val TextSecondaryDark  = Color(0xFF9CA3AF)
-val TextMutedDark      = Color(0xFF6B7280)
-val TextPrimaryLight   = Color(0xFF0F172A)
-val TextSecondaryLight = Color(0xFF64748B)
+val RenCloudNavy = MetallicNavy
+val RenCloudPurple = MetallicPurple
+val RenCloudCyan = ElectricCyan
+val RenCloudGold = Color(0xFFF59E0B)
+val RenCloudCardDark = MetallicCardDark
+val RenCloudCardBorder = MetallicBorderDark
+val RenCloudSurfaceDark = MetallicBlack
+val RenCloudGreen = Color(0xFF10B981)
+val RenCloudRed = Color(0xFFEF4444)
 
-// ─── Light Theme Colors ───────────────────────────────────────────────────────
-val RenCloudLightBg      = Color(0xFFF0F4FF)
-val RenCloudLightSurface = Color(0xFFFFFFFF)
-val RenCloudLightCard    = Color(0xFFEFF3FF)
-
-// ─── Category Badge Colors ────────────────────────────────────────────────────
-val MinecraftColor     = Color(0xFF4CAF50)
-val VpsColor           = Color(0xFF2196F3)
-val DediColor          = Color(0xFFFF5722)
-val GameColor          = Color(0xFF9C27B0)
+// State for Theme switching
+val LocalThemeIsDark = compositionLocalOf { mutableStateOf(true) }
