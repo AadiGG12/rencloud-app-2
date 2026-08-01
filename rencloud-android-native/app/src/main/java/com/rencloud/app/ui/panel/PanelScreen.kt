@@ -49,11 +49,7 @@ fun PanelScreen(
                 PanelMenuItem("Backups", Icons.Default.CloudDownload, "Management"),
                 PanelMenuItem("Network", Icons.Default.Router, "Management"),
                 PanelMenuItem("Subdomain", Icons.Default.Public, "Management"),
-                PanelMenuItem("Staff Request", Icons.Default.SupportAgent, "Management"),
-                PanelMenuItem("Server Importer", Icons.Default.FileUpload, "Management"),
-                PanelMenuItem("Custom Mod Manager", Icons.Default.Extension, "Management"),
-                PanelMenuItem("Server Splitter", Icons.Default.CallSplit, "Management"),
-                PanelMenuItem("Server Wiper", Icons.Default.CleaningServices, "Management"),
+                PanelMenuItem("Nodes & Locations", Icons.Default.Dns, "Management"),
                 PanelMenuItem("Reverse Proxy", Icons.Default.Dns, "Management"),
                 PanelMenuItem("FastDL", Icons.Default.Speed, "Management")
             ),
@@ -63,12 +59,8 @@ fun PanelScreen(
                 PanelMenuItem("Startup", Icons.Default.PowerSettingsNew, "Configuration"),
                 PanelMenuItem("Config Editor", Icons.Default.EditNote, "Configuration")
             ),
-            "Security" to listOf(
-                PanelMenuItem("Network Statistics", Icons.Default.Security, "Security")
-            ),
             "Minecraft" to listOf(
                 PanelMenuItem("Configuration", Icons.Default.Tune, "Minecraft"),
-                PanelMenuItem("Version Changer", Icons.Default.SystemUpdate, "Minecraft"),
                 PanelMenuItem("Plugin Installer", Icons.Default.AddBox, "Minecraft")
             )
         )
@@ -98,7 +90,7 @@ fun PanelScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Sidebar based on screenshot user.png
+            // Sidebar with Nodes & Locations selector, without Version Changer
             Column(
                 modifier = Modifier
                     .width(220.dp)
@@ -151,7 +143,7 @@ fun PanelScreen(
                 }
             }
 
-            Divider(modifier = Modifier.fillMaxHeight().width(1.dp), color = MetallicBorderDark)
+            HorizontalDivider(modifier = Modifier.fillMaxHeight().width(1.dp), color = MetallicBorderDark)
 
             // Content Panel Area
             Box(
@@ -162,12 +154,81 @@ fun PanelScreen(
             ) {
                 when (selectedTab) {
                     "Console" -> ConsoleTabContent()
+                    "Nodes & Locations" -> NodesAndLocationsContent()
                     "File Manager" -> SimplePanelPlaceholder("File Manager", Icons.Default.Folder, "Browse and edit server configuration files & directories.")
                     "Databases" -> SimplePanelPlaceholder("Databases", Icons.Default.Storage, "Manage MySQL/MariaDB database credentials & connections.")
                     "Backups" -> SimplePanelPlaceholder("Backups", Icons.Default.CloudDownload, "Create, restore, or download automated server backups.")
-                    "Network" -> SimplePanelPlaceholder("Network", Icons.Default.Router, "Configure server IP allocations and port forwardings.")
                     "Plugin Installer" -> SimplePanelPlaceholder("Plugin Installer", Icons.Default.AddBox, "Search and install Spigot/Paper plugins with 1-tap.")
                     else -> SimplePanelPlaceholder(selectedTab, Icons.Default.Tune, "Feature module active for $selectedServer.")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NodesAndLocationsContent() {
+    var selectedLocation by remember { mutableStateOf("India (Mumbai)") }
+    var selectedNode by remember { mutableStateOf("Node-01 (AMD Ryzen 9 7950X)") }
+
+    val locations = listOf("India (Mumbai - Asia South)", "Singapore (Asia Southeast)")
+    val nodes = listOf("Node-01 (AMD Ryzen 9 7950X)", "Node-02 (AMD EPYC Milan)", "Node-03 (Intel Platinum)")
+
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text("SELECT NODE & LOCATION", fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.White)
+
+        Surface(
+            color = MetallicCardDark,
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, MetallicBorderDark),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("DATACENTER LOCATION", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
+                locations.forEach { loc ->
+                    val isSel = selectedLocation == loc
+                    Surface(
+                        onClick = { selectedLocation = loc },
+                        color = if (isSel) MetallicPurple.copy(alpha = 0.2f) else MetallicNavy,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, if (isSel) ElectricCyan else MetallicBorderDark),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(loc, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            if (isSel) Icon(Icons.Default.Check, contentDescription = null, tint = ElectricCyan)
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = MetallicBorderDark)
+
+                Text("COMPUTE NODE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
+                nodes.forEach { node ->
+                    val isSel = selectedNode == node
+                    Surface(
+                        onClick = { selectedNode = node },
+                        color = if (isSel) MetallicPurple.copy(alpha = 0.2f) else MetallicNavy,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, if (isSel) ElectricCyan else MetallicBorderDark),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(node, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            if (isSel) Icon(Icons.Default.Check, contentDescription = null, tint = ElectricCyan)
+                        }
+                    }
                 }
             }
         }
@@ -182,12 +243,7 @@ private fun ConsoleTabContent() {
             "[10:14:02 INFO]: Starting Minecraft server version 1.20.4",
             "[10:14:03 INFO]: Loading properties from server.properties",
             "[10:14:04 INFO]: Default game type: SURVIVAL",
-            "[10:14:05 INFO]: Generating keypair...",
-            "[10:14:06 INFO]: Starting Minecraft server on *:25565",
-            "[10:14:07 INFO]: Using epoll channel type",
-            "[10:14:08 INFO]: Preparing level \"world\"",
-            "[10:14:09 INFO]: Preparing start region for level 0",
-            "[10:14:10 INFO]: Time elapsed: 4210 ms",
+            "[10:14:05 INFO]: Preparing level \"world\"",
             "[10:14:10 INFO]: Done (4.21s)! For help, type \"help\""
         )
     }
@@ -196,7 +252,6 @@ private fun ConsoleTabContent() {
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Status Row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -220,7 +275,6 @@ private fun ConsoleTabContent() {
             }
         }
 
-        // Terminal Log Container
         Surface(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             color = Color.Black,
@@ -242,7 +296,6 @@ private fun ConsoleTabContent() {
             }
         }
 
-        // Command Bar
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
