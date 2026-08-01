@@ -1,14 +1,14 @@
 package com.rencloud.app.ui.home
 
-import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -21,8 +21,10 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,6 +35,8 @@ import com.rencloud.app.ui.components.BoomMenu
 import com.rencloud.app.ui.components.BoomMenuItem
 import com.rencloud.app.ui.showcase.*
 import com.rencloud.app.ui.theme.*
+import com.rencloud.app.util.SoundEffects
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +51,7 @@ fun HomeScreen(
     val authState by authViewModel.uiState.collectAsState()
     val configuration = LocalConfiguration.current
     val context = LocalContext.current
+    val view = LocalView.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     val themeIsDark = LocalThemeIsDark.current
@@ -95,18 +100,20 @@ fun HomeScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
+                    // Centered RenCloud Title & Logo
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.rencloud_logo),
-                            contentDescription = "RenCloud",
-                            modifier = Modifier.size(36.dp)
+                            contentDescription = "RenCloud Logo",
+                            modifier = Modifier.size(32.dp)
                         )
-                        Column {
+                        Spacer(Modifier.width(8.dp))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 "RenCloud",
                                 fontSize = 18.sp,
@@ -115,7 +122,7 @@ fun HomeScreen(
                             )
                             Text(
                                 "v3.4 Enterprise",
-                                fontSize = 9.sp,
+                                fontSize = 8.sp,
                                 color = ElectricCyan,
                                 letterSpacing = 1.sp
                             )
@@ -123,8 +130,11 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    // Theme Switcher Button (Dark / Light)
-                    IconButton(onClick = { themeIsDark.value = !themeIsDark.value }) {
+                    // Theme Switcher Button with Audio Feedback
+                    IconButton(onClick = {
+                        SoundEffects.playThemeToggleSound()
+                        themeIsDark.value = !themeIsDark.value
+                    }) {
                         Icon(
                             imageVector = if (themeIsDark.value) Icons.Default.WbSunny else Icons.Default.NightsStay,
                             contentDescription = "Switch Theme",
@@ -134,7 +144,10 @@ fun HomeScreen(
 
                     // Currency toggle
                     Surface(
-                        onClick = { catalogViewModel.toggleCurrency() },
+                        onClick = {
+                            SoundEffects.playClickSound(view)
+                            catalogViewModel.toggleCurrency()
+                        },
                         color = RenCloudGold.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(20.dp),
                         border = BorderStroke(1.dp, RenCloudGold.copy(alpha = 0.4f))
@@ -150,7 +163,10 @@ fun HomeScreen(
 
                     // Admin panel
                     if (authState.user?.isAdmin == true) {
-                        IconButton(onClick = onNavigateAdmin) {
+                        IconButton(onClick = {
+                            SoundEffects.playClickSound(view)
+                            onNavigateAdmin()
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.ManageAccounts,
                                 contentDescription = "Admin",
@@ -159,8 +175,11 @@ fun HomeScreen(
                         }
                     }
 
-                    // Account
-                    IconButton(onClick = onNavigateAuth) {
+                    // Account Tab (Fixed Navigation Callback)
+                    IconButton(onClick = {
+                        SoundEffects.playClickSound(view)
+                        onNavigateAuth()
+                    }) {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
                             contentDescription = "Account",
@@ -168,7 +187,7 @@ fun HomeScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
@@ -182,7 +201,7 @@ fun HomeScreen(
                 ) {
                     NavigationBarItem(
                         selected = true,
-                        onClick = {},
+                        onClick = { SoundEffects.playClickSound(view) },
                         icon = { Icon(Icons.Default.Cloud, contentDescription = "Plans") },
                         label = { Text("Plans", fontSize = 10.sp) },
                         colors = NavigationBarItemDefaults.colors(
@@ -193,7 +212,10 @@ fun HomeScreen(
                     )
                     NavigationBarItem(
                         selected = false,
-                        onClick = onNavigateCalculator,
+                        onClick = {
+                            SoundEffects.playClickSound(view)
+                            onNavigateCalculator()
+                        },
                         icon = { Icon(Icons.Default.Calculate, contentDescription = "Calculator") },
                         label = { Text("Calculator", fontSize = 10.sp) },
                         colors = NavigationBarItemDefaults.colors(
@@ -202,7 +224,10 @@ fun HomeScreen(
                     )
                     NavigationBarItem(
                         selected = false,
-                        onClick = onNavigateAuth,
+                        onClick = {
+                            SoundEffects.playClickSound(view)
+                            onNavigateAuth()
+                        },
                         icon = { Icon(Icons.Default.Person, contentDescription = "Account") },
                         label = { Text("Account", fontSize = 10.sp) },
                         colors = NavigationBarItemDefaults.colors(
@@ -226,7 +251,10 @@ fun HomeScreen(
                 currency = catalogState.currency,
                 selectedCategory = catalogState.selectedCategory,
                 searchQuery = catalogState.searchQuery,
-                onPlanDeploy = { selectedPlanForDeploy = it },
+                onPlanDeploy = {
+                    SoundEffects.playClickSound(view)
+                    selectedPlanForDeploy = it
+                },
                 modifier = Modifier.fillMaxSize()
             )
 
@@ -234,6 +262,7 @@ fun HomeScreen(
             BoomMenu(
                 items = boomMenuItems,
                 onItemClick = { item ->
+                    SoundEffects.playClickSound(view)
                     when (item.id) {
                         "compare" -> showCompareDialog = true
                         "simulator" -> showSimulatorDialog = true
@@ -288,10 +317,11 @@ private fun HomeContent(
     onPlanDeploy: (RenCloudPlan) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val view = LocalView.current
     val allPlans = catalogViewModel.getFilteredPlans()
     val featuredPlans = remember(allPlans) { catalogViewModel.uiState.value.plans.filter { it.isFeatured } }
 
-    androidx.compose.foundation.lazy.LazyColumn(
+    LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(bottom = 90.dp)
     ) {
@@ -301,10 +331,10 @@ private fun HomeContent(
             item {
                 Column {
                     SectionHeader(
-                        title = "Featured Servers",
+                        title = "Featured 3D Carousel",
                         icon = Icons.Default.Star
                     )
-                    FixedFeaturedCarousel(
+                    Animated3DVerticalCarousel(
                         plans = featuredPlans,
                         currency = currency,
                         onDeploy = onPlanDeploy
@@ -332,7 +362,10 @@ private fun HomeContent(
                     CategoryChip(
                         category = category,
                         isSelected = selectedCategory == category,
-                        onClick = { catalogViewModel.selectCategory(category) }
+                        onClick = {
+                            SoundEffects.playClickSound(view)
+                            catalogViewModel.selectCategory(category)
+                        }
                     )
                 }
             }
@@ -362,6 +395,116 @@ private fun HomeContent(
         item {
             FaqSection()
             Spacer(Modifier.height(30.dp))
+        }
+    }
+}
+
+// ── 3D Animated Vertical Scroll Carousel ──────────────────────────────────────
+@Composable
+private fun Animated3DVerticalCarousel(
+    plans: List<RenCloudPlan>,
+    currency: String,
+    onDeploy: (RenCloudPlan) -> Unit
+) {
+    val view = LocalView.current
+    val listState = rememberLazyListState()
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(240.dp)
+            .padding(horizontal = 16.dp)
+    ) {
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(plans.size) { index ->
+                val plan = plans[index]
+                val itemInfo = remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull { it.index == index } } }
+
+                val animationFraction = remember {
+                    derivedStateOf {
+                        val info = itemInfo.value ?: return@derivedStateOf 0f
+                        val centerOffset = listState.layoutInfo.viewportEndOffset / 2f
+                        val itemCenter = info.offset + info.size / 2f
+                        ((itemCenter - centerOffset) / centerOffset).coerceIn(-1f, 1f)
+                    }
+                }
+
+                val scale = 1f - (animationFraction.value.absoluteValue * 0.15f)
+                val alpha = 1f - (animationFraction.value.absoluteValue * 0.35f)
+                val rotationX = animationFraction.value * 15f
+
+                Card(
+                    onClick = {
+                        SoundEffects.playClickSound(view)
+                        onDeploy(plan)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(130.dp)
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                            this.alpha = alpha
+                            this.rotationX = rotationX
+                            cameraDistance = 16 * density
+                        },
+                    colors = CardDefaults.cardColors(containerColor = MetallicCardDark),
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.5.dp, Brush.linearGradient(listOf(MetallicPurple, ElectricCyan)))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Surface(
+                                color = MetallicPurple.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    plan.categoryName.uppercase(),
+                                    fontSize = 8.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MetallicPurple,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(plan.name, fontSize = 16.sp, fontWeight = FontWeight.Black, color = Color.White)
+                            Text("${plan.ram} • ${plan.cpu}", fontSize = 11.sp, color = TextSecondaryDark)
+                        }
+
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                if (currency == "INR") "₹${plan.monthlyPriceInr}/mo" else "$${plan.monthlyPriceUsd}/mo",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Black,
+                                color = ElectricCyan
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            Button(
+                                onClick = {
+                                    SoundEffects.playClickSound(view)
+                                    onDeploy(plan)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text("DEPLOY", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -498,80 +641,6 @@ private fun CategoryChip(
             color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
         )
-    }
-}
-
-@Composable
-private fun FixedFeaturedCarousel(
-    plans: List<RenCloudPlan>,
-    currency: String,
-    onDeploy: (RenCloudPlan) -> Unit
-) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        modifier = Modifier.fillMaxWidth().height(190.dp)
-    ) {
-        items(plans) { plan ->
-            Card(
-                onClick = { onDeploy(plan) },
-                modifier = Modifier.width(280.dp).fillMaxHeight(),
-                colors = CardDefaults.cardColors(containerColor = MetallicCardDark),
-                shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.5.dp, ElectricCyan.copy(alpha = 0.5f))
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            color = MetallicPurple.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                plan.categoryName.uppercase(),
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MetallicPurple,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                        Text(
-                            if (currency == "INR") "₹${plan.monthlyPriceInr}/mo" else "$${plan.monthlyPriceUsd}/mo",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Black,
-                            color = ElectricCyan
-                        )
-                    }
-
-                    Column {
-                        Text(plan.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Text(plan.tagline, fontSize = 11.sp, color = TextSecondaryDark, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("${plan.ram} • ${plan.cpu}", fontSize = 11.sp, color = TextSecondaryDark)
-                        Button(
-                            onClick = { onDeploy(plan) },
-                            colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                        ) {
-                            Text("DEPLOY", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
