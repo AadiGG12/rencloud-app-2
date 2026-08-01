@@ -62,7 +62,7 @@ fun AdminControlCenter(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Icon(Icons.Default.AdminPanelSettings, contentDescription = null, tint = RenCloudGold)
-                            Text("Admin Control Center v4.2", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("Admin Control Center v4.3", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     },
                     navigationIcon = {
