@@ -27,26 +27,48 @@ fun DeployDialog(
 ) {
     val locations = remember { listOf("India (Mumbai - Asia South)", "Singapore (Asia Southeast)") }
     val nodes = remember { listOf("Node-01 (AMD Ryzen 9 7950X)", "Node-02 (AMD EPYC Milan)", "Node-03 (Intel Platinum)") }
-    val realPterodactylEggs = remember {
-        listOf(
-            "Paper (Minecraft Vanilla + Plugins)",
-            "Vanilla Minecraft",
-            "Forge Minecraft (Modded)",
-            "PocketmineMP (Minecraft Bedrock)",
-            "Sponge (SpongeVanilla)",
-            "BungeeCord Proxy",
-            "Rust (Survival Server)",
-            "Counter-Strike: Global Offensive",
-            "HaZeyHosting Node.js Egg (Discord)",
-            "Python-Universal (Bot Engine)",
-            "Server Importer Hyper (Utility)",
-            "Modpack Downloader Hyper (Utility)"
-        )
+
+    // Configure live Pterodactyl Eggs by Nest based on Plan Category
+    val categoryEggs = remember(plan.categoryName) {
+        when {
+            plan.categoryName.contains("Minecraft", ignoreCase = true) -> listOf(
+                "Paper (Minecraft Vanilla + Plugins) [Nest: Minecraft]",
+                "Vanilla Minecraft [Nest: Minecraft]",
+                "Forge Minecraft (Modded) [Nest: Minecraft]",
+                "PocketmineMP (Bedrock Edition) [Nest: Minecraft]",
+                "Sponge (SpongeVanilla) [Nest: Minecraft]",
+                "BungeeCord Proxy [Nest: Minecraft]"
+            )
+            plan.categoryName.contains("Bot", ignoreCase = true) -> listOf(
+                "HaZeyHosting Node.js Egg [Nest: Discord]",
+                "Python-Universal (Bot Engine) [Nest: Discord]",
+                "PteroStats (Node.js Stats Bot) [Nest: Discord]"
+            )
+            plan.categoryName.contains("VPS", ignoreCase = true) || plan.categoryName.contains("Web", ignoreCase = true) -> listOf(
+                "Ubuntu 22.04 LTS (Cloud VPS) [Nest: Utilities]",
+                "Debian 12 Bookworm (Cloud VPS) [Nest: Utilities]",
+                "Docker Engine (Alpine Container) [Nest: Utilities]",
+                "Server Importer Hyper [Nest: Utilities]"
+            )
+            plan.categoryName.contains("Hytale", ignoreCase = true) || plan.categoryName.contains("ARK", ignoreCase = true) -> listOf(
+                "Ark: Survival Evolved [Nest: Source Engine]",
+                "Rust (Survival Server) [Nest: Rust]",
+                "Counter-Strike: Global Offensive [Nest: Source Engine]",
+                "Team Fortress 2 [Nest: Source Engine]",
+                "Garry's Mod [Nest: Source Engine]"
+            )
+            else -> listOf(
+                "Paper (Minecraft Vanilla + Plugins) [Nest: Minecraft]",
+                "Ubuntu 22.04 LTS [Nest: Utilities]",
+                "HaZeyHosting Node.js Egg [Nest: Discord]",
+                "Rust [Nest: Rust]"
+            )
+        }
     }
 
     var selectedLocation by remember { mutableStateOf(locations[0]) }
     var selectedNode by remember { mutableStateOf(nodes[0]) }
-    var selectedEgg by remember { mutableStateOf(realPterodactylEggs[0]) }
+    var selectedEgg by remember(categoryEggs) { mutableStateOf(categoryEggs[0]) }
     var serverName by remember { mutableStateOf("${plan.name}-Server") }
 
     var expandedLocation by remember { mutableStateOf(false) }
@@ -121,13 +143,13 @@ fun DeployDialog(
                     onSelect = { selectedNode = it; expandedNode = false }
                 )
 
-                // Real Pterodactyl Egg Selector (100% Synced from panel.rencloud.online)
-                Text("Pterodactyl Egg (Real Panel Synced)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
+                // Plan-Aware Nest & Egg Selector (Synced with Pterodactyl Panel Nests)
+                Text("${plan.categoryName} Compatible Egg", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextSecondaryDark)
                 ClickableDropdown(
                     selectedText = selectedEgg,
                     expanded = expandedEgg,
                     onExpandedChange = { expandedEgg = it },
-                    options = realPterodactylEggs,
+                    options = categoryEggs,
                     onSelect = { selectedEgg = it; expandedEgg = false }
                 )
 
@@ -136,7 +158,7 @@ fun DeployDialog(
                 // Launch Button
                 Button(
                     onClick = {
-                        onConfirmLaunch("Deployment triggered for '$serverName' on $selectedNode ($selectedLocation) with Egg: $selectedEgg!")
+                        onConfirmLaunch("Deployment triggered for '$serverName' on $selectedNode ($selectedLocation) using $selectedEgg!")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ElectricCyan),
                     shape = RoundedCornerShape(12.dp),
