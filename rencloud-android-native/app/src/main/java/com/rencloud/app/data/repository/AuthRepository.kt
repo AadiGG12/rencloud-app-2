@@ -25,7 +25,6 @@ class AuthRepository @Inject constructor(
     private val sessionManager: SessionManager,
     private val gson: Gson
 ) {
-    // Connection Flow: Frontend (Android) -> Custom Backend Gateway -> Pterodactyl Panel
     private val backendUrl = "https://api.rencloud.online"
 
     private val httpClient = OkHttpClient.Builder()
@@ -70,7 +69,7 @@ class AuthRepository @Inject constructor(
                     email = userObj.get("email")?.asString ?: cleanEmail,
                     role = userObj.get("role")?.asString ?: "client"
                 )
-                val token = jsonRes.get("token")?.asString ?: "jwt_token"
+                val token = jsonRes.get("token")?.asString ?: ""
                 sessionManager.saveUserSession(user, token)
                 return@withContext AuthResult.Success(user, message)
             } else {
@@ -78,18 +77,7 @@ class AuthRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("AuthRepository", "Backend login connection failed: ${e.message}")
-            
-            // Fallback for Admin when backend is offline
-            if (cleanEmail == "anshkumar19zx@gmail.com" || cleanEmail == "ansh") {
-                if (cleanPass == "ANSHGAUR123" || cleanPass == "anshgaur") {
-                    val adminUser = RenCloudUser("1", "Ansh Gaur", "anshkumar19zx@gmail.com", "admin")
-                    sessionManager.saveUserSession(adminUser, "token_admin")
-                    return@withContext AuthResult.Success(adminUser, "Welcome Super Admin!")
-                } else {
-                    return@withContext AuthResult.Error("Invalid credentials! The password you entered is incorrect for \"$cleanEmail\".")
-                }
-            }
-            return@withContext AuthResult.Error("Could not connect to RenCloud Backend Gateway. Ensure server is online.")
+            return@withContext AuthResult.Error("Could not connect to RenCloud Auth Gateway. Check network connection.")
         }
     }
 
@@ -99,6 +87,9 @@ class AuthRepository @Inject constructor(
 
         if (cleanEmail.isEmpty() || !cleanEmail.contains("@")) {
             return@withContext AuthResult.Error("Please enter a valid email address.")
+        }
+        if (cleanPass.length < 6) {
+            return@withContext AuthResult.Error("Password must be at least 6 characters long.")
         }
 
         try {
@@ -126,21 +117,54 @@ class AuthRepository @Inject constructor(
                     id = userObj.get("id")?.asString ?: "1",
                     fullName = userObj.get("fullName")?.asString ?: fullName,
                     email = userObj.get("email")?.asString ?: cleanEmail,
-                    role = "client"
+                    role = userObj.get("role")?.asString ?: "client"
                 )
-                val token = jsonRes.get("token")?.asString ?: "jwt_token"
+                val token = jsonRes.get("token")?.asString ?: ""
                 sessionManager.saveUserSession(user, token)
                 return@withContext AuthResult.Success(user, message)
             } else {
                 return@withContext AuthResult.Error(message)
             }
         } catch (e: Exception) {
-            return@withContext AuthResult.Error("Could not connect to RenCloud Backend Gateway.")
+            return@withContext AuthResult.Error("Could not connect to RenCloud Auth Gateway. Ensure server is online.")
         }
     }
 
     suspend fun restoreSession(): RenCloudUser? = withContext(Dispatchers.IO) {
-        return@withContext sessionManager.getUser()
+        val savedUser = sessionManager.getUser()
+        val token = sessionManager.getToken()
+
+        if (savedUser == null || token.isNullOrEmpty()) {
+            return@withContext null
+        }
+
+        try {
+            val request = Request.Builder()
+                .url("$backendUrl/api/auth/me")
+                .header("Authorization", "Bearer $token")
+                .get()
+                .build()
+
+            val response = httpClient.newCall(request).execute()
+            if (response.isSuccessful) {
+                val rawJson = response.body?.string() ?: ""
+                val jsonRes = gson.fromJson(rawJson, JsonObject::class.java)
+                if (jsonRes?.get("success")?.asBoolean == true && jsonRes.has("user")) {
+                    val userObj = jsonRes.getAsJsonObject("user")
+                    val updatedUser = RenCloudUser(
+                        id = userObj.get("id")?.asString ?: savedUser.id,
+                        fullName = userObj.get("fullName")?.asString ?: savedUser.fullName,
+                        email = userObj.get("email")?.asString ?: savedUser.email,
+                        role = userObj.get("role")?.asString ?: savedUser.role
+                    )
+                    sessionManager.saveUserSession(updatedUser, token)
+                    return@withContext updatedUser
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("AuthRepository", "Session restore network check failed, using cached session: ${e.message}")
+        }
+        return@withContext savedUser
     }
 
     fun logout() {

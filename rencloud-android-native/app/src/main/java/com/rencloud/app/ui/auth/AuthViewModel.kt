@@ -45,13 +45,36 @@ class AuthViewModel @Inject constructor(
                     isLoading = false
                 )
             } else {
-                _uiState.value = _uiState.value.copy(isLoading = false)
+                _uiState.value = _uiState.value.copy(
+                    user = null,
+                    isAuthenticated = false,
+                    isLoading = false
+                )
             }
         }
     }
 
     fun setBiometricAuthenticated(success: Boolean) {
-        _uiState.value = _uiState.value.copy(isBiometricAuthenticated = success)
+        viewModelScope.launch {
+            if (success) {
+                val existingUser = authRepository.restoreSession()
+                if (existingUser != null) {
+                    _uiState.value = _uiState.value.copy(
+                        user = existingUser,
+                        isAuthenticated = true,
+                        isBiometricAuthenticated = true,
+                        errorMessage = null
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isBiometricAuthenticated = false,
+                        errorMessage = "No active saved session found. Please sign in with email & password."
+                    )
+                }
+            } else {
+                _uiState.value = _uiState.value.copy(isBiometricAuthenticated = false)
+            }
+        }
     }
 
     fun toggleMode() {
