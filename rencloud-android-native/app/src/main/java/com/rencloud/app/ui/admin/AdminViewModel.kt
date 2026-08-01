@@ -2,6 +2,7 @@ package com.rencloud.app.ui.admin
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
 import com.rencloud.app.data.model.PanelUserAttributes
 import com.rencloud.app.data.remote.PterodactylApi
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -10,6 +11,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 data class AdminUiState(
@@ -30,7 +34,8 @@ data class AdminUiState(
 
 @HiltViewModel
 class AdminViewModel @Inject constructor(
-    private val api: PterodactylApi
+    private val api: PterodactylApi,
+    private val gson: Gson
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdminUiState())
@@ -38,6 +43,11 @@ class AdminViewModel @Inject constructor(
 
     private val ptlaKey = "ptla_ZOzmkCLdCNI7zzx69CvOCkVLrdgiZskY2v3bRhxepk0"
     private val authHeader = "Bearer $ptlaKey"
+
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
+        .build()
 
     init {
         loadUsers()
@@ -61,31 +71,32 @@ class AdminViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
                 }
             }
-        } else if (query.isEmpty()) {
-            loadUsers()
         }
     }
 
-    // Keep backward compat
-    fun searchUsers(query: String) = setSearchQuery(query)
-
     fun loadUsers() {
         viewModelScope.launch(Dispatchers.IO) {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             try {
-                _uiState.value = _uiState.value.copy(isLoading = true)
-                val resp = api.findUserByEmailFilter(authHeader, "")
+                val resp = api.getAllUsers(authHeader)
                 if (resp.isSuccessful) {
-                    val list = resp.body()?.dataList?.map { it.attributes } ?: emptyList()
+                    val usersList = resp.body()?.dataList?.map { it.attributes } ?: emptyList()
                     _uiState.value = _uiState.value.copy(
-                        users = list,
-                        totalUsersCount = 354,
+                        users = usersList,
+                        totalUsersCount = usersList.size,
                         isLoading = false
                     )
                 } else {
-                    _uiState.value = _uiState.value.copy(isLoading = false)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Could not fetch users list from Pterodactyl Panel."
+                    )
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false)
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Network error connecting to panel"
+                )
             }
         }
     }
